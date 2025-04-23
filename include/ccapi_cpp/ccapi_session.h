@@ -974,10 +974,10 @@ class Session {
   EventDispatcher* eventDispatcher{nullptr};
   bool useInternalEventDispatcher{};
 #endif
-  ServiceContext* serviceContextPtr{nullptr};
   std::map<std::string, std::map<std::string, std::shared_ptr<Service> > > serviceByServiceNameExchangeMap;
   std::thread t;
   Queue<Event> eventQueue;
+  ServiceContext* serviceContextPtr{nullptr};
   std::function<void(Event& event, Queue<Event>* eventQueue)> internalEventHandler;
   std::map<std::string, std::shared_ptr<steady_timer> > delayTimerByIdMap;
 };

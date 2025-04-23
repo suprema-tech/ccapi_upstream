@@ -479,7 +479,7 @@ class Service : public std::enable_shared_from_this<Service> {
       errorHandler(ec);
       return;
     }
-    beast::ssl_stream<beast::tcp_stream>& stream = *httpConnectionPtr->streamPtr;
+
 #if defined(CCAPI_ENABLE_LOG_DEBUG) || defined(CCAPI_ENABLE_LOG_TRACE)
     {
       std::ostringstream oss;
@@ -1395,22 +1395,21 @@ class Service : public std::enable_shared_from_this<Service> {
     if (ec) {
       if (ec == beast::error::timeout) {
         CCAPI_LOGGER_TRACE("timeout, connection closed");
-      } else {
-        CCAPI_LOGGER_TRACE("fail");
-        Event event;
-        event.setType(Event::Type::SESSION_STATUS);
-        Message message;
-        message.setTimeReceived(now);
-        message.setType(Message::Type::SESSION_CONNECTION_DOWN);
-        message.setCorrelationIdList(wsConnectionPtr->correlationIdList);
-        Element element(true);
-        auto& connectionId = wsConnectionPtr->id;
-        element.insert(CCAPI_CONNECTION_ID, connectionId);
-        message.setElementList({element});
-        event.setMessageList({message});
-        this->eventHandler(event, nullptr);
-        this->onFail(wsConnectionPtr);
       }
+      CCAPI_LOGGER_TRACE("fail");
+      Event event;
+      event.setType(Event::Type::SESSION_STATUS);
+      Message message;
+      message.setTimeReceived(now);
+      message.setType(Message::Type::SESSION_CONNECTION_DOWN);
+      message.setCorrelationIdList(wsConnectionPtr->correlationIdList);
+      Element element;
+      auto& connectionId = wsConnectionPtr->id;
+      element.insert(CCAPI_CONNECTION_ID, connectionId);
+      message.setElementList({element});
+      event.setMessageList({message});
+      this->eventHandler(event, nullptr);
+      this->onFail(wsConnectionPtr);
       return;
     }
     if (wsConnectionPtr->status != WsConnection::Status::OPEN) {
@@ -1490,6 +1489,27 @@ class Service : public std::enable_shared_from_this<Service> {
   }
   void onWriteWs(std::shared_ptr<WsConnection> wsConnectionPtr, const ErrorCode& ec, std::size_t n) {
     CCAPI_LOGGER_FUNCTION_ENTER;
+    auto now = UtilTime::now();
+    if (ec) {
+      if (ec == beast::error::timeout) {
+        CCAPI_LOGGER_TRACE("timeout, connection closed");
+      }
+      CCAPI_LOGGER_TRACE("fail");
+      Event event;
+      event.setType(Event::Type::SESSION_STATUS);
+      Message message;
+      message.setTimeReceived(now);
+      message.setType(Message::Type::SESSION_CONNECTION_DOWN);
+      message.setCorrelationIdList(wsConnectionPtr->correlationIdList);
+      Element element;
+      auto& connectionId = wsConnectionPtr->id;
+      element.insert(CCAPI_CONNECTION_ID, connectionId);
+      message.setElementList({element});
+      event.setMessageList({message});
+      this->eventHandler(event, nullptr);
+      this->onFail(wsConnectionPtr);
+      return;
+    }
     auto& connectionId = wsConnectionPtr->id;
     auto& writeMessageBuffer = this->writeMessageBufferByConnectionIdMap[connectionId];
     auto& writeMessageBufferWrittenLength = this->writeMessageBufferWrittenLengthByConnectionIdMap[connectionId];
