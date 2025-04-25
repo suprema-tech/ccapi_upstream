@@ -302,7 +302,17 @@ class Session {
   }
   virtual void start() {
     CCAPI_LOGGER_FUNCTION_ENTER;
-    std::thread t([this]() { this->serviceContextPtr->start(); });
+    std::thread t([this]() {
+      if (this->sessionOptions.cpuCoreIdOpt) {
+        cpu_set_t cpuset;
+        CPU_ZERO(&cpuset);
+        CPU_SET(*this->sessionOptions.cpuCoreIdOpt, &cpuset);
+        if (pthread_setaffinity_np(pthread_self(), sizeof(cpuset), &cpuset) != 0) {
+          CCAPI_LOGGER_ERROR("pthread_setaffinity_np");
+        }
+      }
+      this->serviceContextPtr->start();
+    });
     this->t = std::move(t);
     this->internalEventHandler = std::bind(&Session::onEvent, this, std::placeholders::_1, std::placeholders::_2);
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
