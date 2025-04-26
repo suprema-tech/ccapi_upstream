@@ -93,7 +93,7 @@ if(NOT CCAPI_LEGACY_USE_WEBSOCKETPP)
   if(NOT BOOST_INCLUDE_DIR)
   include(ExternalProject)
   ExternalProject_Add(boost
-    URL    https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.gz
+    URL    https://archives.boost.io/release/1.80.0/source/boost_1_80_0.tar.gz
     SOURCE_DIR        "${CMAKE_BINARY_DIR}/boost"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND     ""
