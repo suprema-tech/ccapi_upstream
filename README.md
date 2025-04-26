@@ -79,7 +79,7 @@
 * Macros in the compiler command line:
   * Define service enablement macro such as `CCAPI_ENABLE_SERVICE_MARKET_DATA`, `CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT`, `CCAPI_ENABLE_SERVICE_FIX`, etc. and exchange enablement macros such as `CCAPI_ENABLE_EXCHANGE_COINBASE`, etc. These macros can be found at the top of [`include/ccapi_cpp/ccapi_session.h`](include/ccapi_cpp/ccapi_session.h).
 * Dependencies:
-  * boost https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.gz (notice that its include directory is boost).
+  * boost https://archives.boost.io/release/1.80.0/source/boost_1_80_0.tar.gz (notice that its include directory is boost).
   * rapidjson https://github.com/Tencent/rapidjson/archive/refs/tags/v1.1.0.tar.gz (notice that its include directory is rapidjson/include).
   * If you use FIX API, also need hffix https://github.com/jamesdbrock/hffix/archive/refs/tags/v1.3.0.tar.gz (notice that its include directory is hffix/include).
 * Include directory for this library:
