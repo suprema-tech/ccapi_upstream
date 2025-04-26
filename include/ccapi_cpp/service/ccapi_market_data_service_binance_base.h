@@ -362,12 +362,9 @@ class MarketDataServiceBinanceBase : public MarketDataService {
         req.target(target + "?" + queryString);
       } break;
       case Request::Operation::GET_SERVER_TIME: {
-        Message message;
-        message.setTime(UtilTime::makeTimePointMilli(UtilTime::divideMilli(document["serverTime"].GetString())));
-        message.setTimeReceived(timeReceived);
-        message.setType(this->requestOperationToMessageTypeMap.at(request.getOperation()));
-        message.setCorrelationIdList({request.getCorrelationId()});
-        event.addMessages({message});
+        req.method(http::verb::get);
+        auto target = this->getServerTimeTarget;
+        req.target(target);
       } break;
       case Request::Operation::GET_INSTRUMENT: {
         req.method(http::verb::get);
@@ -477,9 +474,12 @@ class MarketDataServiceBinanceBase : public MarketDataService {
         marketDataMessageList.emplace_back(std::move(marketDataMessage));
       } break;
       case Request::Operation::GET_SERVER_TIME: {
-        req.method(http::verb::get);
-        auto target = this->getServerTimeTarget;
-        req.target(target);
+        Message message;
+        message.setTime(UtilTime::makeTimePointMilli(UtilTime::divideMilli(document["serverTime"].GetString())));
+        message.setTimeReceived(timeReceived);
+        message.setType(this->requestOperationToMessageTypeMap.at(request.getOperation()));
+        message.setCorrelationIdList({request.getCorrelationId()});
+        event.addMessages({message});
       } break;
       case Request::Operation::GET_INSTRUMENT: {
         Message message;
