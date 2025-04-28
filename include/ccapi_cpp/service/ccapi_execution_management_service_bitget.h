@@ -192,7 +192,7 @@ class ExecutionManagementServiceBitget : public ExecutionManagementServiceBitget
         {CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUANTITY, std::make_pair("baseVolume", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_CUMULATIVE_FILLED_PRICE_TIMES_QUANTITY, std::make_pair("quoteVolume", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_STATUS, std::make_pair("status", JsonDataType::STRING)},
-        {CCAPI_EM_ORDER_INSTRUMENT, std::make_pair("symbol", JsonDataType::STRING)}};        
+        {CCAPI_EM_ORDER_INSTRUMENT, std::make_pair("symbol", JsonDataType::STRING)}};
     const rj::Value& data = document["data"];
     if (data.IsObject()) {
       Element element;
@@ -278,57 +278,57 @@ class ExecutionManagementServiceBitget : public ExecutionManagementServiceBitget
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
 #endif
-  if (textMessage != "pong") {
+      if (textMessage != "pong") {
+        rj::Document document;
+  document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+  auto it = document.FindMember("event");
+  std::string eventStr = it != document.MemberEnd() ? it->value.GetString() : "";
+  if (eventStr == "login") {
     rj::Document document;
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
-    auto it = document.FindMember("event");
-    std::string eventStr = it != document.MemberEnd() ? it->value.GetString() : "";
-    if (eventStr == "login") {
-      rj::Document document;
-      document.SetObject();
-      auto& allocator = document.GetAllocator();
-      document.AddMember("op", rj::Value("subscribe").Move(), allocator);
-      rj::Value args(rj::kArrayType);
-      const auto& fieldSet = subscription.getFieldSet();
-      const auto& instrumentSet = subscription.getInstrumentSet();
-      for (const auto& field : fieldSet) {
-        if (field == CCAPI_EM_ORDER_UPDATE || field == CCAPI_EM_PRIVATE_TRADE) {
-          for (const auto& instrument : instrumentSet) {
-            rj::Value arg(rj::kObjectType);
-            arg.AddMember("channel", rj::Value("orders", allocator).Move(), allocator);
-            arg.AddMember("instId", rj::Value(instrument.c_str(), allocator).Move(), allocator);
-            arg.AddMember("instType", rj::Value("SPOT").Move(), allocator);
-            args.PushBack(arg, allocator);
-          }
-        } else if (field == CCAPI_EM_BALANCE_UPDATE) {
+    document.SetObject();
+    auto& allocator = document.GetAllocator();
+    document.AddMember("op", rj::Value("subscribe").Move(), allocator);
+    rj::Value args(rj::kArrayType);
+    const auto& fieldSet = subscription.getFieldSet();
+    const auto& instrumentSet = subscription.getInstrumentSet();
+    for (const auto& field : fieldSet) {
+      if (field == CCAPI_EM_ORDER_UPDATE || field == CCAPI_EM_PRIVATE_TRADE) {
+        for (const auto& instrument : instrumentSet) {
           rj::Value arg(rj::kObjectType);
-          arg.AddMember("channel", rj::Value("account", allocator).Move(), allocator);
-          arg.AddMember("coin", rj::Value("default", allocator).Move(), allocator);
+          arg.AddMember("channel", rj::Value("orders", allocator).Move(), allocator);
+          arg.AddMember("instId", rj::Value(instrument.c_str(), allocator).Move(), allocator);
           arg.AddMember("instType", rj::Value("SPOT").Move(), allocator);
           args.PushBack(arg, allocator);
         }
+      } else if (field == CCAPI_EM_BALANCE_UPDATE) {
+        rj::Value arg(rj::kObjectType);
+        arg.AddMember("channel", rj::Value("account", allocator).Move(), allocator);
+        arg.AddMember("coin", rj::Value("default", allocator).Move(), allocator);
+        arg.AddMember("instType", rj::Value("SPOT").Move(), allocator);
+        args.PushBack(arg, allocator);
       }
-      document.AddMember("args", args, allocator);
-      rj::StringBuffer stringBufferSubscribe;
-      rj::Writer<rj::StringBuffer> writerSubscribe(stringBufferSubscribe);
-      document.Accept(writerSubscribe);
-      std::string sendString = stringBufferSubscribe.GetString();
-      ErrorCode ec;
+    }
+    document.AddMember("args", args, allocator);
+    rj::StringBuffer stringBufferSubscribe;
+    rj::Writer<rj::StringBuffer> writerSubscribe(stringBufferSubscribe);
+    document.Accept(writerSubscribe);
+    std::string sendString = stringBufferSubscribe.GetString();
+    ErrorCode ec;
 #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-      this->send(wsConnection.hdl, sendString, wspp::frame::opcode::text, ec);
+    this->send(wsConnection.hdl, sendString, wspp::frame::opcode::text, ec);
 #else
         this->send(wsConnectionPtr, sendString, ec);
 #endif
-      if (ec) {
-        this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "subscribe");
-      }
-    } else {
-      Event event = this->createEvent(subscription, textMessage, document, eventStr, timeReceived);
-      if (!event.getMessageList().empty()) {
-        this->eventHandler(event, nullptr);
-      }
+    if (ec) {
+      this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "subscribe");
+    }
+  } else {
+    Event event = this->createEvent(subscription, textMessage, document, eventStr, timeReceived);
+    if (!event.getMessageList().empty()) {
+      this->eventHandler(event, nullptr);
     }
   }
+}
 }  // namespace ccapi
 Event createEvent(const Subscription& subscription, const std::string& textMessage, const rj::Document& document, const std::string& eventStr,
                   const TimePoint& timeReceived) {
@@ -440,7 +440,8 @@ Event createEvent(const Subscription& subscription, const std::string& textMessa
   event.setMessageList(messageList);
   return event;
 }
-};  // namespace ccapi
+}
+;  // namespace ccapi
 } /* namespace ccapi */
 #endif
 #endif
