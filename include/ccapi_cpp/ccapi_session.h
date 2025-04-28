@@ -304,12 +304,14 @@ class Session {
     CCAPI_LOGGER_FUNCTION_ENTER;
     std::thread t([this]() {
       if (this->sessionOptions.cpuCoreIdOpt) {
+#ifdef __linux__
         cpu_set_t cpuset;
         CPU_ZERO(&cpuset);
         CPU_SET(*this->sessionOptions.cpuCoreIdOpt, &cpuset);
         if (pthread_setaffinity_np(pthread_self(), sizeof(cpuset), &cpuset) != 0) {
           CCAPI_LOGGER_ERROR("pthread_setaffinity_np");
         }
+#endif
       }
       this->serviceContextPtr->start();
     });
