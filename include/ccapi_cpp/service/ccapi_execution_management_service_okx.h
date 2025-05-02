@@ -327,10 +327,11 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
           Element element;
           element.insert(CCAPI_INSTRUMENT, x["instId"].GetString());
           element.insert(CCAPI_EM_POSITION_SIDE, x["posSide"].GetString());
-          std::string availPos = x["availPos"].GetString();
-          std::string positionQuantity = availPos.empty() ? x["pos"].GetString() : availPos;
+          std::string positionQuantity = x["pos"].GetString();
           element.insert(CCAPI_EM_POSITION_QUANTITY, positionQuantity);
           element.insert(CCAPI_EM_POSITION_ASSET, x["posCcy"].GetString());
+          element.insert(CCAPI_EM_POSITION_MARGIN_TYPE,
+                         std::string(x["mgnMode"].GetString()) == "cross" ? CCAPI_EM_MARGIN_TYPE_CROSS_MARGIN : CCAPI_EM_MARGIN_TYPE_ISOLATED_MARGIN);
           element.insert(CCAPI_EM_POSITION_ENTRY_PRICE, x["avgPx"].GetString());
           element.insert(CCAPI_EM_POSITION_LEVERAGE, x["lever"].GetString());
           elementList.emplace_back(std::move(element));
@@ -606,6 +607,8 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
             element.insert(CCAPI_EM_POSITION_SIDE, x["posSide"].GetString());
             element.insert(CCAPI_EM_POSITION_QUANTITY, x["pos"].GetString());
             element.insert(CCAPI_EM_POSITION_ASSET, x["posCcy"].GetString());
+            element.insert(CCAPI_EM_POSITION_MARGIN_TYPE,
+                           std::string(x["mgnMode"].GetString()) == "cross" ? CCAPI_EM_MARGIN_TYPE_CROSS_MARGIN : CCAPI_EM_MARGIN_TYPE_ISOLATED_MARGIN);
             element.insert(CCAPI_EM_POSITION_ENTRY_PRICE, x["avgPx"].GetString());
             element.insert(CCAPI_EM_UNREALIZED_PNL, x["upl"].GetString());
             elementList.emplace_back(std::move(element));
