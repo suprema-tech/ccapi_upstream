@@ -1046,10 +1046,6 @@ class MarketDataService : public Service {
         auto& detail = x.second;
         if (type == MarketDataMessage::DataType::CANDLESTICK) {
           for (auto& y : detail) {
-            auto& openPrice = y.at(MarketDataMessage::DataFieldType::OPEN_PRICE);
-            auto& highPrice = y.at(MarketDataMessage::DataFieldType::HIGH_PRICE);
-            auto& lowPrice = y.at(MarketDataMessage::DataFieldType::LOW_PRICE);
-            auto& closePrice = y.at(MarketDataMessage::DataFieldType::CLOSE_PRICE);
             Element element;
             std::string k1(CCAPI_OPEN_PRICE);
             std::string k2(CCAPI_HIGH_PRICE);
