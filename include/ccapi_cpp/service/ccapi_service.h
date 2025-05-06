@@ -831,8 +831,8 @@ class Service : public std::enable_shared_from_this<Service> {
             port = request.getPort();
           }
           std::shared_ptr<HttpConnection> httpConnectionPtr(new HttpConnection(host, port, streamPtr));
-          CCAPI_LOGGER_WARN("about to perform request with new httpConnectionPtr " + toString(*httpConnectionPtr) + " for localIpAddress = " + localIpAddress +
-                            ", requestBaseUrl = " + toString(requestBaseUrl));
+          CCAPI_LOGGER_WARN("about to perform request with new httpConnectionPtr " + toString(*httpConnectionPtr) + " for request = " + toString(request) +
+                            ", localIpAddress = " + localIpAddress + ", requestBaseUrl = " + toString(requestBaseUrl));
           this->performRequestWithNewHttpConnection(httpConnectionPtr, request, req, retry, eventQueuePtr);
         } else {
           std::shared_ptr<HttpConnection> httpConnectionPtr = this->httpConnectionPool[localIpAddress][requestBaseUrl].back();
@@ -1530,7 +1530,8 @@ class Service : public std::enable_shared_from_this<Service> {
   virtual void onFail_(std::shared_ptr<WsConnection> wsConnectionPtr) {
     WsConnection& wsConnection = *wsConnectionPtr;
     wsConnection.status = WsConnection::Status::FAILED;
-    this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, "connection " + toString(wsConnection) + " has failed before opening");
+    this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE_DUE_TO_CONNECTION_FAILURE,
+                  "connection " + toString(wsConnection) + " has failed before opening");
     WsConnection thisWsConnection = wsConnection;
     this->wsConnectionByIdMap.erase(thisWsConnection.id);
     auto urlBase = UtilString::split(thisWsConnection.url, "?").at(0);
