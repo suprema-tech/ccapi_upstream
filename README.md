@@ -47,7 +47,6 @@
       - [Thread safety](#thread-safety)
       - [Enable library logging](#enable-library-logging)
       - [Set timer](#set-timer)
-      - [Custom service class](#custom-service-class)
   - [Performance Tuning](#performance-tuning)
   - [Known Issues and Workarounds](#known-issues-and-workarounds)
   - [Contributing](#contributing)
@@ -59,9 +58,9 @@
 * Code closely follows Bloomberg's API: https://www.bloomberg.com/professional/support/api-library/.
 * It is ultra fast thanks to very careful optimizations: move semantics, regex optimization, locality of reference, lock contention minimization, etc.
 * Supported exchanges:
-  * Market Data: ascendex, binance, binance-usds-futures, binance-coin-futures, binance-us, bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, bybit, coinbase, cryptocom, deribit, erisx (Cboe Digital), gateio, gateio-perpetual-futures, gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, mexc-futures, okx, whitebit.
-  * Execution Management: ascendex, binance, binance-usds-futures, binance-coin-futures, binance-us, bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, bybit, coinbase, cryptocom, deribit, erisx (Cboe Digital), gateio, gateio-perpetual-futures, gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, okx.
-  * FIX: coinbase, gemini.
+  * Market Data: ascendex, binance, binanceds-futures, binance-coin-futures, binance, bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, bybit, okx, cryptocom, deribit, erisx (Cboe Digital), gateio, gateio-perpetual-futures, gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, mexc-futures, okx, whitebit.
+  * Execution Management: ascendex, binance, binanceds-futures, binance-coin-futures, binance, bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, bybit, okx, cryptocom, deribit, erisx (Cboe Digital), gateio, gateio-perpetual-futures, gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, okx.
+  * FIX: okx, gemini.
 * Join us on Discord https://discord.gg/b5EKcp9s8T and Medium https://cryptochassis.medium.com.
 
 ## Branches
@@ -75,7 +74,7 @@
 * Example CMake: example/CMakeLists.txt.
 * Require C++17 and OpenSSL.
 * Macros in the compiler command line:
-  * Define service enablement macro such as `CCAPI_ENABLE_SERVICE_MARKET_DATA`, `CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT`, `CCAPI_ENABLE_SERVICE_FIX`, etc. and exchange enablement macros such as `CCAPI_ENABLE_EXCHANGE_COINBASE`, etc. These macros can be found at the top of [`include/ccapi_cpp/ccapi_session.h`](include/ccapi_cpp/ccapi_session.h).
+  * Define service enablement macro such as `CCAPI_ENABLE_SERVICE_MARKET_DATA`, `CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT`, `CCAPI_ENABLE_SERVICE_FIX`, etc. and exchange enablement macros such as `CCAPI_ENABLE_EXCHANGE_OKX`, etc. These macros can be found at the top of [`include/ccapi_cpp/ccapi_session.h`](include/ccapi_cpp/ccapi_session.h).
 * Dependencies:
   * boost https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.gz (notice that its include directory is boost).
   * rapidjson https://github.com/Tencent/rapidjson/archive/refs/tags/v1.1.0.tar.gz (notice that its include directory is rapidjson/include).
@@ -215,8 +214,10 @@ For a specific exchange and instrument, get recents trades.
 [C++](example/src/market_data_simple_request/main.cpp) / [Python](binding/python/example/market_data_simple_request/main.py) / [Java](binding/java/example/market_data_simple_request/Main.java) / [C#](binding/csharp/example/market_data_simple_request/MainProgram.cs) / [Go](binding/go/example/market_data_simple_request/main.go) / [Javascript](binding/javascript/example/market_data_simple_request/index.js)
 ```
 #include "ccapi_cpp/ccapi_session.h"
+
 namespace ccapi {
 Logger* Logger::logger = nullptr;  // This line is needed.
+
 class MyEventHandler : public EventHandler {
  public:
   bool processEvent(const Event& event, Session* session) override {
@@ -225,12 +226,13 @@ class MyEventHandler : public EventHandler {
   }
 };
 } /* namespace ccapi */
+
 using ::ccapi::MyEventHandler;
 using ::ccapi::Request;
 using ::ccapi::Session;
 using ::ccapi::SessionConfigs;
 using ::ccapi::SessionOptions;
-using ::ccapi::toString;
+
 int main(int argc, char** argv) {
   SessionOptions sessionOptions;
   SessionConfigs sessionConfigs;
@@ -246,6 +248,7 @@ int main(int argc, char** argv) {
   std::cout << "Bye" << std::endl;
   return EXIT_SUCCESS;
 }
+
 ```
 
 **Output 1:**
@@ -288,16 +291,19 @@ For a specific exchange and instrument, whenever the best bid's or ask's price o
 [C++](example/src/market_data_simple_subscription/main.cpp) / [Python](binding/python/example/market_data_simple_subscription/main.py) / [Java](binding/java/example/market_data_simple_subscription/Main.java) / [C#](binding/csharp/example/market_data_simple_subscription/MainProgram.cs) / [Go](binding/go/example/market_data_simple_subscription/main.go) / [Javascript](binding/javascript/example/market_data_simple_subscription/index.js)
 ```
 #include "ccapi_cpp/ccapi_session.h"
+
 namespace ccapi {
 Logger* Logger::logger = nullptr;  // This line is needed.
+
 class MyEventHandler : public EventHandler {
  public:
-  bool processEvent(const Event& event, Session *session) override {
-    if (event.getType() == Event::Type::SUBSCRIPTION_DATA) {
-      for (const auto & message : event.getMessageList()) {
-        std::cout << std::string("Best bid and ask at ") + UtilTime::getISOTimestamp(message.getTime()) + " are:"
-                  << std::endl;
-        for (const auto & element : message.getElementList()) {
+  bool processEvent(const Event& event, Session* session) override {
+    if (event.getType() == Event::Type::SUBSCRIPTION_STATUS) {
+      std::cout << "Received an event of type SUBSCRIPTION_STATUS:\n" + event.toStringPretty(2, 2) << std::endl;
+    } else if (event.getType() == Event::Type::SUBSCRIPTION_DATA) {
+      for (const auto& message : event.getMessageList()) {
+        std::cout << std::string("Best bid and ask at ") + UtilTime::getISOTimestamp(message.getTime()) + " are:" << std::endl;
+        for (const auto& element : message.getElementList()) {
           const std::map<std::string, std::string>& elementNameValueMap = element.getNameValueMap();
           std::cout << "  " + toString(elementNameValueMap) << std::endl;
         }
@@ -307,12 +313,15 @@ class MyEventHandler : public EventHandler {
   }
 };
 } /* namespace ccapi */
+
 using ::ccapi::MyEventHandler;
 using ::ccapi::Session;
 using ::ccapi::SessionConfigs;
 using ::ccapi::SessionOptions;
 using ::ccapi::Subscription;
-int main(int argc, char **argv) {
+using ::ccapi::toString;
+
+int main(int argc, char** argv) {
   SessionOptions sessionOptions;
   SessionConfigs sessionConfigs;
   MyEventHandler eventHandler;
@@ -324,6 +333,7 @@ int main(int argc, char **argv) {
   std::cout << "Bye" << std::endl;
   return EXIT_SUCCESS;
 }
+
 ```
 
 **Output 2:**
@@ -339,9 +349,9 @@ Best bid and ask at 2020-07-27T23:56:51.935993000Z are:
 ### Advanced Market Data
 
 #### Complex request parameters
-Please follow the exchange's API documentations: e.g. https://docs.pro.coinbase.com/#pagination.
+Please follow the exchange's API documentations: e.g. https://www.okx.com/docs-v5/en/#order-book-trading-market-data-get-trades-history.
 ```
-Request request(Request::Operation::GET_RECENT_TRADES, "okx", "BTC-USDT");
+Request request(Request::Operation::GET_HISTORICAL_TRADES, "okx", "BTC-USDT");
 request.appendParam({
   {"before", "1"},
   {"after", "3"},
@@ -374,14 +384,14 @@ Send a `std::vector<Request>`.
 ```
 Request request_1(Request::Operation::GET_RECENT_TRADES, "okx", "BTC-USDT", "cool correlation id for BTC");
 request_1.appendParam(...);
-Request request_2(Request::Operation::GET_RECENT_TRADES, "okx", "ETH-USDT", "cool correlation id for ETH");
+Request request_2(Request::Operation::GET_RECENT_TRADES, "binance", "ETH-USDT", "cool correlation id for ETH");
 request_2.appendParam(...);
 session.sendRequest({request_1, request_2});
 ```
 Subscribe a `std::vector<Subscription>`.
 ```
-Subscription subscription_1("okx", "BTC-USDT", "MARKET_DEPTH", "", "cool correlation id for coinbase BTC-USDT");
-Subscription subscription_2("okx", "ethusd", "MARKET_DEPTH", "", "cool correlation id for binance-us ethusd");
+Subscription subscription_1("okx", "BTC-USDT", "MARKET_DEPTH", "", "cool correlation id for okx BTC-USDT");
+Subscription subscription_2("binance", "ETH-USDT", "MARKET_DEPTH", "", "cool correlation id for binance ETH-USDT");
 session.subscribe({subscription_1, subscription_2});
 ```
 
@@ -431,11 +441,10 @@ Subscription subscription("okx", "BTC-USDTT", "CANDLESTICK", "CANDLESTICK_INTERV
 
 Instantiate `Request` with operation `GENERIC_PUBLIC_REQUEST`. Provide request parameters `HTTP_METHOD`, `HTTP_PATH`, and optionally `HTTP_QUERY_STRING` (query string parameter values should be url-encoded), `HTTP_BODY`.
 ```
-Request request(Request::Operation::GENERIC_PUBLIC_REQUEST, "okx");
+Request request(Request::Operation::GENERIC_PUBLIC_REQUEST, "okx", "", "Check Server Time");
 request.appendParam({
     {"HTTP_METHOD", "GET"},
-    {"HTTP_PATH", "/api/v3/historicalTrades"},
-    {"HTTP_QUERY_STRING", "symbol=BTCUSDTT"},
+    {"HTTP_PATH", "/api/v5/public/time"},
 });
 ```
 
@@ -450,11 +459,14 @@ Subscription subscription("okx", "", "GENERIC_PUBLIC_SUBSCRIPTION", R"({"type":"
 
 Instantiate `Request` with operation `GENERIC_PRIVATE_REQUEST`. Provide request parameters `HTTP_METHOD`, `HTTP_PATH`, and optionally `HTTP_QUERY_STRING` (query string parameter values should be url-encoded), `HTTP_BODY`.
 ```
-Request request(Request::Operation::GENERIC_PRIVATE_REQUEST, "okx");
+Request request(Request::Operation::GENERIC_PRIVATE_REQUEST, "okx", "", "close all positions");
 request.appendParam({
-    {"HTTP_METHOD", "GET"},
-    {"HTTP_PATH", "/fills"},
-    {"HTTP_QUERY_STRING", "product_id=BTC-USDT"},
+    {"HTTP_METHOD", "POST"},
+    {"HTTP_PATH", "/api/v5/trade/close-position"},
+    {"HTTP_BODY", R"({
+      "instId": "BTC-USDT-SWAP",
+      "mgnMode": "cross"
+  })"},
 });
 ```
 
@@ -469,16 +481,19 @@ For a specific exchange and instrument, submit a simple limit order.
 [C++](example/src/execution_management_simple_request/main.cpp) / [Python](binding/python/example/execution_management_simple_request/main.py) / [Java](binding/java/example/execution_management_simple_request/Main.java) / [C#](binding/csharp/example/execution_management_simple_request/MainProgram.cs) / [Go](binding/go/example/execution_management_simple_request/main.go) / [Javascript](binding/javascript/example/execution_management_simple_request/index.js)
 ```
 #include "ccapi_cpp/ccapi_session.h"
+
 namespace ccapi {
 Logger* Logger::logger = nullptr;  // This line is needed.
+
 class MyEventHandler : public EventHandler {
  public:
-  bool processEvent(const Event& event, Session *session) override {
-    std::cout << "Received an event: " + event.toStringPretty(2, 2) << std::endl;
+  bool processEvent(const Event& event, Session* session) override {
+    std::cout << "Received an event:\n" + event.toStringPretty(2, 2) << std::endl;
     return true;
   }
 };
 } /* namespace ccapi */
+
 using ::ccapi::MyEventHandler;
 using ::ccapi::Request;
 using ::ccapi::Session;
@@ -486,26 +501,30 @@ using ::ccapi::SessionConfigs;
 using ::ccapi::SessionOptions;
 using ::ccapi::toString;
 using ::ccapi::UtilSystem;
+
 int main(int argc, char** argv) {
-  std::string key = UtilSystem::getEnvAsString("BINANCE_US_API_KEY");
-  if (key.empty()) {
-    std::cerr << "Please set environment variable BINANCE_US_API_KEY" << std::endl;
+  if (UtilSystem::getEnvAsString("OKX_API_KEY").empty()) {
+    std::cerr << "Please set environment variable OKX_API_KEY" << std::endl;
     return EXIT_FAILURE;
   }
-  std::string secret = UtilSystem::getEnvAsString("BINANCE_US_API_SECRET");
-  if (secret.empty()) {
-    std::cerr << "Please set environment variable BINANCE_US_API_SECRET" << std::endl;
+  if (UtilSystem::getEnvAsString("OKX_API_SECRET").empty()) {
+    std::cerr << "Please set environment variable OKX_API_SECRET" << std::endl;
     return EXIT_FAILURE;
   }
+  if (UtilSystem::getEnvAsString("OKX_API_PASSPHRASE").empty()) {
+    std::cerr << "Please set environment variable OKX_API_PASSPHRASE" << std::endl;
+    return EXIT_FAILURE;
+  }
+
   SessionOptions sessionOptions;
   SessionConfigs sessionConfigs;
   MyEventHandler eventHandler;
   Session session(sessionOptions, sessionConfigs, &eventHandler);
   Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDT");
   request.appendParam({
-    {"SIDE", "BUY"},
-    {"QUANTITY", "0.0005"},
-    {"LIMIT_PRICE", "20000"}
+      {"SIDE", "BUY"},
+      {"QUANTITY", "0.0005"},
+      {"LIMIT_PRICE", "100000"},
   });
   session.sendRequest(request);
   std::this_thread::sleep_for(std::chrono::seconds(10));
@@ -513,6 +532,7 @@ int main(int argc, char** argv) {
   std::cout << "Bye" << std::endl;
   return EXIT_SUCCESS;
 }
+
 ```
 
 **Output 1:**
@@ -530,14 +550,14 @@ Received an event:
           Element [
             nameValueMap = {
               CLIENT_ORDER_ID = wBgmzOJbbMTCLJlwTrIeiH,
-              CUMULATIVE_FILLED_PRICE_TIMES_QUANTITY = 0.0000,
-              CUMULATIVE_FILLED_QUANTITY = 0.00000000,
-              INSTRUMENT = BTCUSDT,
-              LIMIT_PRICE = 20000.0000,
+              CUMULATIVE_FILLED_PRICE_TIMES_QUANTITY = 0,
+              CUMULATIVE_FILLED_QUANTITY = 0,
+              INSTRUMENT = BTC-USDT,
+              LIMIT_PRICE = 100000,
               ORDER_ID = 383781246,
-              QUANTITY = 0.00100000,
+              QUANTITY = 0.0005,
               SIDE = BUY,
-              STATUS = NEW
+              STATUS = live
             }
           ]
         ],
@@ -559,8 +579,10 @@ For a specific exchange and instrument, receive order updates.
 [C++](example/src/execution_management_simple_subscription/main.cpp) / [Python](binding/python/example/execution_management_simple_subscription/main.py) / [Java](binding/java/example/execution_management_simple_subscription/Main.java) / [C#](binding/csharp/example/execution_management_simple_subscription/MainProgram.cs) / [Go](binding/go/example/execution_management_simple_subscription/main.go) / [Javascript](binding/javascript/example/execution_management_simple_subscription/index.js)
 ```
 #include "ccapi_cpp/ccapi_session.h"
+
 namespace ccapi {
 Logger* Logger::logger = nullptr;  // This line is needed.
+
 class MyEventHandler : public EventHandler {
  public:
   bool processEvent(const Event& event, Session* session) override {
@@ -573,6 +595,7 @@ class MyEventHandler : public EventHandler {
             {"SIDE", "BUY"},
             {"LIMIT_PRICE", "20000"},
             {"QUANTITY", "0.001"},
+            {"CLIENT_ORDER_ID", "6d4eb0fb"},
         });
         session->sendRequest(request);
       }
@@ -583,25 +606,26 @@ class MyEventHandler : public EventHandler {
   }
 };
 } /* namespace ccapi */
+
 using ::ccapi::MyEventHandler;
 using ::ccapi::Request;
 using ::ccapi::Session;
 using ::ccapi::SessionConfigs;
 using ::ccapi::SessionOptions;
 using ::ccapi::Subscription;
-using ::ccapi::toString;
 using ::ccapi::UtilSystem;
+
 int main(int argc, char** argv) {
-  if (UtilSystem::getEnvAsString("COINBASE_API_KEY").empty()) {
-    std::cerr << "Please set environment variable COINBASE_API_KEY" << std::endl;
+  if (UtilSystem::getEnvAsString("OKX_API_KEY").empty()) {
+    std::cerr << "Please set environment variable OKX_API_KEY" << std::endl;
     return EXIT_FAILURE;
   }
-  if (UtilSystem::getEnvAsString("COINBASE_API_SECRET").empty()) {
-    std::cerr << "Please set environment variable COINBASE_API_SECRET" << std::endl;
+  if (UtilSystem::getEnvAsString("OKX_API_SECRET").empty()) {
+    std::cerr << "Please set environment variable OKX_API_SECRET" << std::endl;
     return EXIT_FAILURE;
   }
-  if (UtilSystem::getEnvAsString("COINBASE_API_PASSPHRASE").empty()) {
-    std::cerr << "Please set environment variable COINBASE_API_PASSPHRASE" << std::endl;
+  if (UtilSystem::getEnvAsString("OKX_API_PASSPHRASE").empty()) {
+    std::cerr << "Please set environment variable OKX_API_PASSPHRASE" << std::endl;
     return EXIT_FAILURE;
   }
   SessionOptions sessionOptions;
@@ -615,6 +639,7 @@ int main(int argc, char** argv) {
   std::cout << "Bye" << std::endl;
   return EXIT_SUCCESS;
 }
+
 ```
 
 **Output 2:**
@@ -653,32 +678,7 @@ Received an event of type SUBSCRIPTION_DATA:
               ORDER_ID = 6ca39186-be79-4777-97ab-1695fccd0ce4,
               QUANTITY = 0.001,
               SIDE = BUY,
-              STATUS = received
-            }
-          ]
-        ],
-        correlationIdList = [ 5PN2qmWqBlQ9wQj99nsQzldVI5ZuGXbE ]
-      ]
-    ]
-  ]
-Received an event of type SUBSCRIPTION_DATA:
-  Event [
-    type = SUBSCRIPTION_DATA,
-    messageList = [
-      Message [
-        type = EXECUTION_MANAGEMENT_EVENTS_ORDER_UPDATE,
-        recapType = UNKNOWN,
-        time = 2021-05-25T04:22:26.653785000Z,
-        timeReceived = 2021-05-25T04:22:26.407704000Z,
-        elementList = [
-          Element [
-            nameValueMap = {
-              INSTRUMENT = BTC-USDT,
-              LIMIT_PRICE = 20000,
-              ORDER_ID = 6ca39186-be79-4777-97ab-1695fccd0ce4,
-              REMAINING_QUANTITY = 0.001,
-              SIDE = BUY,
-              STATUS = open
+              STATUS = live
             }
           ]
         ],
@@ -738,42 +738,38 @@ std::vector<Event> eventList = eventQueue.purge();
 
 #### Provide API credentials for an exchange
 There are 3 ways to provide API credentials (listed with increasing priority).
-* Set the relevent environment variables. Some exchanges might need additional credentials other than API keys and secrets: e.g. `COINBASE_API_PASSPHRASE`, `KUCOIN_API_PASSPHRASE`. See section "exchange API credentials" in [`include/ccapi_cpp/ccapi_macro.h`](include/ccapi_cpp/ccapi_macro.h).
+* Set the relevent environment variables. Some exchanges might need additional credentials other than API keys and secrets: e.g. `OKX_API_PASSPHRASE`, `KUCOIN_API_PASSPHRASE`. See section "exchange API credentials" in [`include/ccapi_cpp/ccapi_macro.h`](include/ccapi_cpp/ccapi_macro.h).
 * Provide credentials to `SessionConfigs`.
 ```
 sessionConfigs.setCredential({
-  {"BINANCE_US_API_KEY", ...},
-  {"BINANCE_US_API_SECRET", ...}
+  {"OKX_API_KEY", ...},
+  {"OKX_API_SECRET", ...}
 });
 ```
 * Provide credentials to `Request` or `Subscription`.
 ```
 Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDT", "", {
-  {"BINANCE_US_API_KEY", ...},
-  {"BINANCE_US_API_SECRET", ...}
+  {"OKX_API_KEY", ...},
+  {"OKX_API_SECRET", ...}
 });
 ```
 ```
 Subscription subscription("okx", "BTC-USDT", "ORDER_UPDATE", "", "", {
-  {"COINBASE_API_KEY", ...},
-  {"COINBASE_API_SECRET", ...}
+  {"OKX_API_KEY", ...},
+  {"OKX_API_SECRET", ...}
 });
 ```
 
 #### Override exchange urls
-See section "exchange REST urls", "exchange WS urls", and "exchange FIX urls" in [`include/ccapi_cpp/ccapi_macro.h`](include/ccapi_cpp/ccapi_macro.h). This can be useful if you need to connect to test accounts (e.g. https://docs.pro.coinbase.com/#sandbox).
+See section "exchange REST urls", "exchange WS urls", and "exchange FIX urls" in [`include/ccapi_cpp/ccapi_macro.h`](include/ccapi_cpp/ccapi_macro.h). This can be useful if you need to connect to test accounts (e.g. https://docs.pro.okx.com/#sandbox).
 
 #### Complex request parameters
-Please follow the exchange's API documentations: e.g. https://github.com/binance-us/binance-official-api-docs/blob/master/rest-api.md#new-order--trade.
+Please follow the exchange's API documentations: e.g. https://www.okx.com/docs-v5/en/#order-book-trading-trade-post-place-order.
 ```
 Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDT");
 request.appendParam({
-  {"side", "SELL"},
-  {"type", "STOP_LOSS_LIMIT"},
-  {"quantity", "0.0005"},
-  {"stopPrice", "20001"},
-  {"price", "20000"},
-  {"timeInForce", "GTC"}
+    {"tdMode", "cross"},
+    {"ccy", "USDT"},
 });
 ```
 
@@ -846,16 +842,16 @@ using ::ccapi::SessionOptions;
 using ::ccapi::Subscription;
 using ::ccapi::UtilSystem;
 int main(int argc, char** argv) {
-  if (UtilSystem::getEnvAsString("COINBASE_API_KEY").empty()) {
-    std::cerr << "Please set environment variable COINBASE_API_KEY" << std::endl;
+  if (UtilSystem::getEnvAsString("OKX_API_KEY").empty()) {
+    std::cerr << "Please set environment variable OKX_API_KEY" << std::endl;
     return EXIT_FAILURE;
   }
-  if (UtilSystem::getEnvAsString("COINBASE_API_SECRET").empty()) {
-    std::cerr << "Please set environment variable COINBASE_API_SECRET" << std::endl;
+  if (UtilSystem::getEnvAsString("OKX_API_SECRET").empty()) {
+    std::cerr << "Please set environment variable OKX_API_SECRET" << std::endl;
     return EXIT_FAILURE;
   }
-  if (UtilSystem::getEnvAsString("COINBASE_API_PASSPHRASE").empty()) {
-    std::cerr << "Please set environment variable COINBASE_API_PASSPHRASE" << std::endl;
+  if (UtilSystem::getEnvAsString("OKX_API_PASSPHRASE").empty()) {
+    std::cerr << "Please set environment variable OKX_API_PASSPHRASE" << std::endl;
     return EXIT_FAILURE;
   }
   SessionOptions sessionOptions;
@@ -956,16 +952,21 @@ An example can be found [here](example/src/market_data_advanced_subscription/mai
 Extend a subclass, e.g. `MyLogger`, from class `Logger` and override method `logMessage`. Assign a `MyLogger` pointer to `Logger::logger`. Add one of the following macros in the compiler command line: `CCAPI_ENABLE_LOG_TRACE`, `CCAPI_ENABLE_LOG_DEBUG`, `CCAPI_ENABLE_LOG_INFO`, `CCAPI_ENABLE_LOG_WARN`, `CCAPI_ENABLE_LOG_ERROR`, `CCAPI_ENABLE_LOG_FATAL`. Enable logging if you'd like to inspect raw responses/messages from the exchange for troubleshooting purposes.
 ```
 namespace ccapi {
-  class MyLogger final : public Logger {
-   public:
-    void logMessage(const std::string& severity, const std::string& threadId, const std::string& timeISO, const std::string& fileName,
-                    const std::string& lineNumber, const std::string& message) override {
-                      ...
-    }
-  };
+class MyLogger final : public Logger {
+ public:
+  void logMessage(const std::string& severity, const std::string& threadId, const std::string& timeISO, const std::string& fileName,
+                  const std::string& lineNumber, const std::string& message) override {
+    std::lock_guard<std::mutex> lock(m);
+    std::cout << threadId << ": [" << timeISO << "] {" << fileName << ":" << lineNumber << "} " << severity << std::string(8, ' ') << message << std::endl;
+  }
+
+ private:
+  std::mutex m;
+};
+
 MyLogger myLogger;
 Logger* Logger::logger = &myLogger;
-}
+} /* namespace ccapi */
 ```
 
 #### Set timer
