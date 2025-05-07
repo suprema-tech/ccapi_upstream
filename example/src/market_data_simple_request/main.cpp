@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
   SessionConfigs sessionConfigs;
   MyEventHandler eventHandler;
   Session session(sessionOptions, sessionConfigs, &eventHandler);
-  Request request(Request::Operation::GET_RECENT_TRADES, "coinbase", "BTC-USD");
+  Request request(Request::Operation::GET_RECENT_TRADES, "okx", "BTC-USDT");
   request.appendParam({
       {"LIMIT", "1"},
   });

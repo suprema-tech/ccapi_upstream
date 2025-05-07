@@ -235,7 +235,7 @@ int main(int argc, char** argv) {
   SessionConfigs sessionConfigs;
   MyEventHandler eventHandler;
   Session session(sessionOptions, sessionConfigs, &eventHandler);
-  Request request(Request::Operation::GET_RECENT_TRADES, "coinbase", "BTC-USD");
+  Request request(Request::Operation::GET_RECENT_TRADES, "okx", "BTC-USDT");
   request.appendParam({
       {"LIMIT", "1"},
   });
@@ -316,7 +316,7 @@ int main(int argc, char **argv) {
   SessionConfigs sessionConfigs;
   MyEventHandler eventHandler;
   Session session(sessionOptions, sessionConfigs, &eventHandler);
-  Subscription subscription("coinbase", "BTC-USD", "MARKET_DEPTH");
+  Subscription subscription("okx", "BTC-USDT", "MARKET_DEPTH");
   session.subscribe(subscription);
   std::this_thread::sleep_for(std::chrono::seconds(10));
   session.stop();
@@ -340,7 +340,7 @@ Best bid and ask at 2020-07-27T23:56:51.935993000Z are:
 #### Complex request parameters
 Please follow the exchange's API documentations: e.g. https://docs.pro.coinbase.com/#pagination.
 ```
-Request request(Request::Operation::GET_RECENT_TRADES, "coinbase", "BTC-USD");
+Request request(Request::Operation::GET_RECENT_TRADES, "okx", "BTC-USDT");
 request.appendParam({
   {"before", "1"},
   {"after", "3"},
@@ -352,18 +352,18 @@ request.appendParam({
 
 Instantiate `Subscription` with option `MARKET_DEPTH_MAX` set to be the desired market depth (e.g. you want to receive market depth snapshot whenever the top 10 bid's or ask's price or size changes).
 ```
-Subscription subscription("coinbase", "BTC-USD", "MARKET_DEPTH", "MARKET_DEPTH_MAX=10");
+Subscription subscription("okx", "BTC-USDT", "MARKET_DEPTH", "MARKET_DEPTH_MAX=10");
 ```
 
 #### Specify correlation id
 
 Instantiate `Request` with the desired correlationId. The `correlationId` should be unique.
 ```
-Request request(Request::Operation::GET_RECENT_TRADES, "coinbase", "BTC-USD", "cool correlation id");
+Request request(Request::Operation::GET_RECENT_TRADES, "okx", "BTC-USDT", "cool correlation id");
 ```
 Instantiate `Subscription` with the desired correlationId.
 ```
-Subscription subscription("coinbase", "BTC-USD", "MARKET_DEPTH", "", "cool correlation id");
+Subscription subscription("okx", "BTC-USDT", "MARKET_DEPTH", "", "cool correlation id");
 ```
 This is used to match a particular request or subscription with its returned data. Within each `Message` there is a `correlationIdList` to identify the request or subscription that requested the data.
 
@@ -371,16 +371,16 @@ This is used to match a particular request or subscription with its returned dat
 
 Send a `std::vector<Request>`.
 ```
-Request request_1(Request::Operation::GET_RECENT_TRADES, "coinbase", "BTC-USD", "cool correlation id for BTC");
+Request request_1(Request::Operation::GET_RECENT_TRADES, "okx", "BTC-USDT", "cool correlation id for BTC");
 request_1.appendParam(...);
-Request request_2(Request::Operation::GET_RECENT_TRADES, "coinbase", "ETH-USD", "cool correlation id for ETH");
+Request request_2(Request::Operation::GET_RECENT_TRADES, "okx", "ETH-USDT", "cool correlation id for ETH");
 request_2.appendParam(...);
 session.sendRequest({request_1, request_2});
 ```
 Subscribe a `std::vector<Subscription>`.
 ```
-Subscription subscription_1("coinbase", "BTC-USD", "MARKET_DEPTH", "", "cool correlation id for coinbase BTC-USD");
-Subscription subscription_2("binance-us", "ethusd", "MARKET_DEPTH", "", "cool correlation id for binance-us ethusd");
+Subscription subscription_1("okx", "BTC-USDT", "MARKET_DEPTH", "", "cool correlation id for coinbase BTC-USDT");
+Subscription subscription_2("okx", "ethusd", "MARKET_DEPTH", "", "cool correlation id for binance-us ethusd");
 session.subscribe({subscription_1, subscription_2});
 ```
 
@@ -388,53 +388,53 @@ session.subscribe({subscription_1, subscription_2});
 
 Instantiate `Subscription` with option `CONFLATE_INTERVAL_MILLISECONDS` set to be the desired interval.
 ```
-Subscription subscription("coinbase", "BTC-USD", "MARKET_DEPTH", "CONFLATE_INTERVAL_MILLISECONDS=1000");
+Subscription subscription("okx", "BTC-USDT", "MARKET_DEPTH", "CONFLATE_INTERVAL_MILLISECONDS=1000");
 ```
 
 #### Receive subscription events at periodic intervals including when the market depth snapshot hasn't changed
 
 Instantiate `Subscription` with option `CONFLATE_INTERVAL_MILLISECONDS` set to be the desired interval and `CONFLATE_GRACE_PERIOD_MILLISECONDS` to be the grace period for late events.
 ```
-Subscription subscription("coinbase", "BTC-USD", "MARKET_DEPTH", "CONFLATE_INTERVAL_MILLISECONDS=1000&CONFLATE_GRACE_PERIOD_MILLISECONDS=0");
+Subscription subscription("okx", "BTC-USDT", "MARKET_DEPTH", "CONFLATE_INTERVAL_MILLISECONDS=1000&CONFLATE_GRACE_PERIOD_MILLISECONDS=0");
 ```
 
 #### Receive subscription market depth updates
 
 Instantiate `Subscription` with option `MARKET_DEPTH_RETURN_UPDATE` set to 1. This will return the order book updates instead of snapshots.
 ```
-Subscription subscription("coinbase", "BTC-USD", "MARKET_DEPTH", "MARKET_DEPTH_RETURN_UPDATE=1&MARKET_DEPTH_MAX=2");
+Subscription subscription("okx", "BTC-USDT", "MARKET_DEPTH", "MARKET_DEPTH_RETURN_UPDATE=1&MARKET_DEPTH_MAX=2");
 ```
 
 #### Receive subscription trade events
 
 Instantiate `Subscription` with field `TRADE`.
 ```
-Subscription subscription("coinbase", "BTC-USD", "TRADE");
+Subscription subscription("okx", "BTC-USDT", "TRADE");
 ```
 
 #### Receive subscription calculated-candlestick events at periodic intervals
 
 Instantiate `Subscription` with field `TRADE` and option `CONFLATE_INTERVAL_MILLISECONDS` set to be the desired interval and `CONFLATE_GRACE_PERIOD_MILLISECONDS` to be your network latency.
 ```
-Subscription subscription("coinbase", "BTC-USD", "TRADE", "CONFLATE_INTERVAL_MILLISECONDS=5000&CONFLATE_GRACE_PERIOD_MILLISECONDS=0");
+Subscription subscription("okx", "BTC-USDT", "TRADE", "CONFLATE_INTERVAL_MILLISECONDS=5000&CONFLATE_GRACE_PERIOD_MILLISECONDS=0");
 ```
 
 #### Receive subscription exchange-provided-candlestick events at periodic intervals
 
 Instantiate `Subscription` with field `CANDLESTICK` and option `CANDLESTICK_INTERVAL_SECONDS` set to be the desired interval.
 ```
-Subscription subscription("okx", "BTC-USDT", "CANDLESTICK", "CANDLESTICK_INTERVAL_SECONDS=60");
+Subscription subscription("okx", "BTC-USDTT", "CANDLESTICK", "CANDLESTICK_INTERVAL_SECONDS=60");
 ```
 
 #### Send generic public requests
 
 Instantiate `Request` with operation `GENERIC_PUBLIC_REQUEST`. Provide request parameters `HTTP_METHOD`, `HTTP_PATH`, and optionally `HTTP_QUERY_STRING` (query string parameter values should be url-encoded), `HTTP_BODY`.
 ```
-Request request(Request::Operation::GENERIC_PUBLIC_REQUEST, "binance");
+Request request(Request::Operation::GENERIC_PUBLIC_REQUEST, "okx");
 request.appendParam({
     {"HTTP_METHOD", "GET"},
     {"HTTP_PATH", "/api/v3/historicalTrades"},
-    {"HTTP_QUERY_STRING", "symbol=BTCUSDT"},
+    {"HTTP_QUERY_STRING", "symbol=BTCUSDTT"},
 });
 ```
 
@@ -442,18 +442,18 @@ request.appendParam({
 
 Instantiate `Subscription` with empty instrument, field `GENERIC_PUBLIC_SUBSCRIPTION` and options set to be the desired websocket payload.
 ```
-Subscription subscription("coinbase", "", "GENERIC_PUBLIC_SUBSCRIPTION", R"({"type":"subscribe","channels":[{"name":"status"}]})");
+Subscription subscription("okx", "", "GENERIC_PUBLIC_SUBSCRIPTION", R"({"type":"subscribe","channels":[{"name":"status"}]})");
 ```
 
 #### Send generic private requests
 
 Instantiate `Request` with operation `GENERIC_PRIVATE_REQUEST`. Provide request parameters `HTTP_METHOD`, `HTTP_PATH`, and optionally `HTTP_QUERY_STRING` (query string parameter values should be url-encoded), `HTTP_BODY`.
 ```
-Request request(Request::Operation::GENERIC_PRIVATE_REQUEST, "coinbase");
+Request request(Request::Operation::GENERIC_PRIVATE_REQUEST, "okx");
 request.appendParam({
     {"HTTP_METHOD", "GET"},
     {"HTTP_PATH", "/fills"},
-    {"HTTP_QUERY_STRING", "product_id=BTC-USD"},
+    {"HTTP_QUERY_STRING", "product_id=BTC-USDT"},
 });
 ```
 
@@ -500,7 +500,7 @@ int main(int argc, char** argv) {
   SessionConfigs sessionConfigs;
   MyEventHandler eventHandler;
   Session session(sessionOptions, sessionConfigs, &eventHandler);
-  Request request(Request::Operation::CREATE_ORDER, "binance-us", "BTCUSD");
+  Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDT");
   request.appendParam({
     {"SIDE", "BUY"},
     {"QUANTITY", "0.0005"},
@@ -531,7 +531,7 @@ Received an event:
               CLIENT_ORDER_ID = wBgmzOJbbMTCLJlwTrIeiH,
               CUMULATIVE_FILLED_PRICE_TIMES_QUANTITY = 0.0000,
               CUMULATIVE_FILLED_QUANTITY = 0.00000000,
-              INSTRUMENT = BTCUSD,
+              INSTRUMENT = BTCUSDT,
               LIMIT_PRICE = 20000.0000,
               ORDER_ID = 383781246,
               QUANTITY = 0.00100000,
@@ -567,7 +567,7 @@ class MyEventHandler : public EventHandler {
       std::cout << "Received an event of type SUBSCRIPTION_STATUS:\n" + event.toStringPretty(2, 2) << std::endl;
       auto message = event.getMessageList().at(0);
       if (message.getType() == Message::Type::SUBSCRIPTION_STARTED) {
-        Request request(Request::Operation::CREATE_ORDER, "coinbase", "BTC-USD");
+        Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDT");
         request.appendParam({
             {"SIDE", "BUY"},
             {"LIMIT_PRICE", "20000"},
@@ -607,7 +607,7 @@ int main(int argc, char** argv) {
   SessionConfigs sessionConfigs;
   MyEventHandler eventHandler;
   Session session(sessionOptions, sessionConfigs, &eventHandler);
-  Subscription subscription("coinbase", "BTC-USD", "ORDER_UPDATE");
+  Subscription subscription("okx", "BTC-USDT", "ORDER_UPDATE");
   session.subscribe(subscription);
   std::this_thread::sleep_for(std::chrono::seconds(10));
   session.stop();
@@ -647,7 +647,7 @@ Received an event of type SUBSCRIPTION_DATA:
           Element [
             nameValueMap = {
               CLIENT_ORDER_ID = ,
-              INSTRUMENT = BTC-USD,
+              INSTRUMENT = BTC-USDT,
               LIMIT_PRICE = 20000,
               ORDER_ID = 6ca39186-be79-4777-97ab-1695fccd0ce4,
               QUANTITY = 0.001,
@@ -672,7 +672,7 @@ Received an event of type SUBSCRIPTION_DATA:
         elementList = [
           Element [
             nameValueMap = {
-              INSTRUMENT = BTC-USD,
+              INSTRUMENT = BTC-USDT,
               LIMIT_PRICE = 20000,
               ORDER_ID = 6ca39186-be79-4777-97ab-1695fccd0ce4,
               REMAINING_QUANTITY = 0.001,
@@ -695,11 +695,11 @@ Bye
 
 Instantiate `Request` with the desired correlationId. The `correlationId` should be unique.
 ```
-Request request(Request::Operation::CREATE_ORDER, "binance-us", "BTCUSD", "cool correlation id");
+Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDT", "cool correlation id");
 ```
 Instantiate `Subscription` with the desired correlationId.
 ```
-Subscription subscription("coinbase", "BTC-USD", "ORDER_UPDATE", "", "cool correlation id");
+Subscription subscription("okx", "BTC-USDT", "ORDER_UPDATE", "", "cool correlation id");
 ```
 This is used to match a particular request or subscription with its returned data. Within each `Message` there is a `correlationIdList` to identify the request or subscription that requested the data.
 
@@ -707,22 +707,22 @@ This is used to match a particular request or subscription with its returned dat
 
 Send a `std::vector<Request>`.
 ```
-Request request_1(Request::Operation::CREATE_ORDER, "binance-us", "BTCUSD", "cool correlation id for BTC");
+Request request_1(Request::Operation::CREATE_ORDER, "okx", "BTC-USDT", "cool correlation id for BTC");
 request_1.appendParam(...);
-Request request_2(Request::Operation::CREATE_ORDER, "binance-us", "ETHUSD", "cool correlation id for ETH");
+Request request_2(Request::Operation::CREATE_ORDER, "okx", "ETH-USDT", "cool correlation id for ETH");
 request_2.appendParam(...);
 session.sendRequest({request_1, request_2});
 ```
 Subscribe one `Subscription` per exchange with a comma separated string of instruments.
 ```
-Subscription subscription("coinbase", "BTC-USD,ETH-USD", "ORDER_UPDATE");
+Subscription subscription("okx", "BTC-USDT,ETH-USDT", "ORDER_UPDATE");
 ```
 
 #### Multiple subscription fields
 
 Subscribe one `Subscription` with a comma separated string of fields.
 ```
-Subscription subscription("coinbase", "BTC-USD", "ORDER_UPDATE,PRIVATE_TRADE");
+Subscription subscription("okx", "BTC-USDT", "ORDER_UPDATE,PRIVATE_TRADE");
 ```
 
 #### Make Session::sendRequest blocking
@@ -747,13 +747,13 @@ sessionConfigs.setCredential({
 ```
 * Provide credentials to `Request` or `Subscription`.
 ```
-Request request(Request::Operation::CREATE_ORDER, "binance-us", "BTCUSD", "", {
+Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDT", "", {
   {"BINANCE_US_API_KEY", ...},
   {"BINANCE_US_API_SECRET", ...}
 });
 ```
 ```
-Subscription subscription("coinbase", "BTC-USD", "ORDER_UPDATE", "", "", {
+Subscription subscription("okx", "BTC-USDT", "ORDER_UPDATE", "", "", {
   {"COINBASE_API_KEY", ...},
   {"COINBASE_API_SECRET", ...}
 });
@@ -765,7 +765,7 @@ See section "exchange REST urls", "exchange WS urls", and "exchange FIX urls" in
 #### Complex request parameters
 Please follow the exchange's API documentations: e.g. https://github.com/binance-us/binance-official-api-docs/blob/master/rest-api.md#new-order--trade.
 ```
-Request request(Request::Operation::CREATE_ORDER, "binance-us", "BTCUSD");
+Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDT");
 request.appendParam({
   {"side", "SELL"},
   {"type", "STOP_LOSS_LIMIT"},
@@ -778,10 +778,10 @@ request.appendParam({
 
 #### Send request by Websocket API
 ```
-Subscription subscription("okx", "BTC-USDT", "ORDER_UPDATE", "", "same correlation id for subscription and request");
+Subscription subscription("okx", "BTC-USDTT", "ORDER_UPDATE", "", "same correlation id for subscription and request");
 session.subscribe(subscription);
 ...
-Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDT", "same correlation id for subscription and request");
+Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDTT", "same correlation id for subscription and request");
 request.appendParam({
     {"SIDE", "BUY"},
     {"LIMIT_PRICE", "20000"},
@@ -793,7 +793,7 @@ session.sendRequestByWebsocket(request);
 #### Specify instrument type
 Some exchanges (i.e. bybit) might need instrument type for `Subscription`. Use `Subscription`'s `setInstrumentType` method.
 ```
-Subscription subscription("bybit", "BTCUSDT", "MARKET_DEPTH");
+Subscription subscription("bybit", "BTCUSDTT", "MARKET_DEPTH");
 subscription.setInstrumentType("spot");
 session.subscribe(subscription);
 ```
@@ -818,11 +818,11 @@ class MyEventHandler : public EventHandler {
       std::cout << "Received an event of type AUTHORIZATION_STATUS:\n" + event.toStringPretty(2, 2) << std::endl;
       auto message = event.getMessageList().at(0);
       if (message.getType() == Message::Type::AUTHORIZATION_SUCCESS) {
-        Request request(Request::Operation::FIX, "coinbase", "", "same correlation id for subscription and request");
+        Request request(Request::Operation::FIX, "okx", "", "same correlation id for subscription and request");
         request.appendParamFix({
             {35, "D"},
             {11, "6d4eb0fb-2229-469f-873e-557dd78ac11e"},
-            {55, "BTC-USD"},
+            {55, "BTC-USDT"},
             {54, "1"},
             {44, "20000"},
             {38, "0.001"},
@@ -861,7 +861,7 @@ int main(int argc, char** argv) {
   SessionConfigs sessionConfigs;
   MyEventHandler eventHandler;
   Session session(sessionOptions, sessionConfigs, &eventHandler);
-  Subscription subscription("coinbase", "", "FIX", "", "same correlation id for subscription and request");
+  Subscription subscription("okx", "", "FIX", "", "same correlation id for subscription and request");
   session.subscribeByFix(subscription);
   std::this_thread::sleep_for(std::chrono::seconds(10));
   session.stop();
@@ -914,7 +914,7 @@ Received an event of type FIX:
               39 = 0,
               44 = 20000,
               54 = 1,
-              55 = BTC-USD,
+              55 = BTC-USDT,
               60 = 20210525-05:05:16.008,
               150 = 0
             }
@@ -979,17 +979,6 @@ session->setTimer(
       std::cout << std::string("Timer error handler is triggered at ") + UtilTime::getISOTimestamp(UtilTime::now()) << std::endl;
     },
     []() { std::cout << std::string("Timer success handler is triggered at ") + UtilTime::getISOTimestamp(UtilTime::now()) << std::endl; });
-```
-
-#### Custom service class
-
-[C++](example/src/custom_service_class/main.cpp)
-
-Define macro `CCAPI_EXPOSE_INTERNAL`. Extend a subclass e.g. `MyService` from class `Service`. Inject a `MyService` pointer into `Session`. E.g.
-```
-session.serviceByServiceNameExchangeMap[CCAPI_EXECUTION_MANAGEMENT][CCAPI_EXCHANGE_NAME_COINBASE] =
-    std::make_shared<ExecutionManagementServiceCoinbaseCustom>(session.internalEventHandler, session.sessionOptions, session.sessionConfigs,
-                                                               session.serviceContextPtr);
 ```
 
 ## Performance Tuning

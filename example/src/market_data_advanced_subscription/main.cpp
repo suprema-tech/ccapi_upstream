@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
     MyEventHandler eventHandler;
     EventDispatcher eventDispatcher(2);
     Session session(sessionOptions, sessionConfigs, &eventHandler, &eventDispatcher);
-    Subscription subscription("coinbase", "BTC-USD", "MARKET_DEPTH");
+    Subscription subscription("okx", "BTC-USDT", "MARKET_DEPTH");
     session.subscribe(subscription);
     std::this_thread::sleep_for(std::chrono::seconds(10));
     session.stop();
@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
     SessionOptions sessionOptions;
     SessionConfigs sessionConfigs;
     Session session(sessionOptions, sessionConfigs);
-    Subscription subscription("coinbase", "BTC-USD", "MARKET_DEPTH");
+    Subscription subscription("okx", "BTC-USDT", "MARKET_DEPTH");
     session.subscribe(subscription);
     std::this_thread::sleep_for(std::chrono::seconds(10));
     std::vector<Event> eventList = session.getEventQueue().purge();
