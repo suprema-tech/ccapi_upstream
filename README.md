@@ -1,6 +1,6 @@
 # Some breaking changes introduced
-* When a subscription fails due to the underlying websocket connection fails to open, the emitted message type is SUBSCRIPTION_FAILURE_DUE_TO_CONNECTION_FAILURE instead of SUBSCRIPTION_FAILURE.
 * Please update boost version to at least 1.88.0.
+* When a subscription fails due to the underlying websocket connection fails to open, the emitted message type is SUBSCRIPTION_FAILURE_DUE_TO_CONNECTION_FAILURE instead of SUBSCRIPTION_FAILURE.
 * Removed the spot market making application and the single order execution application.
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
