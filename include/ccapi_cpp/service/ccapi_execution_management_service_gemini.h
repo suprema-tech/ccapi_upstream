@@ -14,19 +14,6 @@ class ExecutionManagementServiceGemini : public ExecutionManagementService {
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
     this->setHostWsFromUrlWs(this->baseUrlWs);
-    //     try {
-    //       this->tcpResolverResultsRest = this->resolver.resolve(this->hostRest, this->portRest);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-    // #else
-    //     try {
-    //       this->tcpResolverResultsWs = this->resolverWs.resolve(this->hostWs, this->portWs);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #endif
     this->apiKeyName = CCAPI_GEMINI_API_KEY;
     this->apiSecretName = CCAPI_GEMINI_API_SECRET;
     this->setupCredential({this->apiKeyName, this->apiSecretName});
@@ -273,38 +260,7 @@ class ExecutionManagementServiceGemini : public ExecutionManagementService {
       }
     }
   }
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  void prepareConnect(WsConnection& wsConnection) override {
-    auto now = UtilTime::now();
-    auto subscription = wsConnection.subscriptionList.at(0);
-    const auto& fieldSet = subscription.getFieldSet();
-    const auto& instrumentSet = subscription.getInstrumentSet();
-    auto credential = wsConnection.subscriptionList.at(0).getCredential();
-    if (credential.empty()) {
-      credential = this->credentialDefault;
-    }
-    auto apiKey = mapGetWithDefault(credential, this->apiKeyName);
-    wsConnection.url += "?heartbeat=true";
-    if (fieldSet == std::set<std::string>({CCAPI_EM_PRIVATE_TRADE})) {
-      wsConnection.url += "&eventTypeFilter=fill";
-    }
-    if (!instrumentSet.empty()) {
-      for (const auto& instrument : instrumentSet) {
-        wsConnection.url += "&symbolFilter=" + instrument;
-      }
-    }
-    wsConnection.url += "&apiSessionFilter=" + apiKey;
-    wsConnection.headers.insert({"X-GEMINI-APIKEY", apiKey});
-    int64_t nonce = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
-    std::string payload = R"({"request":"/v1/order/events","nonce":)" + std::to_string(nonce) + "}";
-    auto base64Payload = UtilAlgorithm::base64Encode(payload);
-    wsConnection.headers.insert({"X-GEMINI-PAYLOAD", base64Payload});
-    auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    auto signature = Hmac::hmac(Hmac::ShaVersion::SHA384, apiSecret, base64Payload, true);
-    wsConnection.headers.insert({"X-GEMINI-SIGNATURE", signature});
-    this->connect(wsConnection);
-  }
-#else
+
   void prepareConnect(std::shared_ptr<WsConnection> wsConnectionPtr) override {
     auto now = UtilTime::now();
     auto subscription = wsConnectionPtr->subscriptionList.at(0);
@@ -335,19 +291,7 @@ class ExecutionManagementServiceGemini : public ExecutionManagementService {
     wsConnectionPtr->headers.insert({"X-GEMINI-SIGNATURE", signature});
     this->connect(wsConnectionPtr);
   }
-#endif
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  void onTextMessage(wspp::connection_hdl hdl, const std::string& textMessage, const TimePoint& timeReceived) override {
-    WsConnection& wsConnection = this->getWsConnectionFromConnectionPtr(this->serviceContextPtr->tlsClientPtr->get_con_from_hdl(hdl));
-    auto subscription = wsConnection.subscriptionList.at(0);
-    rj::Document document;
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
-    Event event = this->createEvent(wsConnection, hdl, subscription, textMessage, document, timeReceived);
-    if (!event.getMessageList().empty()) {
-      this->eventHandler(event, nullptr);
-    }
-  }
-#else
+
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
     std::string textMessage(textMessageView);
@@ -358,15 +302,12 @@ class ExecutionManagementServiceGemini : public ExecutionManagementService {
       this->eventHandler(event, nullptr);
     }
   }
-#endif
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  Event createEvent(const WsConnection& wsConnection, wspp::connection_hdl hdl, const Subscription& subscription, const std::string& textMessage,
-                    const rj::Document& document, const TimePoint& timeReceived) {
-#else
+
+
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const TimePoint& timeReceived) {
     std::string textMessage(textMessageView);
-#endif
+
     Event event;
     std::vector<Message> messageList;
     if (document.IsObject()) {

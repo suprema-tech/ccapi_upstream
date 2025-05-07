@@ -14,19 +14,6 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
     this->setHostWsFromUrlWs(this->baseUrlWs);
-    //     try {
-    //       this->tcpResolverResultsRest = this->resolver.resolve(this->hostRest, this->portRest);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-    // #else
-    //     try {
-    //       this->tcpResolverResultsWs = this->resolverWs.resolve(this->hostWs, this->portWs);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #endif
     this->apiKeyName = CCAPI_BITSTAMP_API_KEY;
     this->apiSecretName = CCAPI_BITSTAMP_API_SECRET;
     this->setupCredential({this->apiKeyName, this->apiSecretName});
@@ -44,15 +31,11 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
 
  protected:
 #endif
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  void pingOnApplicationLevel(wspp::connection_hdl hdl, ErrorCode& ec) override {
-    this->send(hdl, R"({"event": "bts:heartbeat"})", wspp::frame::opcode::text, ec);
-  }
-#else
+
   void pingOnApplicationLevel(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode& ec) override {
     this->send(wsConnectionPtr, R"({"event": "bts:heartbeat"})", ec);
   }
-#endif
+
   bool doesHttpBodyContainError(const std::string& body) override {
     return body.find(R"("status": "error")") != std::string::npos || body.find(R"("status":"error")") != std::string::npos ||
            body.find(R"("error":)") != std::string::npos;
@@ -274,64 +257,7 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
         CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);
     }
   }
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  void prepareConnect(WsConnection& wsConnection) override {
-    auto now = UtilTime::now();
-    auto hostPort = this->extractHostFromUrl(this->baseUrlRest);
-    std::string host = hostPort.first;
-    std::string port = hostPort.second;
-    http::request<http::string_body> req;
-    req.set(http::field::host, host);
-    req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-    req.method(http::verb::post);
-    std::string target = this->getWebSocketsTokenTarget;
-    req.target(target);
-    auto credential = wsConnection.subscriptionList.at(0).getCredential();
-    if (credential.empty()) {
-      credential = this->credentialDefault;
-    }
-    auto apiKey = mapGetWithDefault(credential, this->apiKeyName);
-    req.set("X-Auth", "BITSTAMP " + apiKey);
-    std::string nonce = UtilString::generateUuidV4();
-    req.set("X-Auth-Nonce", nonce);
-    req.set("X-Auth-Timestamp", std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count()));
-    req.set("X-Auth-Version", "v2");
-    std::string body;
-    this->signRequest(req, "", credential);
-    this->sendRequest(
-        req,
-        [wsConnection, that = shared_from_base<ExecutionManagementServiceBitstamp>()](const beast::error_code& ec) {
-          WsConnection thisWsConnection = wsConnection;
-          that->onFail_(thisWsConnection);
-        },
-        [wsConnection, that = shared_from_base<ExecutionManagementServiceBitstamp>()](const http::response<http::string_body>& res) {
-          WsConnection thisWsConnection = wsConnection;
-          int statusCode = res.result_int();
-          std::string body = res.body();
-          if (statusCode / 100 == 2) {
-            try {
-              rj::Document document;
-              document.Parse<rj::kParseNumbersAsStringsFlag>(body.c_str());
-              if (document.HasMember("token") && document.HasMember("user_id")) {
-                std::string token = document["token"].GetString();
-                std::string userId = document["user_id"].GetString();
-                thisWsConnection.url = that->baseUrlWs;
-                that->connect(thisWsConnection);
-                that->extraPropertyByConnectionIdMap[thisWsConnection.id].insert({
-                    {"token", token},
-                    {"userId", userId},
-                });
-              }
-              return;
-            } catch (const std::runtime_error& e) {
-              CCAPI_LOGGER_ERROR(std::string("e.what() = ") + e.what());
-            }
-          }
-          that->onFail_(thisWsConnection);
-        },
-        this->sessionOptions.httpRequestTimeoutMilliseconds);
-  }
-#else
+
   void prepareConnect(std::shared_ptr<WsConnection> wsConnectionPtr) override {
     auto now = UtilTime::now();
     auto hostPort = this->extractHostFromUrl(this->baseUrlRest);
@@ -383,7 +309,7 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
         },
         this->sessionOptions.httpRequestTimeoutMilliseconds);
   }
-#endif
+
   std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription, const TimePoint& now,
                                                                 const std::map<std::string, std::string>& credential) override {
     const auto& fieldSet = subscription.getFieldSet();
@@ -416,18 +342,7 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
     }
     return sendStringList;
   }
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  void onTextMessage(wspp::connection_hdl hdl, const std::string& textMessage, const TimePoint& timeReceived) override {
-    WsConnection& wsConnection = this->getWsConnectionFromConnectionPtr(this->serviceContextPtr->tlsClientPtr->get_con_from_hdl(hdl));
-    auto subscription = wsConnection.subscriptionList.at(0);
-    rj::Document document;
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
-    Event event = this->createEvent(wsConnection, hdl, subscription, textMessage, document, timeReceived);
-    if (!event.getMessageList().empty()) {
-      this->eventHandler(event, nullptr);
-    }
-  }
-#else
+
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
     std::string textMessage(textMessageView);
@@ -438,15 +353,12 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
       this->eventHandler(event, nullptr);
     }
   }
-#endif
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  Event createEvent(const WsConnection& wsConnection, wspp::connection_hdl hdl, const Subscription& subscription, const std::string& textMessage,
-                    const rj::Document& document, const TimePoint& timeReceived) {
-#else
+
+
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const TimePoint& timeReceived) {
     std::string textMessage(textMessageView);
-#endif
+
     Event event;
     std::vector<Message> messageList;
     Message message;

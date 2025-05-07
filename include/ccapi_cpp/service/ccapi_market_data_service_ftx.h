@@ -19,14 +19,13 @@ class MarketDataServiceFtx : public MarketDataServiceFtxBase {
     } catch (const std::exception& e) {
       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
     }
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-#else
+
     try {
       this->tcpResolverResultsWs = this->resolverWs.resolve(this->hostWs, this->portWs);
     } catch (const std::exception& e) {
       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
     }
-#endif
+
   }
   virtual ~MarketDataServiceFtx() {}
 };

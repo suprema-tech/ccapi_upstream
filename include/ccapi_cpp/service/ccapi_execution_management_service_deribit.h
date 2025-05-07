@@ -14,19 +14,6 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
     this->setHostWsFromUrlWs(this->baseUrlWs);
-    //     try {
-    //       this->tcpResolverResultsRest = this->resolver.resolve(this->hostRest, this->portRest);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-    // #else
-    //     try {
-    //       this->tcpResolverResultsWs = this->resolverWs.resolve(this->hostWs, this->portWs);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #endif
     this->clientIdName = CCAPI_DERIBIT_CLIENT_ID;
     this->clientSecretName = CCAPI_DERIBIT_CLIENT_SECRET;
     this->setupCredential({this->clientIdName, this->clientSecretName});
@@ -45,35 +32,7 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
 
  protected:
 #endif
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  void onOpen(wspp::connection_hdl hdl) override {
-    ExecutionManagementService::onOpen(hdl);
-    WsConnection& wsConnection = this->getWsConnectionFromConnectionPtr(this->serviceContextPtr->tlsClientPtr->get_con_from_hdl(hdl));
-    rj::Document document;
-    document.SetObject();
-    rj::Document::AllocatorType& allocator = document.GetAllocator();
-    auto now = UtilTime::now();
-    this->appendParam(document, allocator, std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count(), "public/set_heartbeat",
-                      {
-                          {"interval", "10"},
-                      });
-    rj::StringBuffer stringBuffer;
-    rj::Writer<rj::StringBuffer> writer(stringBuffer);
-    document.Accept(writer);
-    std::string msg = stringBuffer.GetString();
-    ErrorCode ec;
-    this->send(hdl, msg, wspp::frame::opcode::text, ec);
-    if (ec) {
-      this->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE, ec, "request");
-    }
-  }
-  void onClose(wspp::connection_hdl hdl) override {
-    WsConnection& wsConnection = this->getWsConnectionFromConnectionPtr(this->serviceContextPtr->tlsClientPtr->get_con_from_hdl(hdl));
-    this->subscriptionJsonrpcIdSetByConnectionIdMap.erase(wsConnection.id);
-    this->authorizationJsonrpcIdSetByConnectionIdMap.erase(wsConnection.id);
-    ExecutionManagementService::onClose(hdl);
-  }
-#else
+
   void onOpen(std::shared_ptr<WsConnection> wsConnectionPtr) override {
     ExecutionManagementService::onOpen(wsConnectionPtr);
     rj::Document document;
@@ -99,7 +58,7 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
     this->authorizationJsonrpcIdSetByConnectionIdMap.erase(wsConnectionPtr->id);
     ExecutionManagementService::onClose(wsConnectionPtr, ec);
   }
-#endif
+
   void signReqeustForRestGenericPrivateRequest(http::request<http::string_body>& req, const Request& request, std::string& httpMethodString,
                                                std::string& headerString, std::string& path, std::string& queryString, std::string& body, const TimePoint& now,
                                                const std::map<std::string, std::string>& credential) override {
@@ -358,18 +317,7 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
     sendStringList.push_back(sendString);
     return sendStringList;
   }
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  void onTextMessage(wspp::connection_hdl hdl, const std::string& textMessage, const TimePoint& timeReceived) override {
-    WsConnection& wsConnection = this->getWsConnectionFromConnectionPtr(this->serviceContextPtr->tlsClientPtr->get_con_from_hdl(hdl));
-    auto subscription = wsConnection.subscriptionList.at(0);
-    rj::Document document;
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
-    Event event = this->createEvent(wsConnection, hdl, subscription, textMessage, document, timeReceived);
-    if (!event.getMessageList().empty()) {
-      this->eventHandler(event, nullptr);
-    }
-  }
-#else
+
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
     std::string textMessage(textMessageView);
@@ -380,16 +328,13 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
       this->eventHandler(event, nullptr);
     }
   }
-#endif
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  Event createEvent(const WsConnection& wsConnection, wspp::connection_hdl hdl, const Subscription& subscription, const std::string& textMessage,
-                    const rj::Document& document, const TimePoint& timeReceived) {
-#else
+
+
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const TimePoint& timeReceived) {
     std::string textMessage(textMessageView);
     const WsConnection& wsConnection = *wsConnectionPtr;
-#endif
+
     Event event;
     std::vector<Message> messageList;
     Message message;
@@ -450,11 +395,9 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
             document.Accept(writer);
             std::string sendString = stringBuffer.GetString();
             ErrorCode ec;
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-            this->send(wsConnection.hdl, sendString, wspp::frame::opcode::text, ec);
-#else
+
             this->send(wsConnectionPtr, sendString, ec);
-#endif
+
             if (ec) {
               this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "subscribe");
             }
@@ -558,11 +501,9 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
             document.Accept(writer);
             std::string msg = stringBuffer.GetString();
             ErrorCode ec;
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-            this->send(wsConnection.hdl, msg, wspp::frame::opcode::text, ec);
-#else
+
             this->send(wsConnectionPtr, msg, ec);
-#endif
+
             if (ec) {
               this->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE, ec, "request");
             }

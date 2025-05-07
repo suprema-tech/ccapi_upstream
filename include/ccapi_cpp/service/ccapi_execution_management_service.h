@@ -55,10 +55,7 @@ class ExecutionManagementService : public Service {
           if (credential.empty()) {
             credential = that->credentialDefault;
           }
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-          WsConnection wsConnection(that->baseUrlWs, "", {subscription}, credential);
-          that->prepareConnect(wsConnection);
-#else
+
                                 std::shared_ptr<beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>> streamPtr(nullptr);
                                 try {
                                   streamPtr = that->createWsStream(that->serviceContextPtr->ioContextPtr, that->serviceContextPtr->sslContextPtr);
@@ -70,7 +67,7 @@ class ExecutionManagementService : public Service {
                                 std::shared_ptr<WsConnection> wsConnectionPtr(new WsConnection(that->baseUrlWs, "", {subscription}, credential, streamPtr));
                                 CCAPI_LOGGER_WARN("about to subscribe with new wsConnectionPtr " + toString(*wsConnectionPtr));
                                 that->prepareConnect(wsConnectionPtr);
-#endif
+
         });
       }
     }
@@ -190,55 +187,7 @@ class ExecutionManagementService : public Service {
     auto errorMessage = "Websocket unimplemented operation " + Request::operationToString(request.getOperation()) + " for exchange " + request.getExchange();
     throw std::runtime_error(errorMessage);
   }
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  virtual void logonToExchange(const WsConnection& wsConnection, const TimePoint& now, const std::map<std::string, std::string>& credential) {
-    CCAPI_LOGGER_INFO("about to logon to exchange");
-    CCAPI_LOGGER_INFO("exchange is " + this->exchangeName);
-    auto subscription = wsConnection.subscriptionList.at(0);
-    std::vector<std::string> sendStringList = this->createSendStringListFromSubscription(wsConnection, subscription, now, credential);
-    for (const auto& sendString : sendStringList) {
-      CCAPI_LOGGER_INFO("sendString = " + sendString);
-      ErrorCode ec;
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-      this->send(wsConnection.hdl, sendString, wspp::frame::opcode::text, ec);
-#else
-      this->send(wsConnectionPtr, sendString, ec);
-#endif
-      if (ec) {
-        this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "subscribe");
-      }
-    }
-  }
-  void onTextMessage(wspp::connection_hdl hdl, const std::string& textMessage, const TimePoint& timeReceived) override {
-    WsConnection& wsConnection = this->getWsConnectionFromConnectionPtr(this->serviceContextPtr->tlsClientPtr->get_con_from_hdl(hdl));
-    auto subscription = wsConnection.subscriptionList.at(0);
-    this->onTextMessage(wsConnection, subscription, textMessage, timeReceived);
-    this->onPongByMethod(PingPongMethod::WEBSOCKET_APPLICATION_LEVEL, hdl, textMessage, timeReceived, false);
-  }
-  void onOpen(wspp::connection_hdl hdl) override {
-    CCAPI_LOGGER_FUNCTION_ENTER;
-    Service::onOpen(hdl);
-    auto now = UtilTime::now();
-    WsConnection& wsConnection = this->getWsConnectionFromConnectionPtr(this->serviceContextPtr->tlsClientPtr->get_con_from_hdl(hdl));
-    auto correlationId = wsConnection.subscriptionList.at(0).getCorrelationId();
-    this->wsConnectionByCorrelationIdMap.insert({correlationId, wsConnection});
-    this->correlationIdByConnectionIdMap.insert({wsConnection.id, correlationId});
-    auto credential = wsConnection.credential;
-    this->logonToExchange(wsConnection, now, credential);
-  }
-  void onClose(wspp::connection_hdl hdl) override {
-    CCAPI_LOGGER_FUNCTION_ENTER;
-    WsConnection& wsConnection = this->getWsConnectionFromConnectionPtr(this->serviceContextPtr->tlsClientPtr->get_con_from_hdl(hdl));
-    if (this->correlationIdByConnectionIdMap.find(wsConnection.id) != this->correlationIdByConnectionIdMap.end()) {
-      this->wsConnectionByCorrelationIdMap.erase(this->correlationIdByConnectionIdMap.at(wsConnection.id));
-      this->correlationIdByConnectionIdMap.erase(wsConnection.id);
-    }
-    this->wsRequestIdByConnectionIdMap.erase(wsConnection.id);
-    Service::onClose(hdl);
-  }
-  virtual void onTextMessage(const WsConnection& wsConnection, const Subscription& subscription, const std::string& textMessage,
-                             const TimePoint& timeReceived) {}
-#else
+
   virtual void logonToExchange(std::shared_ptr<WsConnection> wsConnectionPtr, const TimePoint& now, const std::map<std::string, std::string>& credential) {
     CCAPI_LOGGER_INFO("about to logon to exchange");
     CCAPI_LOGGER_INFO("exchange is " + this->exchangeName);
@@ -282,7 +231,7 @@ class ExecutionManagementService : public Service {
   }
   virtual void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                              const TimePoint& timeReceived) {}
-#endif
+
   void convertRequestForRestGenericPrivateRequest(http::request<http::string_body>& req, const Request& request, const TimePoint& now,
                                                   const std::string& symbolId, const std::map<std::string, std::string>& credential) {
     const std::map<std::string, std::string> param = request.getFirstParamWithDefault();
@@ -334,12 +283,10 @@ class ExecutionManagementService : public Service {
         that->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE, "Websocket connection was not found", {correlationId});
         return;
       }
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-      auto& wsConnection = it->second;
-#else
+
       auto wsConnectionPtr = it->second;
       auto& wsConnection = *wsConnectionPtr;
-#endif
+
       CCAPI_LOGGER_TRACE("wsConnection = " + toString(wsConnection));
       auto instrument = request.getInstrument();
       auto symbolId = instrument;
@@ -358,11 +305,9 @@ class ExecutionManagementService : public Service {
       document.Accept(writer);
       std::string sendString = stringBuffer.GetString();
       CCAPI_LOGGER_TRACE("sendString = " + sendString);
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-      that->send(wsConnection.hdl, sendString, wspp::frame::opcode::text, ec);
-#else
+
       that->send(wsConnectionPtr, sendString,  ec);
-#endif
+
       if (ec) {
         that->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE, ec, "request");
       }
@@ -394,12 +339,10 @@ class ExecutionManagementService : public Service {
   std::string getAccountBalancesTarget;
   std::string getAccountPositionsTarget;
   std::map<std::string, std::string> correlationIdByConnectionIdMap;
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  std::map<std::string, WsConnection> wsConnectionByCorrelationIdMap;
-#else
+
   std::map<std::string, std::shared_ptr<WsConnection>>
       wsConnectionByCorrelationIdMap;  // TODO(cryptochassis): for consistency, to be renamed to wsConnectionPtrByCorrelationIdMap
-#endif
+
   std::map<std::string, int> wsRequestIdByConnectionIdMap;
 };
 } /* namespace ccapi */

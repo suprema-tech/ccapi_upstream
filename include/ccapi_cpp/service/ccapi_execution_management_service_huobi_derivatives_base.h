@@ -13,12 +13,10 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
     this->isDerivatives = true;
     // this->convertNumberToStringInJsonRegex = std::regex("(\\[|,|\":)\\s?(-?\\d+\\.?\\d*[eE]?-?\\d*)");
     this->needDecompressWebsocketMessage = true;
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-    ErrorCode ec = this->inflater.init(false, 31);
-#else
+
     this->inflater.setWindowBitsOverride(31);
     ErrorCode ec = this->inflater.init();
-#endif
+
     if (ec) {
       CCAPI_LOGGER_FATAL(ec.message());
     }
@@ -247,15 +245,12 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
     sendStringList.push_back(sendString);
     return sendStringList;
   }
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  void onTextMessage(const WsConnection& wsConnection, const Subscription& subscription, const std::string& textMessage,
-                     const TimePoint& timeReceived) override {
-#else
+
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
-#endif
+
     rj::Document document;
     document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
     std::string op = document["op"].GetString();
@@ -282,11 +277,9 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
             document.Accept(writerSubscribe);
             std::string sendString = stringBufferSubscribe.GetString();
             ErrorCode ec;
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-            this->send(wsConnection.hdl, sendString, wspp::frame::opcode::text, ec);
-#else
+
             this->send(wsConnectionPtr, sendString, ec);
-#endif
+
             if (ec) {
               this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "subscribe");
             }
@@ -303,11 +296,9 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
       std::string toReplace("ping");
       sendString.replace(sendString.find(toReplace), toReplace.length(), "pong");
       ErrorCode ec;
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-      this->send(wsConnection.hdl, sendString, wspp::frame::opcode::text, ec);
-#else
+
       this->send(wsConnectionPtr, sendString, ec);
-#endif
+
       if (ec) {
         this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "pong");
       }

@@ -10,12 +10,10 @@ class MarketDataServiceHuobiBase : public MarketDataService {
                              ServiceContext* serviceContextPtr)
       : MarketDataService(eventHandler, sessionOptions, sessionConfigs, serviceContextPtr) {
     this->needDecompressWebsocketMessage = true;
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-    ErrorCode ec = this->inflater.init(false, 31);
-#else
+
     this->inflater.setWindowBitsOverride(31);
     ErrorCode ec = this->inflater.init();
-#endif
+
     if (ec) {
       CCAPI_LOGGER_FATAL(ec.message());
     }
@@ -26,17 +24,12 @@ class MarketDataServiceHuobiBase : public MarketDataService {
 
  protected:
 #endif
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  void pingOnApplicationLevel(wspp::connection_hdl hdl, ErrorCode& ec) override {
-    auto now = UtilTime::now();
-    this->send(hdl, "{\"ping\":" + std::to_string(UtilTime::getUnixTimestamp(now)) + "}", wspp::frame::opcode::text, ec);
-  }
-#else
+
   void pingOnApplicationLevel(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode& ec) override {
     auto now = UtilTime::now();
     this->send(wsConnectionPtr, "{\"ping\":" + std::to_string(UtilTime::getUnixTimestamp(now)) + "}", ec);
   }
-#endif
+
   std::vector<std::string> createSendStringList(const WsConnection& wsConnection) override {
     std::vector<std::string> sendStringList;
     for (const auto& subscriptionListByChannelIdSymbolId : this->subscriptionListByConnectionIdChannelIdSymbolIdMap.at(wsConnection.id)) {
@@ -108,18 +101,15 @@ class MarketDataServiceHuobiBase : public MarketDataService {
     return url + "|" + field + "|" + subscription.getSerializedOptions();
   }
   void processTextMessage(
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-      WsConnection& wsConnection, wspp::connection_hdl hdl, const std::string& textMessage
-#else
+
       std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView
-#endif
+
       ,
       const TimePoint& timeReceived, Event& event, std::vector<MarketDataMessage>& marketDataMessageList) override {
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-#else
+
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
-#endif
+
     rj::Document document;
     document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
     if (document.IsObject() && document.HasMember("ch") && document.HasMember("tick")) {
@@ -266,11 +256,9 @@ class MarketDataServiceHuobiBase : public MarketDataService {
       payload += document["ping"].GetString();
       payload += "}";
       ErrorCode ec;
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-      this->send(hdl, payload, wspp::frame::opcode::text, ec);
-#else
+
       this->send(wsConnectionPtr, payload, ec);
-#endif
+
       if (ec) {
         this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "pong");
       }

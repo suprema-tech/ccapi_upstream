@@ -54,10 +54,7 @@ class SessionOptions CCAPI_FINAL {
   long httpConnectionKeepAliveTimeoutSeconds{
       10};  // used to remove a http connection from the http connection pool if it has stayed idle for at least this amount of time
   bool enableOneHttpConnectionPerRequest{};  // create a new http connection for each request
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-#else
   long websocketConnectTimeoutMilliseconds{10000};
-#endif
   std::optional<int> cpuCoreIdOpt;  // used to set cpu affinity
 };
 } /* namespace ccapi */

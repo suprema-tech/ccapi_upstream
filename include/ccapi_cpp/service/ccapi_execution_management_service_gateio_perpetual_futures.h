@@ -14,19 +14,6 @@ class ExecutionManagementServiceGateioPerpetualFutures : public ExecutionManagem
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
     this->setHostWsFromUrlWs(this->baseUrlWs);
-    //     try {
-    //       this->tcpResolverResultsRest = this->resolver.resolve(this->hostRest, this->portRest);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-    // #else
-    //     try {
-    //       this->tcpResolverResultsWs = this->resolverWs.resolve(this->hostWs, this->portWs);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #endif
     this->apiKeyName = CCAPI_GATEIO_PERPETUAL_FUTURES_API_KEY;
     this->apiSecretName = CCAPI_GATEIO_PERPETUAL_FUTURES_API_SECRET;
     this->setupCredential({this->apiKeyName, this->apiSecretName});
@@ -106,10 +93,7 @@ class ExecutionManagementServiceGateioPerpetualFutures : public ExecutionManagem
                               if (credential.empty()) {
                                 credential = that->credentialDefault;
                               }
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-                              WsConnection wsConnection(that->baseUrlWs + settle, "", {subscription}, credential);
-                              that->prepareConnect(wsConnection);
-#else
+
                               std::shared_ptr<beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>> streamPtr(nullptr);
                                 try {
                                   streamPtr = that->createWsStream(that->serviceContextPtr->ioContextPtr, that->serviceContextPtr->sslContextPtr);
@@ -121,7 +105,7 @@ class ExecutionManagementServiceGateioPerpetualFutures : public ExecutionManagem
                                 std::shared_ptr<WsConnection> wsConnectionPtr(new WsConnection(that->baseUrlWs + settle, "", {subscription}, credential, streamPtr));
                                 CCAPI_LOGGER_WARN("about to subscribe with new wsConnectionPtr " + toString(*wsConnectionPtr));
                                 that->prepareConnect(wsConnectionPtr);
-#endif
+
                             }
                           });
       }

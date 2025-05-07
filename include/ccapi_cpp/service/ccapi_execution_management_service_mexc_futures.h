@@ -14,19 +14,6 @@ class ExecutionManagementServiceMexcFutures : public ExecutionManagementService 
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
     this->setHostWsFromUrlWs(this->baseUrlWs);
-    //     try {
-    //       this->tcpResolverResultsRest = this->resolver.resolve(this->hostRest, this->portRest);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-    // #else
-    //     try {
-    //       this->tcpResolverResultsWs = this->resolverWs.resolve(this->hostWs, this->portWs);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #endif
     this->apiKeyName = CCAPI_MEXC_FUTURES_API_KEY;
     this->apiSecretName = CCAPI_MEXC_FUTURES_API_SECRET;
     this->setupCredential({this->apiKeyName, this->apiSecretName});
@@ -45,13 +32,11 @@ class ExecutionManagementServiceMexcFutures : public ExecutionManagementService 
 
  private:
 #endif
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  void pingOnApplicationLevel(wspp::connection_hdl hdl, ErrorCode& ec) override { this->send(hdl, R"({"method":"ping"})", wspp::frame::opcode::text, ec); }
-#else
+
   void pingOnApplicationLevel(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode& ec) override {
     this->send(wsConnectionPtr, R"({"method":"ping"})", ec);
   }
-#endif
+
   bool doesHttpBodyContainError(const std::string& body) override { return !std::regex_search(body, std::regex("\"code\":\\s*\"0\"")); }
   void createSignature(std::string& signature, std::string& queryString, const std::string& reqMethod, const std::string& host, const std::string& path,
                        const std::map<std::string, std::string>& queryParamMap, const std::map<std::string, std::string>& credential) {
@@ -365,11 +350,10 @@ class ExecutionManagementServiceMexcFutures : public ExecutionManagementService 
   }
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-#else
+
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
-#endif
+
     // if (textMessage != "pong") {
     //   rj::Document document;
     //   document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
@@ -402,7 +386,7 @@ class ExecutionManagementServiceMexcFutures : public ExecutionManagementService 
     //     document.Accept(writerSubscribe);
     //     std::string sendString = stringBufferSubscribe.GetString();
     //     ErrorCode ec;
-    //     #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
+
     this->send(wsConnection.hdl, sendString, wspp::frame::opcode::text, ec);
 #else
 this->send(wsConnectionPtr, sendString, ec);

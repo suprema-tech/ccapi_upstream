@@ -14,19 +14,6 @@ class ExecutionManagementServiceBitget : public ExecutionManagementServiceBitget
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
     this->setHostWsFromUrlWs(this->baseUrlWs);
-    //     try {
-    //       this->tcpResolverResultsRest = this->resolver.resolve(this->hostRest, this->portRest);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-    // #else
-    //     try {
-    //       this->tcpResolverResultsWs = this->resolverWs.resolve(this->hostWs, this->portWs);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #endif
     this->apiKeyName = CCAPI_BITGET_API_KEY;
     this->apiSecretName = CCAPI_BITGET_API_SECRET;
     this->apiPassphraseName = CCAPI_BITGET_API_PASSPHRASE;
@@ -269,15 +256,12 @@ class ExecutionManagementServiceBitget : public ExecutionManagementServiceBitget
     sendStringList.push_back(sendString);
     return sendStringList;
   }
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  void onTextMessage(const WsConnection& wsConnection, const Subscription& subscription, const std::string& textMessage,
-                     const TimePoint& timeReceived) override{
-#else
+
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
-#endif
+
       if (textMessage != "pong") {
         rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
@@ -314,11 +298,9 @@ class ExecutionManagementServiceBitget : public ExecutionManagementServiceBitget
     document.Accept(writerSubscribe);
     std::string sendString = stringBufferSubscribe.GetString();
     ErrorCode ec;
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-    this->send(wsConnection.hdl, sendString, wspp::frame::opcode::text, ec);
-#else
+
         this->send(wsConnectionPtr, sendString, ec);
-#endif
+
     if (ec) {
       this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "subscribe");
     }

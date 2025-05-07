@@ -19,14 +19,13 @@ class ExecutionManagementServiceFtxUs : public ExecutionManagementServiceFtxBase
     } catch (const std::exception& e) {
       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
     }
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-#else
+
     try {
       this->tcpResolverResultsWs = this->resolverWs.resolve(this->hostWs, this->portWs);
     } catch (const std::exception& e) {
       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
     }
-#endif
+
     this->apiKeyName = CCAPI_FTX_US_API_KEY;
     this->apiSecretName = CCAPI_FTX_US_API_SECRET;
     this->apiSubaccountName = CCAPI_FTX_US_API_SUBACCOUNT;

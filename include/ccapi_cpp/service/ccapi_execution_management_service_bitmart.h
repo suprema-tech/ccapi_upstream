@@ -14,19 +14,6 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
     this->setHostWsFromUrlWs(this->baseUrlWs);
-    //     try {
-    //       this->tcpResolverResultsRest = this->resolver.resolve(this->hostRest, this->portRest);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-    // #else
-    //     try {
-    //       this->tcpResolverResultsWs = this->resolverWs.resolve(this->hostWs, this->portWs);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #endif
     this->apiKeyName = CCAPI_BITMART_API_KEY;
     this->apiSecretName = CCAPI_BITMART_API_SECRET;
     this->apiMemoName = CCAPI_BITMART_API_MEMO;
@@ -38,11 +25,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
     this->cancelOpenOrdersTarget = "/spot/v1/cancel_orders";
     this->getAccountBalancesTarget = "/spot/v1/wallet";
     this->needDecompressWebsocketMessage = true;
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-    ErrorCode ec = this->inflater.init(false);
-#else
     ErrorCode ec = this->inflater.init();
-#endif
     if (ec) {
       CCAPI_LOGGER_FATAL(ec.message());
     }
@@ -52,11 +35,9 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
 
  private:
 #endif
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  void pingOnApplicationLevel(wspp::connection_hdl hdl, ErrorCode& ec) override { this->send(hdl, "ping", wspp::frame::opcode::text, ec); }
-#else
+
   void pingOnApplicationLevel(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode& ec) override { this->send(wsConnectionPtr, "ping", ec); }
-#endif
+
   bool doesHttpBodyContainError(const std::string& body) override { return !std::regex_search(body, std::regex("\"code\":\\s*1000")); }
   void signReqeustForRestGenericPrivateRequest(http::request<http::string_body>& req, const Request& request, std::string& methodString,
                                                std::string& headerString, std::string& path, std::string& queryString, std::string& body, const TimePoint& now,
@@ -302,15 +283,12 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
     sendStringList.push_back(sendString);
     return sendStringList;
   }
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  void onTextMessage(const WsConnection& wsConnection, const Subscription& subscription, const std::string& textMessage,
-                     const TimePoint& timeReceived) override {
-#else
+
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
-#endif
+
     if (textMessage != "pong") {
       rj::Document document;
       document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
@@ -339,39 +317,13 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
           document.Accept(writerSubscribe);
           std::string sendString = stringBufferSubscribe.GetString();
           ErrorCode ec;
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-          this->send(wsConnection.hdl, sendString, wspp::frame::opcode::text, ec);
-#else
+
           this->send(wsConnectionPtr, sendString, ec);
-#endif
+
           if (ec) {
             this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "subscribe");
           }
-          // else {
-          //   this->serviceContextPtr->tlsClientPtr->set_timer(1000,
-          //        [wsConnection,correlationId,sendString,that=this](ErrorCode const& ec) {
-          //          auto timeReceived=UtilTime::now();
-          //          if (ec) {
-          //            that->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
-          //          } else {
-          //            if (!that->subscriptionFailedByConnectionIdCorrelationIdMap[wsConnection.id][correlationId]){
-          //              Event event;
-          //              event.setType(Event::Type::SUBSCRIPTION_STATUS);
-          //              std::vector<Message> messageList;
-          //              Message message;
-          //              message.setTimeReceived(timeReceived);
-          //              message.setCorrelationIdList({correlationId});
-          //              message.setType(Message::Type::SUBSCRIPTION_STARTED);
-          //              Element element;
-          //              element.insert(CCAPI_INFO_MESSAGE, sendString);
-          //              message.setElementList({element});
-          //              messageList.emplace_back(std::move(message));
-          //              event.addMessages(messageList);
-          //              that->eventHandler(event, nullptr);
-          //            }
-          //          }
-          //        });
-          // }
+
         } else {
           event = this->createEvent(subscription, textMessage, document, eventStr, timeReceived);
         }
