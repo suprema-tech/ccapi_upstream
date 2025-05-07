@@ -24,12 +24,12 @@ int main(int argc, char** argv) {
   SessionConfigs sessionConfigs;
   MyEventHandler eventHandler;
   Session session(sessionOptions, sessionConfigs, &eventHandler);
-    Request request(Request::Operation::GENERIC_PUBLIC_REQUEST, "okx", "", "Check Server Time");
-    request.appendParam({
-        {"HTTP_METHOD", "GET"},
-        {"HTTP_PATH", "/api/v5/public/time"},
-    });
-    session.sendRequest(request);
+  Request request(Request::Operation::GENERIC_PUBLIC_REQUEST, "okx", "", "Check Server Time");
+  request.appendParam({
+      {"HTTP_METHOD", "GET"},
+      {"HTTP_PATH", "/api/v5/public/time"},
+  });
+  session.sendRequest(request);
   std::this_thread::sleep_for(std::chrono::seconds(10));
   session.stop();
   std::cout << "Bye" << std::endl;
