@@ -43,7 +43,7 @@ class ExecutionManagementServiceBitmex : public ExecutionManagementService {
       target += "?" + queryString;
     }
     preSignedText += target;
-    preSignedText += req.base().at("api-expires").to_string();
+    preSignedText += std::string(req.base().at("api-expires"));
     preSignedText += body;
     auto signature = Hmac::hmac(Hmac::ShaVersion::SHA256, apiSecret, preSignedText, true);
     if (!headerString.empty()) {
@@ -55,8 +55,8 @@ class ExecutionManagementServiceBitmex : public ExecutionManagementService {
   void signRequest(http::request<http::string_body>& req, const std::string& body, const std::map<std::string, std::string>& credential) {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
     auto preSignedText = std::string(req.method_string());
-    preSignedText += req.target().to_string();
-    preSignedText += req.base().at("api-expires").to_string();
+    preSignedText += std::string(req.target());
+    preSignedText += std::string(req.base().at("api-expires"));
     preSignedText += body;
     auto signature = Hmac::hmac(Hmac::ShaVersion::SHA256, apiSecret, preSignedText, true);
     req.set("api-signature", signature);

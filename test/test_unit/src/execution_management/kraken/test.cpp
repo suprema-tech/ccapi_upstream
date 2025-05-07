@@ -28,15 +28,15 @@ class ExecutionManagementServiceKrakenTest : public ::testing::Test {
   TimePoint now{};
 };
 
-void verifyApiKeyEtc(const http::request<http::string_body>& req, const std::string& apiKey) { EXPECT_EQ(req.base().at("API-Key").to_string(), apiKey); }
+void verifyApiKeyEtc(const http::request<http::string_body>& req, const std::string& apiKey) { EXPECT_EQ(std::string(req.base().at("API-Key")), apiKey); }
 
 void verifySignature(const http::request<http::string_body>& req, const std::string& apiSecret) {
-  std::string preSignedText = req.target().to_string();
+  std::string preSignedText = std::string(req.target());
   std::string body = req.body();
   std::string nonce = Url::convertFormUrlEncodedToMap(body).at("nonce");
   std::string noncePlusBodySha256 = UtilAlgorithm::computeHash(UtilAlgorithm::ShaVersion::SHA256, nonce + body);
   preSignedText += noncePlusBodySha256;
-  auto signature = req.base().at("API-SIGN").to_string();
+  auto signature = std::string(req.base().at("API-SIGN"));
   EXPECT_EQ(UtilAlgorithm::base64Encode(Hmac::hmac(Hmac::ShaVersion::SHA512, UtilAlgorithm::base64Decode(apiSecret), preSignedText)), signature);
 }
 
@@ -47,7 +47,7 @@ TEST_F(ExecutionManagementServiceKrakenTest, signRequest) {
   std::string body("nonce=1631066678179");
   std::string nonce("1631066678179");
   this->service->signRequest(req, body, this->credential, nonce);
-  EXPECT_EQ(req.base().at("API-SIGN").to_string(), "OU1XAxrMq+2tP5wEPYl6g8qOUWqXGLGZg/6EHYs0Rq+hhg8GYSAOUMJdih6jaImAfBPDzg8UFZyHfDy24T5/5A==");
+  EXPECT_EQ(std::string(req.base().at("API-SIGN")), "OU1XAxrMq+2tP5wEPYl6g8qOUWqXGLGZg/6EHYs0Rq+hhg8GYSAOUMJdih6jaImAfBPDzg8UFZyHfDy24T5/5A==");
 }
 
 TEST_F(ExecutionManagementServiceKrakenTest, convertRequestCreateOrder) {

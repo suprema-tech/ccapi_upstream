@@ -32,22 +32,22 @@ class ExecutionManagementServiceKucoinTest : public ::testing::Test {
 
 void verifyApiKeyEtc(const http::request<http::string_body>& req, const std::string& apiKey, const std::string& apiSecret, const std::string& apiPassphrase,
                      const std::string& apiKeyVersion, long long timestamp) {
-  EXPECT_EQ(req.base().at("KC-API-KEY").to_string(), apiKey);
-  EXPECT_EQ(req.base().at("KC-API-KEY-VERSION").to_string(), apiKeyVersion);
+  EXPECT_EQ(std::string(req.base().at("KC-API-KEY")), apiKey);
+  EXPECT_EQ(std::string(req.base().at("KC-API-KEY-VERSION")), apiKeyVersion);
   if (apiKeyVersion == "2" || apiKeyVersion == "3") {
-    EXPECT_EQ(req.base().at("KC-API-PASSPHRASE").to_string(), UtilAlgorithm::base64Encode(Hmac::hmac(Hmac::ShaVersion::SHA256, apiSecret, apiPassphrase)));
+    EXPECT_EQ(std::string(req.base().at("KC-API-PASSPHRASE")), UtilAlgorithm::base64Encode(Hmac::hmac(Hmac::ShaVersion::SHA256, apiSecret, apiPassphrase)));
   } else {
-    EXPECT_EQ(req.base().at("KC-API-PASSPHRASE").to_string(), apiPassphrase);
+    EXPECT_EQ(std::string(req.base().at("KC-API-PASSPHRASE")), apiPassphrase);
   }
-  EXPECT_EQ(req.base().at("KC-API-TIMESTAMP").to_string(), std::to_string(timestamp * 1000LL));
+  EXPECT_EQ(std::string(req.base().at("KC-API-TIMESTAMP")), std::to_string(timestamp * 1000LL));
 }
 
 void verifySignature(const http::request<http::string_body>& req, const std::string& apiSecret) {
-  auto preSignedText = req.base().at("KC-API-TIMESTAMP").to_string();
+  auto preSignedText = std::string(req.base().at("KC-API-TIMESTAMP"));
   preSignedText += UtilString::toUpper(std::string(req.method_string()));
-  preSignedText += req.target().to_string();
+  preSignedText += std::string(req.target());
   preSignedText += req.body();
-  auto signature = req.base().at("KC-API-SIGN").to_string();
+  auto signature = std::string(req.base().at("KC-API-SIGN"));
   EXPECT_EQ(UtilAlgorithm::base64Encode(Hmac::hmac(Hmac::ShaVersion::SHA256, apiSecret, preSignedText)), signature);
 }
 
@@ -58,13 +58,13 @@ TEST_F(ExecutionManagementServiceKucoinTest, signRequest) {
   req.target("/api/v1/orders");
   std::string body(R"({"price":"20000","size":"0.001","side":"buy","clientOid":"krJTxrv8r45d4nFRN4qrd3VDiOTVmenj","symbol":"BTC-USDT"})");
   this->service->signRequest(req, body, this->credential);
-  EXPECT_EQ(req.base().at("KC-API-SIGN").to_string(), "WgyYyAV8wtpK2QzPGrplb9fYCMti+B0iy/35v6uTxcM=");
+  EXPECT_EQ(std::string(req.base().at("KC-API-SIGN")), "WgyYyAV8wtpK2QzPGrplb9fYCMti+B0iy/35v6uTxcM=");
 }
 
 TEST_F(ExecutionManagementServiceKucoinTest, signApiPassphrase) {
   http::request<http::string_body> req;
   this->service->signApiPassphrase(req, this->credential.at(CCAPI_KUCOIN_API_PASSPHRASE), this->credential.at(CCAPI_KUCOIN_API_SECRET));
-  EXPECT_EQ(req.base().at("KC-API-PASSPHRASE").to_string(), "CYLB31MY6PQb8CqECms7sJpNjKEUv+p8DnKPm13kAKo=");
+  EXPECT_EQ(std::string(req.base().at("KC-API-PASSPHRASE")), "CYLB31MY6PQb8CqECms7sJpNjKEUv+p8DnKPm13kAKo=");
 }
 
 TEST_F(ExecutionManagementServiceKucoinTest, convertRequestCreateOrder) {
@@ -120,7 +120,7 @@ TEST_F(ExecutionManagementServiceKucoinTest, convertRequestCancelOrderByOrderId)
   EXPECT_EQ(req.method(), http::verb::delete_);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_KUCOIN_API_KEY), this->credential.at(CCAPI_KUCOIN_API_SECRET),
                   this->credential.at(CCAPI_KUCOIN_API_PASSPHRASE), this->credential.at(CCAPI_KUCOIN_API_KEY_VERSION), this->timestamp);
-  EXPECT_EQ(req.target().to_string(), "/api/v1/orders/5bd6e9286d99522a52e458de");
+  EXPECT_EQ(std::string(req.target()), "/api/v1/orders/5bd6e9286d99522a52e458de");
   verifySignature(req, this->credential.at(CCAPI_KUCOIN_API_SECRET));
 }
 
@@ -134,7 +134,7 @@ TEST_F(ExecutionManagementServiceKucoinTest, convertRequestCancelOrderByClientOr
   EXPECT_EQ(req.method(), http::verb::delete_);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_KUCOIN_API_KEY), this->credential.at(CCAPI_KUCOIN_API_SECRET),
                   this->credential.at(CCAPI_KUCOIN_API_PASSPHRASE), this->credential.at(CCAPI_KUCOIN_API_KEY_VERSION), this->timestamp);
-  EXPECT_EQ(req.target().to_string(), "/api/v1/order/client-order/6d539dc614db3");
+  EXPECT_EQ(std::string(req.target()), "/api/v1/order/client-order/6d539dc614db3");
   verifySignature(req, this->credential.at(CCAPI_KUCOIN_API_SECRET));
 }
 
@@ -168,7 +168,7 @@ TEST_F(ExecutionManagementServiceKucoinTest, convertRequestGetOrderByOrderId) {
   EXPECT_EQ(req.method(), http::verb::get);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_KUCOIN_API_KEY), this->credential.at(CCAPI_KUCOIN_API_SECRET),
                   this->credential.at(CCAPI_KUCOIN_API_PASSPHRASE), this->credential.at(CCAPI_KUCOIN_API_KEY_VERSION), this->timestamp);
-  EXPECT_EQ(req.target().to_string(), "/api/v1/orders/5c35c02703aa673ceec2a168");
+  EXPECT_EQ(std::string(req.target()), "/api/v1/orders/5c35c02703aa673ceec2a168");
   verifySignature(req, this->credential.at(CCAPI_KUCOIN_API_SECRET));
 }
 
@@ -182,7 +182,7 @@ TEST_F(ExecutionManagementServiceKucoinTest, convertRequestGetOrderByClientOrder
   EXPECT_EQ(req.method(), http::verb::get);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_KUCOIN_API_KEY), this->credential.at(CCAPI_KUCOIN_API_SECRET),
                   this->credential.at(CCAPI_KUCOIN_API_PASSPHRASE), this->credential.at(CCAPI_KUCOIN_API_KEY_VERSION), this->timestamp);
-  EXPECT_EQ(req.target().to_string(), "/api/v1/order/client-order/6d539dc614db312");
+  EXPECT_EQ(std::string(req.target()), "/api/v1/order/client-order/6d539dc614db312");
   verifySignature(req, this->credential.at(CCAPI_KUCOIN_API_SECRET));
 }
 
@@ -244,7 +244,7 @@ TEST_F(ExecutionManagementServiceKucoinTest, convertRequestGetOpenOrdersOneInstr
   EXPECT_EQ(req.method(), http::verb::get);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_KUCOIN_API_KEY), this->credential.at(CCAPI_KUCOIN_API_SECRET),
                   this->credential.at(CCAPI_KUCOIN_API_PASSPHRASE), this->credential.at(CCAPI_KUCOIN_API_KEY_VERSION), this->timestamp);
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/api/v1/orders");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   EXPECT_EQ(paramMap.at("status"), "active");
@@ -258,7 +258,7 @@ TEST_F(ExecutionManagementServiceKucoinTest, convertRequestGetOpenOrdersAllInstr
   EXPECT_EQ(req.method(), http::verb::get);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_KUCOIN_API_KEY), this->credential.at(CCAPI_KUCOIN_API_SECRET),
                   this->credential.at(CCAPI_KUCOIN_API_PASSPHRASE), this->credential.at(CCAPI_KUCOIN_API_KEY_VERSION), this->timestamp);
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/api/v1/orders");
   verifySignature(req, this->credential.at(CCAPI_KUCOIN_API_SECRET));
 }
@@ -340,7 +340,7 @@ TEST_F(ExecutionManagementServiceKucoinTest, convertRequestCancelOpenOrders) {
   EXPECT_EQ(req.method(), http::verb::delete_);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_KUCOIN_API_KEY), this->credential.at(CCAPI_KUCOIN_API_SECRET),
                   this->credential.at(CCAPI_KUCOIN_API_PASSPHRASE), this->credential.at(CCAPI_KUCOIN_API_KEY_VERSION), this->timestamp);
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/api/v1/orders");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   EXPECT_EQ(paramMap.at("symbol"), "BTC-USDT");
@@ -379,7 +379,7 @@ TEST_F(ExecutionManagementServiceKucoinTest, convertRequestGetAccounts) {
   EXPECT_EQ(req.method(), http::verb::get);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_KUCOIN_API_KEY), this->credential.at(CCAPI_KUCOIN_API_SECRET),
                   this->credential.at(CCAPI_KUCOIN_API_PASSPHRASE), this->credential.at(CCAPI_KUCOIN_API_KEY_VERSION), this->timestamp);
-  EXPECT_EQ(req.target().to_string(), "/api/v1/accounts");
+  EXPECT_EQ(std::string(req.target()), "/api/v1/accounts");
   verifySignature(req, this->credential.at(CCAPI_KUCOIN_API_SECRET));
 }
 
@@ -429,7 +429,7 @@ TEST_F(ExecutionManagementServiceKucoinTest, convertRequestGetAccountBalances) {
   EXPECT_EQ(req.method(), http::verb::get);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_KUCOIN_API_KEY), this->credential.at(CCAPI_KUCOIN_API_SECRET),
                   this->credential.at(CCAPI_KUCOIN_API_PASSPHRASE), this->credential.at(CCAPI_KUCOIN_API_KEY_VERSION), this->timestamp);
-  EXPECT_EQ(req.target().to_string(), "/api/v1/accounts/5bd6e9286d99522a52e458de");
+  EXPECT_EQ(std::string(req.target()), "/api/v1/accounts/5bd6e9286d99522a52e458de");
   verifySignature(req, this->credential.at(CCAPI_KUCOIN_API_SECRET));
 }
 

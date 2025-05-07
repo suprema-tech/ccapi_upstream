@@ -29,16 +29,16 @@ class ExecutionManagementServiceBitmexTest : public ::testing::Test {
 };
 
 void verifyApiKeyEtc(const http::request<http::string_body>& req, const std::string& apiKey, long long timestamp) {
-  EXPECT_EQ(req.base().at("api-key").to_string(), apiKey);
-  EXPECT_EQ(req.base().at("api-expires").to_string(), std::to_string(timestamp + CCAPI_BITMEX_API_RECEIVE_WINDOW_SECONDS));
+  EXPECT_EQ(std::string(req.base().at("api-key")), apiKey);
+  EXPECT_EQ(std::string(req.base().at("api-expires")), std::to_string(timestamp + CCAPI_BITMEX_API_RECEIVE_WINDOW_SECONDS));
 }
 
 void verifySignature(const http::request<http::string_body>& req, const std::string& apiSecret) {
-  auto preSignedText = UtilString::toUpper(req.method_string().to_string());
-  preSignedText += req.target().to_string();
-  preSignedText += req.base().at("api-expires").to_string();
+  auto preSignedText = UtilString::toUpper(std::string(req.method_string()));
+  preSignedText += std::string(req.target());
+  preSignedText += std::string(req.base().at("api-expires"));
   preSignedText += req.body();
-  auto signature = req.base().at("api-signature").to_string();
+  auto signature = std::string(req.base().at("api-signature"));
   EXPECT_EQ(Hmac::hmac(Hmac::ShaVersion::SHA256, apiSecret, preSignedText, true), signature);
 }
 
@@ -49,7 +49,7 @@ TEST_F(ExecutionManagementServiceBitmexTest, signRequest) {
   req.target("/api/v1/order");
   std::string body("{\"symbol\":\"XBTM15\",\"price\":219.0,\"clOrdID\":\"mm_bitmex_1a/oemUeQ4CAJZgP3fjHsA\",\"orderQty\":98}");
   this->service->signRequest(req, body, this->credential);
-  EXPECT_EQ(req.base().at("api-signature").to_string(), "1749cd2ccae4aa49048ae09f0b95110cee706e0944e6a14ad0b3a8cb45bd336b");
+  EXPECT_EQ(std::string(req.base().at("api-signature")), "1749cd2ccae4aa49048ae09f0b95110cee706e0944e6a14ad0b3a8cb45bd336b");
 }
 
 TEST_F(ExecutionManagementServiceBitmexTest, convertRequestCreateOrder) {
@@ -63,7 +63,7 @@ TEST_F(ExecutionManagementServiceBitmexTest, convertRequestCreateOrder) {
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::post);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_BITMEX_API_KEY), this->timestamp);
-  EXPECT_EQ(req.target().to_string(), "/api/v1/order");
+  EXPECT_EQ(std::string(req.target()), "/api/v1/order");
   rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(req.body().c_str());
   EXPECT_EQ(std::string(document["symbol"].GetString()), "XBTUSD");
@@ -133,7 +133,7 @@ TEST_F(ExecutionManagementServiceBitmexTest, convertRequestCancelOrderByOrderId)
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::delete_);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_BITMEX_API_KEY), this->timestamp);
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/api/v1/order");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   EXPECT_EQ(paramMap.at("orderID"), "string");
@@ -149,7 +149,7 @@ TEST_F(ExecutionManagementServiceBitmexTest, convertRequestCancelOrderByClientOr
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::delete_);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_BITMEX_API_KEY), this->timestamp);
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/api/v1/order");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   EXPECT_EQ(paramMap.at("clOrdID"), "string");
@@ -214,7 +214,7 @@ TEST_F(ExecutionManagementServiceBitmexTest, convertRequestGetOrderByOrderId) {
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::get);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_BITMEX_API_KEY), this->timestamp);
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/api/v1/order");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   EXPECT_EQ(paramMap.at("filter"), "{\"orderID\":\"string\"}");
@@ -230,7 +230,7 @@ TEST_F(ExecutionManagementServiceBitmexTest, convertRequestGetOrderByClientOrder
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::get);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_BITMEX_API_KEY), this->timestamp);
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/api/v1/order");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   EXPECT_EQ(paramMap.at("filter"), "{\"clOrdID\":\"string\"}");
@@ -300,7 +300,7 @@ TEST_F(ExecutionManagementServiceBitmexTest, convertRequestGetOpenOrdersOneInstr
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::get);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_BITMEX_API_KEY), this->timestamp);
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/api/v1/order");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   EXPECT_EQ(paramMap.at("symbol"), "XBTUSD");
@@ -313,7 +313,7 @@ TEST_F(ExecutionManagementServiceBitmexTest, convertRequestGetOpenOrdersAllInstr
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::get);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_BITMEX_API_KEY), this->timestamp);
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/api/v1/order");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   EXPECT_EQ(paramMap.at("filter"), "{\"open\": true}");
@@ -395,7 +395,7 @@ TEST_F(ExecutionManagementServiceBitmexTest, convertRequestCancelOpenOrders) {
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::delete_);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_BITMEX_API_KEY), this->timestamp);
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/api/v1/order/all");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   EXPECT_EQ(paramMap.at("symbol"), "XBTUSD");
@@ -459,7 +459,7 @@ TEST_F(ExecutionManagementServiceBitmexTest, convertRequestGetAccountBalances) {
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::get);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_BITMEX_API_KEY), this->timestamp);
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/api/v1/user/margin");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   EXPECT_EQ(paramMap.at("currency"), "XBt");
@@ -535,7 +535,7 @@ TEST_F(ExecutionManagementServiceBitmexTest, convertRequestGetAccountPositions) 
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::get);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_BITMEX_API_KEY), this->timestamp);
-  EXPECT_EQ(req.target().to_string(), "/api/v1/position");
+  EXPECT_EQ(std::string(req.target()), "/api/v1/position");
   verifySignature(req, this->credential.at(CCAPI_BITMEX_API_SECRET));
 }
 

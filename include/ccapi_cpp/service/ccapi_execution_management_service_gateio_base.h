@@ -36,7 +36,7 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
     preSignedText += "\n";
     preSignedText += UtilAlgorithm::computeHash(UtilAlgorithm::ShaVersion::SHA512, body, true);
     preSignedText += "\n";
-    preSignedText += req.base().at("TIMESTAMP").to_string();
+    preSignedText += std::string(req.base().at("TIMESTAMP"));
     auto signature = Hmac::hmac(Hmac::ShaVersion::SHA512, apiSecret, preSignedText, true);
     if (!headerString.empty()) {
       headerString += "\r\n";
@@ -55,7 +55,7 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
     preSignedText += "\n";
     preSignedText += UtilAlgorithm::computeHash(UtilAlgorithm::ShaVersion::SHA512, body, true);
     preSignedText += "\n";
-    preSignedText += req.base().at("TIMESTAMP").to_string();
+    preSignedText += std::string(req.base().at("TIMESTAMP"));
     auto signature = Hmac::hmac(Hmac::ShaVersion::SHA512, apiSecret, preSignedText, true);
     req.set("SIGN", signature);
     req.target(queryString.empty() ? path : path + "?" + queryString);

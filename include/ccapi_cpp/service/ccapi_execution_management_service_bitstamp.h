@@ -53,16 +53,16 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
       headerString += "Content-Type:application/x-www-form-urlencoded";
     }
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    std::string preSignedText = req.base().at("X-Auth").to_string();
+    std::string preSignedText = std::string(req.base().at("X-Auth"));
     preSignedText += methodString;
-    preSignedText += req.base().at(http::field::host).to_string();
-    preSignedText += req.target().to_string();
+    preSignedText += std::string(req.base().at(http::field::host));
+    preSignedText += std::string(req.target());
     if (!body.empty()) {
       preSignedText += "application/x-www-form-urlencoded";
     }
-    preSignedText += req.base().at("X-Auth-Nonce").to_string();
-    preSignedText += req.base().at("X-Auth-Timestamp").to_string();
-    preSignedText += req.base().at("X-Auth-Version").to_string();
+    preSignedText += std::string(req.base().at("X-Auth-Nonce"));
+    preSignedText += std::string(req.base().at("X-Auth-Timestamp"));
+    preSignedText += std::string(req.base().at("X-Auth-Version"));
     preSignedText += body;
     auto signature = Hmac::hmac(Hmac::ShaVersion::SHA256, apiSecret, preSignedText, true);
     if (!headerString.empty()) {
@@ -76,16 +76,16 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
       req.set(beast::http::field::content_type, "application/x-www-form-urlencoded");
     }
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    std::string preSignedText = req.base().at("X-Auth").to_string();
+    std::string preSignedText = std::string(req.base().at("X-Auth"));
     preSignedText += std::string(req.method_string());
-    preSignedText += req.base().at(http::field::host).to_string();
-    preSignedText += req.target().to_string();
+    preSignedText += std::string(req.base().at(http::field::host));
+    preSignedText += std::string(req.target());
     if (!body.empty()) {
-      preSignedText += req.base().at(beast::http::field::content_type).to_string();
+      preSignedText += std::string(req.base().at(beast::http::field::content_type));
     }
-    preSignedText += req.base().at("X-Auth-Nonce").to_string();
-    preSignedText += req.base().at("X-Auth-Timestamp").to_string();
-    preSignedText += req.base().at("X-Auth-Version").to_string();
+    preSignedText += std::string(req.base().at("X-Auth-Nonce"));
+    preSignedText += std::string(req.base().at("X-Auth-Timestamp"));
+    preSignedText += std::string(req.base().at("X-Auth-Version"));
     preSignedText += body;
     auto signature = Hmac::hmac(Hmac::ShaVersion::SHA256, apiSecret, preSignedText, true);
     req.set("X-Auth-Signature", signature);

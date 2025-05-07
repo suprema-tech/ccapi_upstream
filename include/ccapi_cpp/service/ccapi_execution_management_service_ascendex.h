@@ -42,7 +42,7 @@ class ExecutionManagementServiceAscendex : public ExecutionManagementService {
                                                std::string& headerString, std::string& path, std::string& queryString, std::string& body, const TimePoint& now,
                                                const std::map<std::string, std::string>& credential) override {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    auto preSignedText = req.base().at("x-auth-timestamp").to_string();
+    auto preSignedText = std::string(req.base().at("x-auth-timestamp"));
     preSignedText += "+";
     auto splitted = UtilString::split(path, '/');
     std::vector<std::string> subSplitted(splitted.begin() + 6, splitted.begin() + splitted.size());
@@ -57,7 +57,7 @@ class ExecutionManagementServiceAscendex : public ExecutionManagementService {
 
   void signRequest(http::request<http::string_body>& req, const std::string& apiPath, const std::map<std::string, std::string>& credential) {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    auto preSignedText = req.base().at("x-auth-timestamp").to_string();
+    auto preSignedText = std::string(req.base().at("x-auth-timestamp"));
     preSignedText += "+";
     preSignedText += apiPath;
     auto signature = UtilAlgorithm::base64Encode(Hmac::hmac(Hmac::ShaVersion::SHA256, apiSecret, preSignedText));
@@ -131,7 +131,7 @@ class ExecutionManagementServiceAscendex : public ExecutionManagementService {
         rj::Document::AllocatorType& allocator = document.GetAllocator();
         this->appendParam(document, allocator, param);
         if (param.find("time") == param.end()) {
-          document.AddMember("time", rj::Value(static_cast<int64_t>(std::stoll(req.base().at("x-auth-timestamp").to_string()))).Move(), allocator);
+          document.AddMember("time", rj::Value(static_cast<int64_t>(std::stoll(std::string(req.base().at("x-auth-timestamp"))))).Move(), allocator);
         }
         if (param.find("orderType") == param.end()) {
           document.AddMember("orderType", rj::Value("limit").Move(), allocator);
@@ -157,7 +157,7 @@ class ExecutionManagementServiceAscendex : public ExecutionManagementService {
         rj::Document::AllocatorType& allocator = document.GetAllocator();
         this->appendParam(document, allocator, param);
         if (param.find("time") == param.end()) {
-          document.AddMember("time", rj::Value(static_cast<int64_t>(std::stoll(req.base().at("x-auth-timestamp").to_string()))).Move(), allocator);
+          document.AddMember("time", rj::Value(static_cast<int64_t>(std::stoll(std::string(req.base().at("x-auth-timestamp"))))).Move(), allocator);
         }
         if (!symbolId.empty()) {
           this->appendSymbolId(document, allocator, symbolId);

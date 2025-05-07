@@ -97,7 +97,7 @@ class ExecutionManagementServiceMexcFutures : public ExecutionManagementService 
     auto apiKey = mapGetWithDefault(credential, this->apiKeyName);
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
     auto preSignedText = apiKey;
-    preSignedText += req.base().at("Request-Time").to_string();
+    preSignedText += std::string(req.base().at("Request-Time"));
     preSignedText += paramString;
     CCAPI_LOGGER_TRACE("preSignedText = " + preSignedText);
     CCAPI_LOGGER_TRACE("apiSecret = " + apiSecret);

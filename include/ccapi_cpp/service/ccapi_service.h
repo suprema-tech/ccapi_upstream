@@ -544,7 +544,7 @@ class Service : public std::enable_shared_from_this<Service> {
                       eventQueuePtr);
         return;
       }
-      tcp::endpoint localEndpoint(net::ip::address::from_string(localIpAddress),
+      tcp::endpoint localEndpoint(net::ip::make_address(localIpAddress),
                                   0);  // Note: Setting the port to 0 means the OS will select a free port for you
       if (localEndpoint != existingLocalEndpoint) {
         ErrorCode ec;

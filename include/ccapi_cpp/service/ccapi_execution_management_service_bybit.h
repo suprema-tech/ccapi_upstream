@@ -41,9 +41,9 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
                                                const std::map<std::string, std::string>& credential) override {
     auto apiKey = mapGetWithDefault(credential, this->apiKeyName);
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    auto preSignedText = req.base().at("X-BAPI-TIMESTAMP").to_string();
+    auto preSignedText = std::string(req.base().at("X-BAPI-TIMESTAMP"));
     preSignedText += apiKey;
-    preSignedText += req.base().at("X-BAPI-RECV-WINDOW").to_string();
+    preSignedText += std::string(req.base().at("X-BAPI-RECV-WINDOW"));
     std::string aString;
     if (methodString == "GET") {
       aString = queryString;
@@ -59,9 +59,9 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
                    const std::map<std::string, std::string>& credential) {
     auto apiKey = mapGetWithDefault(credential, this->apiKeyName);
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    auto preSignedText = req.base().at("X-BAPI-TIMESTAMP").to_string();
+    auto preSignedText = std::string(req.base().at("X-BAPI-TIMESTAMP"));
     preSignedText += apiKey;
-    preSignedText += req.base().at("X-BAPI-RECV-WINDOW").to_string();
+    preSignedText += std::string(req.base().at("X-BAPI-RECV-WINDOW"));
     preSignedText += aString;
     auto signature = Hmac::hmac(Hmac::ShaVersion::SHA256, apiSecret, preSignedText, true);
     req.set("X-BAPI-SIGN", signature);

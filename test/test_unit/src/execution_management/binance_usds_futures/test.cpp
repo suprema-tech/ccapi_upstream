@@ -29,7 +29,7 @@ class ExecutionManagementServiceBinanceUsdsFuturesTest : public ::testing::Test 
   TimePoint now{};
 };
 
-void verifyApiKey(const http::request<http::string_body>& req, const std::string& apiKey) { EXPECT_EQ(req.base().at("X-MBX-APIKEY").to_string(), apiKey); }
+void verifyApiKey(const http::request<http::string_body>& req, const std::string& apiKey) { EXPECT_EQ(std::string(req.base().at("X-MBX-APIKEY")), apiKey); }
 
 void verifySignature(const std::string& paramString, const std::string& apiSecret) {
   auto pos = paramString.find_last_of("&");
@@ -317,7 +317,7 @@ TEST_F(ExecutionManagementServiceBinanceUsdsFuturesTest, convertRequestGetAccoun
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::get);
   verifyApiKey(req, this->credential.at(CCAPI_BINANCE_USDS_FUTURES_API_KEY));
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/fapi/v2/account");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   EXPECT_EQ(paramMap.at("timestamp"), std::to_string(this->timestamp));
@@ -415,7 +415,7 @@ TEST_F(ExecutionManagementServiceBinanceUsdsFuturesTest, convertRequestGetAccoun
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::get);
   verifyApiKey(req, this->credential.at(CCAPI_BINANCE_USDS_FUTURES_API_KEY));
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/fapi/v2/positionRisk");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   EXPECT_EQ(paramMap.at("timestamp"), std::to_string(this->timestamp));

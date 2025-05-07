@@ -29,7 +29,7 @@ class ExecutionManagementServiceErisxTest : public ::testing::Test {
 };
 
 void verifyJwt(const http::request<http::string_body>& req, const std::string& apiKey, const std::string& apiSecret, long long timestamp) {
-  auto authorizationHeader = req.base().at("Authorization").to_string();
+  auto authorizationHeader = std::string(req.base().at("Authorization"));
   std::string toErase = "Bearer ";
   auto pos = authorizationHeader.find(toErase);
   authorizationHeader.erase(pos, toErase.length());
@@ -255,7 +255,7 @@ TEST_F(ExecutionManagementServiceErisxTest, convertRequestGetOrder) {
   request.appendParam(param);
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::get);
-  EXPECT_EQ(req.target().to_string(), "/rest-api/order/ENRY34D6CVV/281474982380221");
+  EXPECT_EQ(std::string(req.target()), "/rest-api/order/ENRY34D6CVV/281474982380221");
   verifyJwt(req, this->credential.at(CCAPI_ERISX_API_KEY), this->credential.at(CCAPI_ERISX_API_SECRET), this->timestamp);
 }
 
@@ -346,7 +346,7 @@ TEST_F(ExecutionManagementServiceErisxTest, convertRequestGetOpenOrders) {
   request.appendParam(param);
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::post);
-  EXPECT_EQ(req.target().to_string(), "/rest-api/order-mass-status");
+  EXPECT_EQ(std::string(req.target()), "/rest-api/order-mass-status");
   rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(req.body().c_str());
   EXPECT_EQ(std::string(document["partyID"].GetString()), "ENRY34D6CVV");
@@ -447,7 +447,7 @@ TEST_F(ExecutionManagementServiceErisxTest, convertRequestCancelOpenOrders) {
   request.appendParam(param);
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::post);
-  EXPECT_EQ(req.target().to_string(), "/rest-api/cancel-all");
+  EXPECT_EQ(std::string(req.target()), "/rest-api/cancel-all");
   rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(req.body().c_str());
   EXPECT_EQ(std::string(document["partyID"].GetString()), "ENRY34D6CVV");

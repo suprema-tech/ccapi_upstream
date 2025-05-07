@@ -105,7 +105,7 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
     std::string nonce = ts;
     auto requestData = std::string(req.method_string());
     requestData += "\n";
-    requestData += req.target().to_string();
+    requestData += std::string(req.target());
     requestData += "\n";
     requestData += body;
     requestData += "\n";

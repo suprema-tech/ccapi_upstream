@@ -37,7 +37,7 @@ class ExecutionManagementServiceCoinbase : public ExecutionManagementService {
                                                std::string& headerString, std::string& path, std::string& queryString, std::string& body, const TimePoint& now,
                                                const std::map<std::string, std::string>& credential) override {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    auto preSignedText = req.base().at("CB-ACCESS-TIMESTAMP").to_string();
+    auto preSignedText = std::string(req.base().at("CB-ACCESS-TIMESTAMP"));
     preSignedText += methodString;
     std::string target = path;
     if (!queryString.empty()) {
@@ -54,9 +54,9 @@ class ExecutionManagementServiceCoinbase : public ExecutionManagementService {
 
   void signRequest(http::request<http::string_body>& req, const std::string& body, const std::map<std::string, std::string>& credential) {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    auto preSignedText = req.base().at("CB-ACCESS-TIMESTAMP").to_string();
+    auto preSignedText = std::string(req.base().at("CB-ACCESS-TIMESTAMP"));
     preSignedText += std::string(req.method_string());
-    preSignedText += req.target().to_string();
+    preSignedText += std::string(req.target());
     preSignedText += body;
     auto signature = UtilAlgorithm::base64Encode(Hmac::hmac(Hmac::ShaVersion::SHA256, UtilAlgorithm::base64Decode(apiSecret), preSignedText));
     req.set("CB-ACCESS-SIGN", signature);

@@ -1,4 +1,7 @@
-# Small breaking change introduced: When a subscription fails due to the underlying websocket connection fails to open, the emitted message type is SUBSCRIPTION_FAILURE_DUE_TO_CONNECTION_FAILURE instead of SUBSCRIPTION_FAILURE.
+# Some breaking changes introduced
+* When a subscription fails due to the underlying websocket connection fails to open, the emitted message type is SUBSCRIPTION_FAILURE_DUE_TO_CONNECTION_FAILURE instead of SUBSCRIPTION_FAILURE.
+* Please update boost version to at least 1.88.0.
+* Removed the spot market making application and the single order execution application.
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
@@ -45,9 +48,6 @@
       - [Set timer](#set-timer)
       - [Custom service class](#custom-service-class)
   - [Performance Tuning](#performance-tuning)
-  - [Applications](#applications)
-    - [Spot Market Making](#spot-market-making)
-    - [Single Order Execution](#single-order-execution)
   - [Known Issues and Workarounds](#known-issues-and-workarounds)
   - [Contributing](#contributing)
 
@@ -61,8 +61,6 @@
   * Market Data: ascendex, binance, binance-usds-futures, binance-coin-futures, binance-us, bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, bybit, coinbase, cryptocom, deribit, erisx (Cboe Digital), gateio, gateio-perpetual-futures, gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, mexc-futures, okx, whitebit.
   * Execution Management: ascendex, binance, binance-usds-futures, binance-coin-futures, binance-us, bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, bybit, coinbase, cryptocom, deribit, erisx (Cboe Digital), gateio, gateio-perpetual-futures, gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, okx.
   * FIX: coinbase, gemini.
-* A spot market making application is provided as an end-to-end solution for liquidity providers.
-* A single order execution application is provided as an end-to-end solution for executing large orders.
 * Join us on Discord https://discord.gg/b5EKcp9s8T and Medium https://cryptochassis.medium.com.
 
 ## Branches
@@ -78,9 +76,9 @@
 * Macros in the compiler command line:
   * Define service enablement macro such as `CCAPI_ENABLE_SERVICE_MARKET_DATA`, `CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT`, `CCAPI_ENABLE_SERVICE_FIX`, etc. and exchange enablement macros such as `CCAPI_ENABLE_EXCHANGE_COINBASE`, etc. These macros can be found at the top of [`include/ccapi_cpp/ccapi_session.h`](include/ccapi_cpp/ccapi_session.h).
 * Dependencies:
-  * boost https://archives.boost.io/release/1.80.0/source/boost_1_80_0.tar.gz (notice that its include directory is boost).
+  * boost https://archives.boost.io/release/1.88.0/source/boost_1_88_0.tar.gz (notice that its include directory is boost).
   * rapidjson https://github.com/Tencent/rapidjson/archive/refs/tags/v1.1.0.tar.gz (notice that its include directory is rapidjson/include).
-  * If you use FIX API, also need hffix https://github.com/jamesdbrock/hffix/archive/refs/tags/v1.3.0.tar.gz (notice that its include directory is hffix/include).
+  * If you use FIX API, also need hffix https://github.com/jamesdbrock/hffix/archive/refs/tags/v1.4.1.tar.gz (notice that its include directory is hffix/include).
 * Include directory for this library:
   * include.
 * Link libraries:
@@ -1002,42 +1000,6 @@ session.serviceByServiceNameExchangeMap[CCAPI_EXECUTION_MANAGEMENT][CCAPI_EXCHAN
 * Use FIX API instead of REST API.
 * Handle events in ["batching" mode](#handle-events-in-immediate-vs-batching-mode) if your application (e.g. market data archiver) isn't latency sensitive.
 * Define macro `CCAPI_USE_SINGLE_THREAD`. It reduces locking overhead for single threaded applications.
-
-## Applications
-
-### Spot Market Making
-* Source code: [app](app)
-* The code uses a simplified version of Avellaneda & Stoikov’s inventory strategy: https://www.math.nyu.edu/~avellane/HighFrequencyTrading.pdf. See the [parameter configuration file `app/src/spot_market_making/config.env.example`](app/src/spot_market_making/config.env.example) for more details. And read more at https://medium.com/open-crypto-market-data-initiative/simplified-avellaneda-stoikov-market-making-608b9d437403.
-* Require CMake.
-  * CMake: https://cmake.org/download/.
-* Run the following commands.
-```
-mkdir app/build
-cd app/build
-rm -rf * (if rebuild from scratch)
-cmake ..
-cmake --build . --target spot_market_making
-```
-* The executable is `app/build/src/spot_market_making/spot_market_making`. Run it after setting relevant environment variables shown in [`app/src/spot_market_making/config.env.example`](app/src/spot_market_making/config.env.example). For example, we can copy file `config.env.example` to `config.env`, edit it, and `export $(grep -v '^#' config.env | xargs)`. To enable and configure advanced parameters, set additional environment variables shown in [`app/src/spot_market_making/config_advanced.env.example`](app/src/spot_market_making/config_advanced.env.example).
-* For live trade mode, please set the desired exchange's credential environment variables shown in [app/credential.env.example](app/credential.env.example).
-* For paper trade mode and backtest mode, please see the [parameter configuration file `app/src/spot_market_making/config.env.example`](app/src/spot_market_making/config.env.example) for more details.
-
-### Single Order Execution
-* Source code: [app](app)
-* The supported strategies are listed in [`app/src/single_order_execution/config.env.example`](app/src/single_order_execution/config.env.example).
-* Require CMake.
-  * CMake: https://cmake.org/download/.
-* Run the following commands.
-```
-mkdir app/build
-cd app/build
-rm -rf * (if rebuild from scratch)
-cmake ..
-cmake --build . --target single_order_execution
-```
-* The executable is `app/build/src/single_order_execution/single_order_execution`. Run it after setting relevant environment variables shown in [`app/src/single_order_execution/config.env.example`](app/src/single_order_execution/config.env.example). For example, we can copy file `config.env.example` to `config.env`, edit it, and `export $(grep -v '^#' config.env | xargs)`. To enable and configure advanced parameters, set additional environment variables shown in [`app/src/single_order_execution/config_advanced.env.example`](app/src/single_order_execution/config_advanced.env.example).
-* For live trade mode, please set the desired exchange's credential environment variables shown in [app/credential.env.example](app/credential.env.example).
-* For paper trade mode and backtest mode, please see the [parameter configuration file `app/src/single_order_execution/config.env.example`](app/src/single_order_execution/config.env.example) for more details.
 
 ## Known Issues and Workarounds
 * Kraken invalid nonce errors. Give the API key a nonce window (https://support.kraken.com/hc/en-us/articles/360001148023-What-is-a-nonce-window-). We use unix timestamp with microsecond resolution as nonce and therefore a nonce window of 500000 translates to a tolerance of 0.5 second.

@@ -49,7 +49,7 @@ class ExecutionManagementServiceBitfinex : public ExecutionManagementService {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
     std::string preSignedText = "/api";
     preSignedText += path;
-    preSignedText += req.base().at("bfx-nonce").to_string();
+    preSignedText += std::string(req.base().at("bfx-nonce"));
     preSignedText += body;
     auto signature = Hmac::hmac(Hmac::ShaVersion::SHA384, apiSecret, preSignedText, true);
     req.set("bfx-signature", signature);

@@ -47,7 +47,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
                                                std::string& headerString, std::string& path, std::string& queryString, std::string& body, const TimePoint& now,
                                                const std::map<std::string, std::string>& credential) override {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    auto noncePlusBody = req.base().at("Nonce").to_string() + body;
+    auto noncePlusBody = std::string(req.base().at("Nonce")) + body;
     auto target = path;
     if (!queryString.empty()) {
       target += queryString;
@@ -66,7 +66,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
                    const std::string& nonce) {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
     auto noncePlusBody = nonce + body;
-    std::string preSignedText = req.target().to_string();
+    std::string preSignedText = std::string(req.target());
     std::string noncePlusBodySha256 = UtilAlgorithm::computeHash(UtilAlgorithm::ShaVersion::SHA256, noncePlusBody);
     preSignedText += noncePlusBodySha256;
     auto signature = UtilAlgorithm::base64Encode(Hmac::hmac(Hmac::ShaVersion::SHA512, UtilAlgorithm::base64Decode(apiSecret), preSignedText));

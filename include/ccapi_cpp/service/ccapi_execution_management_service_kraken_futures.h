@@ -47,7 +47,7 @@ class ExecutionManagementServiceKrakenFutures : public ExecutionManagementServic
                                                const std::map<std::string, std::string>& credential) override {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
     std::string preSignedText = queryString;
-    preSignedText += req.base().at("Nonce").to_string();
+    preSignedText += std::string(req.base().at("Nonce"));
     ;
     preSignedText += path;
     std::string preSignedTextSha256 = UtilAlgorithm::computeHash(UtilAlgorithm::ShaVersion::SHA256, preSignedText);

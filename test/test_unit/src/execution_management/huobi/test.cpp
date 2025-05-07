@@ -41,7 +41,7 @@ void verifySignature(const http::request<http::string_body>& req, const std::str
   preSignedText += "\n";
   preSignedText += "api.huobi.pro";
   preSignedText += "\n";
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   preSignedText += splitted.at(0);
   preSignedText += "\n";
   std::map<std::string, std::string> queryParamMap = Url::convertQueryStringToMap(splitted.at(1));
@@ -74,7 +74,7 @@ TEST_F(ExecutionManagementServiceHuobiTest, signRequest) {
       {"Timestamp", "2021-01-14T00%3A05%3A31"},
   };
   this->service->signRequest(req, path, queryParamMap, this->credential);
-  EXPECT_EQ(Url::urlDecode(Url::convertQueryStringToMap(UtilString::split(req.target().to_string(), "?").at(1)).at("Signature")),
+  EXPECT_EQ(Url::urlDecode(Url::convertQueryStringToMap(UtilString::split(std::string(req.target()), "?").at(1)).at("Signature")),
             "Ns/D8rLOXixLe3yU3pRl4EhCjI0R4KckPMOIu6VpWmE=");
 }
 
@@ -96,7 +96,7 @@ TEST_F(ExecutionManagementServiceHuobiTest, convertRequestCreateOrder) {
   EXPECT_EQ(std::string(document["price"].GetString()), "100.1");
   EXPECT_EQ(std::string(document["symbol"].GetString()), "btcusdt");
   EXPECT_EQ(std::string(document["type"].GetString()), "buy-limit");
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/v1/order/orders/place");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   verifyApiKeyEtc(paramMap, this->credential.at(CCAPI_HUOBI_API_KEY), this->timestamp);
@@ -130,7 +130,7 @@ TEST_F(ExecutionManagementServiceHuobiTest, convertRequestCancelOrderByOrderId) 
   request.appendParam(param);
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::post);
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/v1/order/orders/59378/submitcancel");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   verifyApiKeyEtc(paramMap, this->credential.at(CCAPI_HUOBI_API_KEY), this->timestamp);
@@ -148,7 +148,7 @@ TEST_F(ExecutionManagementServiceHuobiTest, convertRequestCancelOrderByClientOrd
   rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(req.body().c_str());
   EXPECT_EQ(std::string(document["client-order-id"].GetString()), "a0001");
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/v1/order/orders/submitCancelClientOrder");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   verifyApiKeyEtc(paramMap, this->credential.at(CCAPI_HUOBI_API_KEY), this->timestamp);
@@ -182,7 +182,7 @@ TEST_F(ExecutionManagementServiceHuobiTest, convertRequestGetOrderByOrderId) {
   request.appendParam(param);
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::get);
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/v1/order/orders/59378");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   verifyApiKeyEtc(paramMap, this->credential.at(CCAPI_HUOBI_API_KEY), this->timestamp);
@@ -197,7 +197,7 @@ TEST_F(ExecutionManagementServiceHuobiTest, convertRequestGetOrderByClientOrderI
   request.appendParam(param);
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::get);
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/v1/order/orders/getClientOrder");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   EXPECT_EQ(paramMap.at("clientOrderId"), "a0001");
@@ -253,7 +253,7 @@ TEST_F(ExecutionManagementServiceHuobiTest, convertRequestGetOpenOrdersOneInstru
   });
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::get);
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/v1/order/openOrders");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   EXPECT_EQ(paramMap.at("symbol"), "btcusdt");
@@ -310,7 +310,7 @@ TEST_F(ExecutionManagementServiceHuobiTest, convertRequestCancelOpenOrders) {
   rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(req.body().c_str());
   EXPECT_EQ(std::string(document["symbol"].GetString()), "btcusdt");
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/v1/order/orders/batchCancelOpenOrders");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   verifyApiKeyEtc(paramMap, this->credential.at(CCAPI_HUOBI_API_KEY), this->timestamp);
@@ -341,7 +341,7 @@ TEST_F(ExecutionManagementServiceHuobiTest, convertRequestGetAccounts) {
   Request request(Request::Operation::GET_ACCOUNTS, CCAPI_EXCHANGE_NAME_HUOBI, "", "foo", this->credential);
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::get);
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/v1/account/accounts");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   verifyApiKeyEtc(paramMap, this->credential.at(CCAPI_HUOBI_API_KEY), this->timestamp);
@@ -380,7 +380,7 @@ TEST_F(ExecutionManagementServiceHuobiTest, convertRequestGetAccountBalances) {
   request.appendParam(param);
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::get);
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/v1/account/accounts/5bd6e9286d99522a52e458de/balance");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   verifyApiKeyEtc(paramMap, this->credential.at(CCAPI_HUOBI_API_KEY), this->timestamp);

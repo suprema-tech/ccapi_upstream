@@ -33,17 +33,17 @@ class ExecutionManagementServiceOkxTest : public ::testing::Test {
 
 void verifyApiKeyEtc(const http::request<http::string_body>& req, const std::string& apiKey, const std::string& apiPassphrase,
                      const std::string& timestampStr) {
-  EXPECT_EQ(req.base().at("OK-ACCESS-KEY").to_string(), apiKey);
-  EXPECT_EQ(req.base().at("OK-ACCESS-PASSPHRASE").to_string(), apiPassphrase);
-  EXPECT_EQ(req.base().at("OK-ACCESS-TIMESTAMP").to_string(), timestampStr);
+  EXPECT_EQ(std::string(req.base().at("OK-ACCESS-KEY")), apiKey);
+  EXPECT_EQ(std::string(req.base().at("OK-ACCESS-PASSPHRASE")), apiPassphrase);
+  EXPECT_EQ(std::string(req.base().at("OK-ACCESS-TIMESTAMP")), timestampStr);
 }
 
 void verifySignature(const http::request<http::string_body>& req, const std::string& apiSecret) {
-  auto preSignedText = req.base().at("OK-ACCESS-TIMESTAMP").to_string();
+  auto preSignedText = std::string(req.base().at("OK-ACCESS-TIMESTAMP"));
   preSignedText += UtilString::toUpper(std::string(req.method_string()));
-  preSignedText += req.target().to_string();
+  preSignedText += std::string(req.target());
   preSignedText += req.body();
-  auto signature = req.base().at("OK-ACCESS-SIGN").to_string();
+  auto signature = std::string(req.base().at("OK-ACCESS-SIGN"));
   EXPECT_EQ(UtilAlgorithm::base64Encode(Hmac::hmac(Hmac::ShaVersion::SHA256, apiSecret, preSignedText)), signature);
 }
 
@@ -54,7 +54,7 @@ TEST_F(ExecutionManagementServiceOkxTest, signRequest) {
   req.target("/api/v5/trade/order");
   std::string body("{\"px\":\"2.15\",\"ordType\":\"limit\",\"sz\":\"2\",\"side\":\"buy\",\"tdMode\":\"cash\",\"instId\":\"BTC-USDT\"}");
   this->service->signRequest(req, body, this->credential);
-  EXPECT_EQ(req.base().at("OK-ACCESS-SIGN").to_string(), "vnOpLd3yPc2Ojwm8w0TafZqnujwm3qfjyIpNrmhUrsk=");
+  EXPECT_EQ(std::string(req.base().at("OK-ACCESS-SIGN")), "vnOpLd3yPc2Ojwm8w0TafZqnujwm3qfjyIpNrmhUrsk=");
 }
 
 TEST_F(ExecutionManagementServiceOkxTest, convertRequestCreateOrder) {
@@ -177,7 +177,7 @@ TEST_F(ExecutionManagementServiceOkxTest, convertRequestGetOrderByOrderId) {
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::get);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_OKX_API_KEY), this->credential.at(CCAPI_OKX_API_PASSPHRASE), this->timestampStr);
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/api/v5/trade/order");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   EXPECT_EQ(paramMap.at("ordId"), "2510789768709120");
@@ -194,7 +194,7 @@ TEST_F(ExecutionManagementServiceOkxTest, convertRequestGetOrderByClientOrderId)
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::get);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_OKX_API_KEY), this->credential.at(CCAPI_OKX_API_PASSPHRASE), this->timestampStr);
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/api/v5/trade/order");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   EXPECT_EQ(paramMap.at("clOrdId"), "b1");
@@ -268,7 +268,7 @@ TEST_F(ExecutionManagementServiceOkxTest, convertRequestGetOpenOrdersOneInstrume
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::get);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_OKX_API_KEY), this->credential.at(CCAPI_OKX_API_PASSPHRASE), this->timestampStr);
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/api/v5/trade/orders-pending");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   EXPECT_EQ(paramMap.at("instId"), "BTC-USDT");
@@ -280,7 +280,7 @@ TEST_F(ExecutionManagementServiceOkxTest, convertRequestGetOpenOrdersAllInstrume
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::get);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_OKX_API_KEY), this->credential.at(CCAPI_OKX_API_PASSPHRASE), this->timestampStr);
-  auto splitted = UtilString::split(req.target().to_string(), "?");
+  auto splitted = UtilString::split(std::string(req.target()), "?");
   EXPECT_EQ(splitted.at(0), "/api/v5/trade/orders-pending");
   verifySignature(req, this->credential.at(CCAPI_OKX_API_SECRET));
 }
@@ -363,7 +363,7 @@ TEST_F(ExecutionManagementServiceOkxTest, convertRequestGetAccountBalances) {
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::get);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_OKX_API_KEY), this->credential.at(CCAPI_OKX_API_PASSPHRASE), this->timestampStr);
-  EXPECT_EQ(req.target().to_string(), "/api/v5/account/balance");
+  EXPECT_EQ(std::string(req.target()), "/api/v5/account/balance");
   verifySignature(req, this->credential.at(CCAPI_OKX_API_SECRET));
 }
 
@@ -454,7 +454,7 @@ TEST_F(ExecutionManagementServiceOkxTest, convertRequestGetAccountPositions) {
   auto req = this->service->convertRequest(request, this->now);
   EXPECT_EQ(req.method(), http::verb::get);
   verifyApiKeyEtc(req, this->credential.at(CCAPI_OKX_API_KEY), this->credential.at(CCAPI_OKX_API_PASSPHRASE), this->timestampStr);
-  EXPECT_EQ(req.target().to_string(), "/api/v5/account/positions");
+  EXPECT_EQ(std::string(req.target()), "/api/v5/account/positions");
   verifySignature(req, this->credential.at(CCAPI_OKX_API_SECRET));
 }
 

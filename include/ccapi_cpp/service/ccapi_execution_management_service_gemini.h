@@ -47,7 +47,7 @@ class ExecutionManagementServiceGemini : public ExecutionManagementService {
 
   void signRequest(http::request<http::string_body>& req, rj::Document& document, rj::Document::AllocatorType& allocator,
                    const std::map<std::string, std::string>& param, const TimePoint& now, const std::map<std::string, std::string>& credential, int64_t nonce) {
-    document.AddMember("request", rj::Value(req.target().to_string().c_str(), allocator).Move(), allocator);
+    document.AddMember("request", rj::Value(std::string(req.target()).c_str(), allocator).Move(), allocator);
     document.AddMember("nonce", rj::Value(nonce).Move(), allocator);
     rj::StringBuffer stringBuffer;
     rj::Writer<rj::StringBuffer> writer(stringBuffer);

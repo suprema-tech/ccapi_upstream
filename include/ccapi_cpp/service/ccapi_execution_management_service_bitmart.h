@@ -46,7 +46,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
                                                std::string& headerString, std::string& path, std::string& queryString, std::string& body, const TimePoint& now,
                                                const std::map<std::string, std::string>& credential) override {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    auto preSignedText = req.base().at("X-BM-TIMESTAMP").to_string();
+    auto preSignedText = std::string(req.base().at("X-BM-TIMESTAMP"));
     preSignedText += "#";
     preSignedText += mapGetWithDefault(credential, this->apiMemoName);
     preSignedText += "#";
@@ -66,7 +66,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
 
   void signRequest(http::request<http::string_body>& req, const std::string& paramString, const std::map<std::string, std::string>& credential) {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    auto preSignedText = req.base().at("X-BM-TIMESTAMP").to_string();
+    auto preSignedText = std::string(req.base().at("X-BM-TIMESTAMP"));
     preSignedText += "#";
     preSignedText += mapGetWithDefault(credential, this->apiMemoName);
     preSignedText += "#";

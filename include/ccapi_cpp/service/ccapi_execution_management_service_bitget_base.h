@@ -27,7 +27,7 @@ class ExecutionManagementServiceBitgetBase : public ExecutionManagementService {
                                                std::string& headerString, std::string& path, std::string& queryString, std::string& body, const TimePoint& now,
                                                const std::map<std::string, std::string>& credential) override {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    auto preSignedText = req.base().at("ACCESS-TIMESTAMP").to_string();
+    auto preSignedText = std::string(req.base().at("ACCESS-TIMESTAMP"));
     preSignedText += methodString;
     auto target = path;
     if (!queryString.empty()) {
@@ -45,9 +45,9 @@ class ExecutionManagementServiceBitgetBase : public ExecutionManagementService {
 
   void signRequest(http::request<http::string_body>& req, const std::string& body, const std::map<std::string, std::string>& credential) {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    auto preSignedText = req.base().at("ACCESS-TIMESTAMP").to_string();
+    auto preSignedText = std::string(req.base().at("ACCESS-TIMESTAMP"));
     preSignedText += std::string(req.method_string());
-    preSignedText += req.target().to_string();
+    preSignedText += std::string(req.target());
     preSignedText += body;
     auto signature = UtilAlgorithm::base64Encode(Hmac::hmac(Hmac::ShaVersion::SHA256, apiSecret, preSignedText));
     req.set("ACCESS-SIGN", signature);

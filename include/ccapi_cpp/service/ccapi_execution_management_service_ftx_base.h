@@ -31,7 +31,7 @@ class ExecutionManagementServiceFtxBase : public ExecutionManagementService {
                                                std::string& headerString, std::string& path, std::string& queryString, std::string& body, const TimePoint& now,
                                                const std::map<std::string, std::string>& credential) override {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    auto preSignedText = req.base().at(this->ftx + "-TS").to_string();
+    auto preSignedText = std::string(req.base().at(this->ftx + "-TS"));
     preSignedText += methodString;
     std::string target = path;
     if (!queryString.empty()) {
@@ -48,9 +48,9 @@ class ExecutionManagementServiceFtxBase : public ExecutionManagementService {
 
   void signRequest(http::request<http::string_body>& req, const std::string& body, const std::map<std::string, std::string>& credential) {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    auto preSignedText = req.base().at(this->ftx + "-TS").to_string();
+    auto preSignedText = std::string(req.base().at(this->ftx + "-TS"));
     preSignedText += std::string(req.method_string());
-    preSignedText += req.target().to_string();
+    preSignedText += std::string(req.target());
     preSignedText += body;
     auto signature = Hmac::hmac(Hmac::ShaVersion::SHA256, apiSecret, preSignedText, true);
     req.set(this->ftx + "-SIGN", signature);

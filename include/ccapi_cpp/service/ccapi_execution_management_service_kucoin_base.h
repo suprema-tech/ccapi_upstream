@@ -73,7 +73,7 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
                                                std::string& headerString, std::string& path, std::string& queryString, std::string& body, const TimePoint& now,
                                                const std::map<std::string, std::string>& credential) override {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    auto preSignedText = req.base().at("KC-API-TIMESTAMP").to_string();
+    auto preSignedText = std::string(req.base().at("KC-API-TIMESTAMP"));
     preSignedText += methodString;
     auto target = path;
     if (!queryString.empty()) {
@@ -90,9 +90,9 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
 
   void signRequestPartner(http::request<http::string_body>& req, const std::string& body, const std::map<std::string, std::string>& credential) {
     req.set("KC-API-PARTNER", CCAPI_KUCOIN_API_PARTNER_PLATFORM_ID);
-    auto preSignedText = req.base().at("KC-API-TIMESTAMP").to_string();
+    auto preSignedText = std::string(req.base().at("KC-API-TIMESTAMP"));
     preSignedText += CCAPI_KUCOIN_API_PARTNER_PLATFORM_ID;
-    preSignedText += req.base().at("KC-API-KEY").to_string();
+    preSignedText += std::string(req.base().at("KC-API-KEY"));
     auto signature = UtilAlgorithm::base64Encode(Hmac::hmac(Hmac::ShaVersion::SHA256, CCAPI_KUCOIN_API_PARTNER_PRIVATE_KEY, preSignedText));
     req.set("KC-API-PARTNER-SIGN", signature);
     req.set("KC-API-PARTNER-VERIFY", "true");
@@ -100,9 +100,9 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
 
   void signRequest(http::request<http::string_body>& req, const std::string& body, const std::map<std::string, std::string>& credential) {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    auto preSignedText = req.base().at("KC-API-TIMESTAMP").to_string();
+    auto preSignedText = std::string(req.base().at("KC-API-TIMESTAMP"));
     preSignedText += std::string(req.method_string());
-    preSignedText += req.target().to_string();
+    preSignedText += std::string(req.target());
     preSignedText += body;
     auto signature = UtilAlgorithm::base64Encode(Hmac::hmac(Hmac::ShaVersion::SHA256, apiSecret, preSignedText));
     req.set("KC-API-SIGN", signature);
