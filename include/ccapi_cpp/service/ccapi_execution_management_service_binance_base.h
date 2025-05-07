@@ -4,6 +4,7 @@
 #if defined(CCAPI_ENABLE_EXCHANGE_BINANCE_US) || defined(CCAPI_ENABLE_EXCHANGE_BINANCE) || defined(CCAPI_ENABLE_EXCHANGE_BINANCE_USDS_FUTURES) || \
     defined(CCAPI_ENABLE_EXCHANGE_BINANCE_COIN_FUTURES)
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
+
 namespace ccapi {
 class ExecutionManagementServiceBinanceBase : public ExecutionManagementService {
  public:
@@ -13,6 +14,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
     this->enableCheckPingPongWebsocketApplicationLevel = false;
     this->pingListenKeyIntervalSeconds = 600;
   }
+
   virtual ~ExecutionManagementServiceBinanceBase() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -72,6 +74,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
         },
         this->sessionOptions.httpRequestTimeoutMilliseconds);
   }
+
   void onOpen(std::shared_ptr<WsConnection> wsConnectionPtr) override {
     ExecutionManagementService::onOpen(wsConnectionPtr);
     auto now = UtilTime::now();
@@ -85,6 +88,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
     this->eventHandler(event, nullptr);
     this->setPingListenKeyTimer(wsConnectionPtr);
   }
+
   void setPingListenKeyTimer(const std::shared_ptr<WsConnection> wsConnectionPtr) {
     TimerPtr timerPtr(
         new boost::asio::steady_timer(*this->serviceContextPtr->ioContextPtr, std::chrono::milliseconds(this->pingListenKeyIntervalSeconds * 1000)));
@@ -138,6 +142,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
     });
     this->pingListenKeyTimerMapByConnectionIdMap[wsConnectionPtr->id] = timerPtr;
   }
+
   void onClose(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode ec) override {
     if (this->pingListenKeyTimerMapByConnectionIdMap.find(wsConnectionPtr->id) != this->pingListenKeyTimerMapByConnectionIdMap.end()) {
       this->pingListenKeyTimerMapByConnectionIdMap.at(wsConnectionPtr->id)->cancel();
@@ -161,6 +166,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
     queryString += "&signature=";
     queryString += signature;
   }
+
   void signRequest(std::string& queryString, const std::map<std::string, std::string>& param, const TimePoint& now,
                    const std::map<std::string, std::string>& credential) {
     if (param.find("timestamp") == param.end()) {
@@ -176,6 +182,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
     queryString += "&signature=";
     queryString += signature;
   }
+
   void appendParam(std::string& queryString, const std::map<std::string, std::string>& param,
                    const std::map<std::string, std::string> standardizationMap = {}) {
     for (const auto& kv : param) {
@@ -185,15 +192,18 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
       queryString += "&";
     }
   }
+
   void appendSymbolId(std::string& queryString, const std::string& symbolId) {
     queryString += "symbol=";
     queryString += Url::urlEncode(symbolId);
     queryString += "&";
   }
+
   void prepareReq(http::request<http::string_body>& req, const std::map<std::string, std::string>& credential) {
     auto apiKey = mapGetWithDefault(credential, this->apiKeyName);
     req.set("X-MBX-APIKEY", apiKey);
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     this->prepareReq(req, credential);
@@ -309,9 +319,10 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
-    std::map<std::string, std::pair<std::string, JsonDataType> > extractionFieldNameMap = {
+    std::map<std::string, std::pair<std::string, JsonDataType>> extractionFieldNameMap = {
         {CCAPI_EM_ORDER_ID, std::make_pair("orderId", JsonDataType::INTEGER)},
         {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_QUANTITY, std::make_pair("origQty", JsonDataType::STRING)},
@@ -347,6 +358,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
       }
     }
   }
+
   void extractAccountInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                      const rj::Document& document) override {
     switch (request.getOperation()) {
@@ -424,7 +436,6 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
     }
   }
 
-
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const TimePoint& timeReceived) {
     std::string textMessage(textMessageView);
@@ -479,7 +490,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
           message.setCorrelationIdList({subscription.getCorrelationId()});
           message.setTime(TimePoint(std::chrono::milliseconds(std::stoll((this->isDerivatives ? document : data)["E"].GetString()))));
           message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_ORDER_UPDATE);
-          const std::map<std::string, std::pair<std::string, JsonDataType> >& extractionFieldNameMap = {
+          const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
               {CCAPI_EM_ORDER_ID, std::make_pair("i", JsonDataType::INTEGER)},
               {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("c", JsonDataType::STRING)},
               {CCAPI_EM_ORDER_SIDE, std::make_pair("S", JsonDataType::STRING)},
@@ -553,6 +564,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
     event.setMessageList(messageList);
     return event;
   }
+
   bool isDerivatives{};
   std::string listenKeyTarget;
   int pingListenKeyIntervalSeconds;

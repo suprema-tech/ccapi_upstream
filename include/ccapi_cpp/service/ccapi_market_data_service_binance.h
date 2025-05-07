@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #ifdef CCAPI_ENABLE_EXCHANGE_BINANCE
 #include "ccapi_cpp/service/ccapi_market_data_service_binance_base.h"
+
 namespace ccapi {
 class MarketDataServiceBinance : public MarketDataServiceBinanceBase {
  public:
@@ -28,6 +29,7 @@ class MarketDataServiceBinance : public MarketDataServiceBinanceBase {
     this->getInstrumentsTarget = "/api/v3/exchangeInfo";
     this->getBbosTarget = "/api/v3/ticker/bookTicker";
   }
+
   virtual ~MarketDataServiceBinance() {}
 };
 } /* namespace ccapi */

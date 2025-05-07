@@ -3,12 +3,14 @@
 #ifdef CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT
 #if defined(CCAPI_ENABLE_EXCHANGE_KUCOIN) || defined(CCAPI_ENABLE_EXCHANGE_KUCOIN_FUTURES)
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
+
 namespace ccapi {
 class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
  public:
   ExecutionManagementServiceKucoinBase(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
                                        ServiceContextPtr serviceContextPtr)
       : ExecutionManagementService(eventHandler, sessionOptions, sessionConfigs, serviceContextPtr) {}
+
   virtual ~ExecutionManagementServiceKucoinBase() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -17,10 +19,12 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
   bool doesHttpBodyContainError(const std::string& body) override { return !std::regex_search(body, std::regex("\"code\":\\s*\"200000\"")); }
 
   void onOpen(std::shared_ptr<WsConnection> wsConnectionPtr) override { wsConnectionPtr->status = WsConnection::Status::OPEN; }
+
   void pingOnApplicationLevel(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode& ec) override {
     auto now = UtilTime::now();
     this->send(wsConnectionPtr, "{\"id\":\"" + std::to_string(UtilTime::getUnixTimestamp(now)) + "\",\"type\":\"ping\"}", ec);
   }
+
   void prepareConnect(std::shared_ptr<WsConnection> wsConnectionPtr) override {
     auto now = UtilTime::now();
     http::request<http::string_body> req;
@@ -83,6 +87,7 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
     }
     headerString += "KC-API-SIGN:" + signature;
   }
+
   void signRequestPartner(http::request<http::string_body>& req, const std::string& body, const std::map<std::string, std::string>& credential) {
     req.set("KC-API-PARTNER", CCAPI_KUCOIN_API_PARTNER_PLATFORM_ID);
     auto preSignedText = req.base().at("KC-API-TIMESTAMP").to_string();
@@ -92,6 +97,7 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
     req.set("KC-API-PARTNER-SIGN", signature);
     req.set("KC-API-PARTNER-VERIFY", "true");
   }
+
   void signRequest(http::request<http::string_body>& req, const std::string& body, const std::map<std::string, std::string>& credential) {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
     auto preSignedText = req.base().at("KC-API-TIMESTAMP").to_string();
@@ -103,9 +109,11 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
     req.body() = body;
     req.prepare_payload();
   }
+
   void signApiPassphrase(http::request<http::string_body>& req, const std::string& apiPassphrase, const std::string& apiSecret) {
     req.set("KC-API-PASSPHRASE", UtilAlgorithm::base64Encode(Hmac::hmac(Hmac::ShaVersion::SHA256, apiSecret, apiPassphrase)));
   }
+
   void appendParam(rj::Document& document, rj::Document::AllocatorType& allocator, const std::map<std::string, std::string>& param,
                    const std::map<std::string, std::string> standardizationMap = {
                        {CCAPI_EM_ORDER_SIDE, "side"},
@@ -129,6 +137,7 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
       }
     }
   }
+
   void appendParam(std::string& queryString, const std::map<std::string, std::string>& param,
                    const std::map<std::string, std::string> standardizationMap = {}) {
     for (const auto& kv : param) {
@@ -138,9 +147,11 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
       queryString += "&";
     }
   }
+
   void appendSymbolId(rj::Document& document, rj::Document::AllocatorType& allocator, const std::string& symbolId) {
     document.AddMember("symbol", rj::Value(symbolId.c_str(), allocator).Move(), allocator);
   }
+
   void prepareReq(http::request<http::string_body>& req, const TimePoint& now, const std::map<std::string, std::string>& credential) {
     req.set(beast::http::field::content_type, "application/json");
     auto apiKey = mapGetWithDefault(credential, this->apiKeyName);
@@ -152,6 +163,7 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
     this->signApiPassphrase(req, apiPassphrase, apiSecret);
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     this->prepareReq(req, now, credential);
@@ -275,6 +287,7 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
     const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
@@ -316,6 +329,7 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
       elementList.emplace_back(std::move(element));
     }
   }
+
   void extractOrderInfo(Element& element, const rj::Value& x, const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap,
                         const std::map<std::string, std::function<std::string(const std::string&)>> conversionMap = {}) override {
     ExecutionManagementService::extractOrderInfo(element, x, extractionFieldNameMap);
@@ -326,6 +340,7 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
       }
     }
   }
+
   std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription, const TimePoint& now,
                                                                 const std::map<std::string, std::string>& credential) override {
     std::string topic;
@@ -363,7 +378,6 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
       this->eventHandler(event, nullptr);
     }
   }
-
 
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const TimePoint& timeReceived) {
@@ -469,6 +483,7 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
     event.setMessageList(messageList);
     return event;
   }
+
   std::string apiPassphraseName;
   bool isDerivatives{};
   std::string topicTradeOrders;

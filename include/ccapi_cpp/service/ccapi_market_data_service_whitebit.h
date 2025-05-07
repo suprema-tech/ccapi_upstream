@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #ifdef CCAPI_ENABLE_EXCHANGE_WHITEBIT
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
+
 namespace ccapi {
 class MarketDataServiceWhitebit : public MarketDataService {
  public:
@@ -22,6 +23,7 @@ class MarketDataServiceWhitebit : public MarketDataService {
     this->methodTradesUpdate = std::string(CCAPI_WEBSOCKET_WHITEBIT_CHANNEL_MARKET_TRADES) + "_update";
     this->shouldAlignSnapshot = true;
   }
+
   virtual ~MarketDataServiceWhitebit() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -43,6 +45,7 @@ class MarketDataServiceWhitebit : public MarketDataService {
       this->marketDepthSubscribedToExchangeByConnectionIdChannelIdSymbolIdMap[wsConnection.id][channelId][symbolId] = marketDepthSubscribedToExchange;
     }
   }
+
   std::vector<std::string> createSendStringList(const WsConnection& wsConnection) override {
     std::vector<std::string> sendStringList;
     for (const auto& subscriptionListByChannelIdSymbolId : this->subscriptionListByConnectionIdChannelIdSymbolIdMap.at(wsConnection.id)) {
@@ -105,13 +108,13 @@ class MarketDataServiceWhitebit : public MarketDataService {
     }
     return sendStringList;
   }
+
   void processTextMessage(
 
       std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView
 
       ,
       const TimePoint& timeReceived, Event& event, std::vector<MarketDataMessage>& marketDataMessageList) override {
-
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
 
@@ -223,6 +226,7 @@ class MarketDataServiceWhitebit : public MarketDataService {
       }
     }
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     switch (request.getOperation()) {
@@ -253,6 +257,7 @@ class MarketDataServiceWhitebit : public MarketDataService {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractInstrumentInfo(Element& element, const rj::Value& x) {
     element.insert(CCAPI_INSTRUMENT, x["name"].GetString());
     element.insert(CCAPI_BASE_ASSET, x["stock"].GetString());
@@ -272,6 +277,7 @@ class MarketDataServiceWhitebit : public MarketDataService {
     element.insert(CCAPI_ORDER_QUANTITY_MIN, x["minAmount"].GetString());
     element.insert(CCAPI_ORDER_PRICE_TIMES_QUANTITY_MIN, x["minTotal"].GetString());
   }
+
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     rj::Document document;
@@ -327,6 +333,7 @@ class MarketDataServiceWhitebit : public MarketDataService {
         CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);
     }
   }
+
   std::string methodDepthSubscribe, methodDepthUpdate, methodTradesSubscribe, methodTradesUpdate;
 };
 } /* namespace ccapi */

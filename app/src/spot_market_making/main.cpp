@@ -9,6 +9,7 @@ AppLogger* AppLogger::logger = &appLogger;
 CcapiLogger ccapiLogger;
 Logger* Logger::logger = &ccapiLogger;
 } /* namespace ccapi */
+
 using ::ccapi::AppLogger;
 using ::ccapi::CcapiLogger;
 using ::ccapi::Element;

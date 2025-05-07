@@ -6,6 +6,7 @@
 #define CCAPI_BINANCE_CREATE_ORDER_PATH "/api/v3/order"
 #endif
 #include "ccapi_cpp/service/ccapi_execution_management_service_binance_base.h"
+
 namespace ccapi {
 class ExecutionManagementServiceBinance : public ExecutionManagementServiceBinanceBase {
  public:
@@ -37,6 +38,7 @@ class ExecutionManagementServiceBinance : public ExecutionManagementServiceBinan
     this->listenKeyCrossMarginTarget = CCAPI_BINANCE_LISTEN_KEY_CROSS_MARGIN_PATH;
     this->listenKeyIsolatedMarginTarget = CCAPI_BINANCE_LISTEN_KEY_ISOLATED_MARGIN_PATH;
   }
+
   virtual ~ExecutionManagementServiceBinance() {}
 };
 } /* namespace ccapi */

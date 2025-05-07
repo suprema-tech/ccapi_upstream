@@ -5,6 +5,7 @@
 
 #include "ccapi_cpp/ccapi_element.h"
 #include "ccapi_cpp/ccapi_logger.h"
+
 namespace ccapi {
 /**
  * A handle to a single message. Message objects are obtained from the getMessageList() function of the Event object. Each Message is associated with one or
@@ -21,6 +22,7 @@ class Message CCAPI_FINAL {
     NONE,  // Normal data tick, not a recap. For market depth, it represents the updated order book state. For public trade, it represents the new trades. These
            // are the batches of data points after the first batch.
   };
+
   static std::string recapTypeToString(RecapType recapType) {
     std::string output;
     switch (recapType) {
@@ -85,6 +87,7 @@ class Message CCAPI_FINAL {
     GENERIC_PUBLIC_SUBSCRIPTION,
     GENERIC_PRIVATE_REQUEST,
   };
+
   static std::string typeToString(Type type) {
     std::string output;
     switch (type) {
@@ -228,6 +231,7 @@ class Message CCAPI_FINAL {
     }
     return output;
   }
+
   std::string toString() const {
     std::string output = "Message [type = " + typeToString(type) + ", recapType = " + recapTypeToString(recapType) +
                          ", time = " + UtilTime::getISOTimestamp(time) + ", timeReceived = " + UtilTime::getISOTimestamp(timeReceived) +
@@ -235,6 +239,7 @@ class Message CCAPI_FINAL {
                          ", secondaryCorrelationIdMap = " + ccapi::toString(secondaryCorrelationIdMap) + "]";
     return output;
   }
+
   std::string toStringPretty(const int space = 2, const int leftToIndent = 0, const bool indentFirstLine = true) const {
     std::string sl(leftToIndent, ' ');
     std::string ss(leftToIndent + space, ' ');
@@ -246,30 +251,51 @@ class Message CCAPI_FINAL {
                          "secondaryCorrelationIdMap = " + ccapi::toString(secondaryCorrelationIdMap) + "\n" + sl + "]";
     return output;
   }
+
   const std::vector<Element>& getElementList() const { return elementList; }
+
   void setElementList(const std::vector<Element>& elementList) { this->elementList = elementList; }
+
   void setElementList(std::vector<Element>& elementList) { this->elementList = std::move(elementList); }
+
   const std::vector<std::string>& getCorrelationIdList() const { return correlationIdList; }
+
   const std::map<std::string, std::string>& getSecondaryCorrelationIdMap() const { return secondaryCorrelationIdMap; }
+
   void setCorrelationIdList(const std::vector<std::string>& correlationIdList) { this->correlationIdList = correlationIdList; }
+
   void setSecondaryCorrelationIdMap(const std::map<std::string, std::string>& secondaryCorrelationIdMap) {
     this->secondaryCorrelationIdMap = secondaryCorrelationIdMap;
   }
+
   // 'getTime' only works in C++. For other languages, please use 'getTimeISO'.
   TimePoint getTime() const { return time; }
+
   std::string getTimeISO() const { return UtilTime::getISOTimestamp(time); }
+
   std::pair<long long, long long> getTimeUnix() const { return UtilTime::divide(time); }
+
   std::pair<long long, long long> getTimePair() const { return UtilTime::divide(time); }
+
   void setTime(TimePoint time) { this->time = time; }
+
   RecapType getRecapType() const { return recapType; }
+
   void setRecapType(RecapType recapType) { this->recapType = recapType; }
+
   Type getType() const { return type; }
+
   void setType(Type type) { this->type = type; }
+
   // 'getTimeReceived' only works in C++. For other languages, please use 'getTimeReceivedISO'.
   TimePoint getTimeReceived() const { return timeReceived; }
+
   std::string getTimeReceivedISO() const { return UtilTime::getISOTimestamp(timeReceived); }
+
   std::pair<long long, long long> getTimeReceivedUnix() const { return UtilTime::divide(timeReceived); }
+
   std::pair<long long, long long> getTimeReceivedPair() const { return UtilTime::divide(timeReceived); }
+
   void setTimeReceived(TimePoint timeReceived) { this->timeReceived = timeReceived; }
 #ifndef CCAPI_EXPOSE_INTERNAL
 

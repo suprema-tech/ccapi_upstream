@@ -3,6 +3,7 @@
 #include "ccapi_cpp/ccapi_hmac.h"
 #include "ccapi_cpp/ccapi_macro.h"
 #include "ccapi_cpp/ccapi_util_private.h"
+
 namespace ccapi {
 /**
  * This class is used for handling jwt tokens.

@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #ifdef CCAPI_ENABLE_EXCHANGE_DERIBIT
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
+
 namespace ccapi {
 class MarketDataServiceDeribit : public MarketDataService {
  public:
@@ -19,6 +20,7 @@ class MarketDataServiceDeribit : public MarketDataService {
     this->getInstrumentTarget = "/public/get_instrument";
     this->getInstrumentsTarget = "/public/get_instruments";
   }
+
   virtual ~MarketDataServiceDeribit() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -45,6 +47,7 @@ class MarketDataServiceDeribit : public MarketDataService {
       this->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE, ec, "request");
     }
   }
+
   void onClose(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode ec) override {
     this->subscriptionJsonrpcIdSetByConnectionIdMap.erase(wsConnectionPtr->id);
     MarketDataService::onClose(wsConnectionPtr, ec);
@@ -66,6 +69,7 @@ class MarketDataServiceDeribit : public MarketDataService {
       }
     }
   }
+
   std::vector<std::string> createSendStringList(const WsConnection& wsConnection) override {
     std::vector<std::string> sendStringList;
     rj::Document document;
@@ -133,13 +137,13 @@ class MarketDataServiceDeribit : public MarketDataService {
     sendStringList.push_back(sendString);
     return sendStringList;
   }
+
   void processTextMessage(
 
       std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView
 
       ,
       const TimePoint& timeReceived, Event& event, std::vector<MarketDataMessage>& marketDataMessageList) override {
-
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
 
@@ -324,6 +328,7 @@ class MarketDataServiceDeribit : public MarketDataService {
       }
     }
   }
+
   void appendParam(rj::Document& document, rj::Document::AllocatorType& allocator, int64_t requestId, const std::string& method,
                    const std::map<std::string, std::string>& param, const std::map<std::string, std::string> standardizationMap = {}) {
     document.AddMember("jsonrpc", rj::Value("2.0").Move(), allocator);
@@ -343,9 +348,11 @@ class MarketDataServiceDeribit : public MarketDataService {
     }
     document.AddMember("params", params, allocator);
   }
+
   void appendSymbolId(rj::Document& document, rj::Document::AllocatorType& allocator, const std::string& symbolId) {
     document["params"].AddMember("instrument_name", rj::Value(symbolId.c_str(), allocator).Move(), allocator);
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     int64_t requestId = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
@@ -412,6 +419,7 @@ class MarketDataServiceDeribit : public MarketDataService {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractInstrumentInfo(Element& element, const rj::Value& x) {
     element.insert(CCAPI_INSTRUMENT, x["instrument_name"].GetString());
     element.insert(CCAPI_MARGIN_ASSET, x["base_currency"].GetString());
@@ -419,6 +427,7 @@ class MarketDataServiceDeribit : public MarketDataService {
     element.insert(CCAPI_ORDER_PRICE_INCREMENT, x["tick_size"].GetString());
     element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, x["contract_size"].GetString());
   }
+
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     rj::Document document;
@@ -469,6 +478,7 @@ class MarketDataServiceDeribit : public MarketDataService {
         CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);
     }
   }
+
   std::map<std::string, std::set<int64_t>> subscriptionJsonrpcIdSetByConnectionIdMap;
   std::string restTarget;
 };

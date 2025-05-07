@@ -1,6 +1,7 @@
 #include "app/historical_market_data_event_processor.h"
 
 #include "gtest/gtest.h"
+
 namespace ccapi {
 class HistoricalMarketDataEventProcessorTest : public ::testing::Test {
  public:
@@ -21,7 +22,9 @@ class HistoricalMarketDataEventProcessorTest : public ::testing::Test {
     this->historicalMarketDataEventProcessor->historicalMarketDataDirectory = UtilSystem::getEnvAsString("HISTORICAL_MARKET_DATA_DIRECTORY", splitted.at(5));
     this->historicalMarketDataEventProcessor->clockStepSeconds = UtilSystem::getEnvAsInt("CLOCK_STEP_MILLISECONDS", 1000) / 1000;
   }
+
   void TearDown() override { delete this->historicalMarketDataEventProcessor; }
+
   std::vector<Event> eventList;
   HistoricalMarketDataEventProcessor* historicalMarketDataEventProcessor;
 };
@@ -72,7 +75,7 @@ Message createMarketDataMessageMarketDepth(const std::vector<std::string>& split
 TEST_F(HistoricalMarketDataEventProcessorTest, processEvent) {
   this->historicalMarketDataEventProcessor->processEvent();
   std::vector<Message> expectedMessageList;
-  std::map<std::pair<long long, long long>, std::vector<Message> > expectedMessageListByTimeMap;
+  std::map<std::pair<long long, long long>, std::vector<Message>> expectedMessageListByTimeMap;
   auto currentDateTp = this->historicalMarketDataEventProcessor->historicalMarketDataStartDateTp;
   int previousSecondsMarketDepth = 0;
   std::vector<std::string> previousSplittedMarketDepth;

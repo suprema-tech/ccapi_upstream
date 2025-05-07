@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT
 #ifdef CCAPI_ENABLE_EXCHANGE_CRYPTOCOM
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
+
 namespace ccapi {
 class ExecutionManagementServiceCryptocom : public ExecutionManagementService {
  public:
@@ -25,6 +26,7 @@ class ExecutionManagementServiceCryptocom : public ExecutionManagementService {
     this->cancelOpenOrdersMethod = "private/cancel-all-orders";
     this->getAccountBalancesMethod = "private/get-account-summary";
   }
+
   virtual ~ExecutionManagementServiceCryptocom() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -69,6 +71,7 @@ class ExecutionManagementServiceCryptocom : public ExecutionManagementService {
     document.Accept(writer);
     body = stringBuffer.GetString();
   }
+
   void signRequest(http::request<http::string_body>& req, rj::Document& document, rj::Document::AllocatorType& allocator, int64_t requestId,
                    const std::string& appMethod, const std::map<std::string, std::string>& param, const TimePoint& now,
                    const std::map<std::string, std::string>& credential) {
@@ -78,6 +81,7 @@ class ExecutionManagementServiceCryptocom : public ExecutionManagementService {
     req.prepare_payload();
     req.target(this->pathPrefix + appMethod);
   }
+
   void signRequest(std::string& body, rj::Document& document, rj::Document::AllocatorType& allocator, int64_t requestId, const std::string& appMethod,
                    const std::map<std::string, std::string>& param, const TimePoint& now, const std::map<std::string, std::string>& credential) {
     auto apiKey = mapGetWithDefault(credential, this->apiKeyName);
@@ -102,6 +106,7 @@ class ExecutionManagementServiceCryptocom : public ExecutionManagementService {
     document.Accept(writer);
     body = stringBuffer.GetString();
   }
+
   void appendParam(rj::Document& document, rj::Document::AllocatorType& allocator, int64_t requestId, const std::string& appMethod,
                    const std::map<std::string, std::string>& param) {
     document.AddMember("id", rj::Value(requestId).Move(), allocator);
@@ -120,6 +125,7 @@ class ExecutionManagementServiceCryptocom : public ExecutionManagementService {
     }
     document.AddMember("params", params, allocator);
   }
+
   void prepareReq(http::request<http::string_body>& req, const std::map<std::string, std::string>& param, const TimePoint& now, const std::string& symbolId,
                   const std::map<std::string, std::string>& credential, const std::string& appMethod,
                   const std::map<std::string, std::string> standardizationMap = {}) {
@@ -146,6 +152,7 @@ class ExecutionManagementServiceCryptocom : public ExecutionManagementService {
     this->appendParam(document, allocator, requestId, appMethod, paramCopy);
     this->signRequest(req, document, allocator, requestId, appMethod, paramCopy, now, credential);
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     switch (request.getOperation()) {
@@ -195,6 +202,7 @@ class ExecutionManagementServiceCryptocom : public ExecutionManagementService {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void convertRequestForWebsocket(rj::Document& document, rj::Document::AllocatorType& allocator, const WsConnection& wsConnection, const Request& request,
                                   int wsRequestId, const TimePoint& now, const std::string& symbolId,
                                   const std::map<std::string, std::string>& credential) override {
@@ -249,10 +257,12 @@ class ExecutionManagementServiceCryptocom : public ExecutionManagementService {
         this->convertRequestForWebsocketCustom(document, allocator, wsConnection, request, wsRequestId, now, symbolId, credential);
     }
   }
+
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
     this->extractOrderInfoFromRequest(elementList, operation, document);
   }
+
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request::Operation operation, const rj::Document& document) {
     const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
         {CCAPI_EM_ORDER_ID, std::make_pair("order_id", JsonDataType::STRING)},
@@ -283,6 +293,7 @@ class ExecutionManagementServiceCryptocom : public ExecutionManagementService {
       elementList.emplace_back(std::move(element));
     }
   }
+
   void extractAccountInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                      const rj::Document& document) override {
     switch (request.getOperation()) {
@@ -302,6 +313,7 @@ class ExecutionManagementServiceCryptocom : public ExecutionManagementService {
         CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);
     }
   }
+
   std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription, const TimePoint& now,
                                                                 const std::map<std::string, std::string>& credential) override {
     std::vector<std::string> sendStringList;
@@ -329,7 +341,6 @@ class ExecutionManagementServiceCryptocom : public ExecutionManagementService {
       this->eventHandler(event, nullptr);
     }
   }
-
 
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const TimePoint& timeReceived) {
@@ -534,6 +545,7 @@ class ExecutionManagementServiceCryptocom : public ExecutionManagementService {
     event.setMessageList(messageList);
     return event;
   }
+
   std::string pathPrefix;
   std::string createOrderMethod;
   std::string cancelOrderMethod;

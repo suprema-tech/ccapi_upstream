@@ -3,12 +3,14 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #if defined(CCAPI_ENABLE_EXCHANGE_GATEIO) || defined(CCAPI_ENABLE_EXCHANGE_GATEIO_PERPETUAL_FUTURES)
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
+
 namespace ccapi {
 class MarketDataServiceGateioBase : public MarketDataService {
  public:
   MarketDataServiceGateioBase(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
                               ServiceContext* serviceContextPtr)
       : MarketDataService(eventHandler, sessionOptions, sessionConfigs, serviceContextPtr) {}
+
   virtual ~MarketDataServiceGateioBase() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -54,6 +56,7 @@ class MarketDataServiceGateioBase : public MarketDataService {
       channelId = this->websocketChannelCandlesticks + interval;
     }
   }
+
   std::vector<std::string> createSendStringList(const WsConnection& wsConnection) override {
     auto now = UtilTime::now();
     std::vector<std::string> sendStringList;
@@ -144,13 +147,13 @@ class MarketDataServiceGateioBase : public MarketDataService {
     }
     return sendStringList;
   }
+
   void processTextMessage(
 
       std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView
 
       ,
       const TimePoint& timeReceived, Event& event, std::vector<MarketDataMessage>& marketDataMessageList) override {
-
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
 
@@ -368,6 +371,7 @@ class MarketDataServiceGateioBase : public MarketDataService {
       }
     }
   }
+
   bool isDerivatives{};
   std::string symbolName;
   std::string websocketChannelTrades;

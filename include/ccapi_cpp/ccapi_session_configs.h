@@ -8,6 +8,7 @@
 #include "ccapi_cpp/ccapi_logger.h"
 #include "ccapi_cpp/ccapi_macro.h"
 #include "ccapi_cpp/ccapi_util_private.h"
+
 namespace ccapi {
 /**
  * This class contains the configs when creating a session. It loads and maintains exchange information. Most of the values shouldn't be changed. To use
@@ -20,16 +21,27 @@ class SessionConfigs CCAPI_FINAL {
     this->updateExchangeRest();
     this->initializUrlFixBase();
   }
-  const std::map<std::string, std::vector<std::string> >& getExchangeFieldMap() const { return exchangeFieldMap; }
-  const std::map<std::string, std::map<std::string, std::string> >& getExchangeFieldWebsocketChannelMap() const { return exchangeFieldWebsocketChannelMap; }
+
+  const std::map<std::string, std::vector<std::string>>& getExchangeFieldMap() const { return exchangeFieldMap; }
+
+  const std::map<std::string, std::map<std::string, std::string>>& getExchangeFieldWebsocketChannelMap() const { return exchangeFieldWebsocketChannelMap; }
+
   const std::map<std::string, std::string>& getUrlWebsocketBase() const { return urlWebsocketBase; }
+
   const std::map<std::string, std::string>& getUrlRestBase() const { return urlRestBase; }
+
   const std::map<std::string, std::string>& getUrlFixBase() const { return urlFixBase; }
+
   const std::map<std::string, int>& getInitialSequenceByExchangeMap() const { return initialSequenceByExchangeMap; }
+
   const std::map<std::string, std::string>& getCredential() const { return credential; }
+
   void setUrlWebsocketBase(const std::map<std::string, std::string>& urlWebsocketBase) { this->urlWebsocketBase = urlWebsocketBase; }
+
   void setUrlRestBase(const std::map<std::string, std::string>& urlRestBase) { this->urlRestBase = urlRestBase; }
+
   void setUrlFixBase(const std::map<std::string, std::string>& urlFixBase) { this->urlFixBase = urlFixBase; }
+
   void setCredential(const std::map<std::string, std::string>& credential) { this->credential = credential; }
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -353,6 +365,7 @@ class SessionConfigs CCAPI_FINAL {
     };
     this->initialSequenceByExchangeMap = {{CCAPI_EXCHANGE_NAME_GEMINI, 0}, {CCAPI_EXCHANGE_NAME_BITFINEX, 1}};
   }
+
   void updateExchangeRest() {
     this->urlRestBase = {
         {CCAPI_EXCHANGE_NAME_COINBASE, CCAPI_COINBASE_URL_REST_BASE},
@@ -390,6 +403,7 @@ class SessionConfigs CCAPI_FINAL {
         {CCAPI_EXCHANGE_NAME_WHITEBIT, CCAPI_WHITEBIT_URL_REST_BASE},
     };
   }
+
   void initializUrlFixBase() {
     this->urlFixBase = {
         {CCAPI_EXCHANGE_NAME_COINBASE, CCAPI_COINBASE_URL_FIX_BASE},
@@ -398,8 +412,9 @@ class SessionConfigs CCAPI_FINAL {
         {CCAPI_EXCHANGE_NAME_DERIBIT, CCAPI_DERIBIT_URL_FIX_BASE},
     };
   }
-  std::map<std::string, std::vector<std::string> > exchangeFieldMap;
-  std::map<std::string, std::map<std::string, std::string> > exchangeFieldWebsocketChannelMap;
+
+  std::map<std::string, std::vector<std::string>> exchangeFieldMap;
+  std::map<std::string, std::map<std::string, std::string>> exchangeFieldWebsocketChannelMap;
   std::map<std::string, std::string> urlWebsocketBase;
   std::map<std::string, std::string> urlRestBase;
   std::map<std::string, std::string> urlFixBase;

@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT
 #ifdef CCAPI_ENABLE_EXCHANGE_BYBIT
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
+
 namespace ccapi {
 class ExecutionManagementServiceBybit : public ExecutionManagementService {
  public:
@@ -25,6 +26,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
     this->getAccountBalancesTarget = "/v5/account/wallet-balance";
     this->getAccountPositionsTarget = "/v5/position/list";
   }
+
   virtual ~ExecutionManagementServiceBybit() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -52,6 +54,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
     auto signature = Hmac::hmac(Hmac::ShaVersion::SHA256, apiSecret, preSignedText, true);
     req.set("X-BAPI-SIGN", signature);
   }
+
   void signRequest(http::request<http::string_body>& req, const std::string aString, const TimePoint& now,
                    const std::map<std::string, std::string>& credential) {
     auto apiKey = mapGetWithDefault(credential, this->apiKeyName);
@@ -63,6 +66,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
     auto signature = Hmac::hmac(Hmac::ShaVersion::SHA256, apiSecret, preSignedText, true);
     req.set("X-BAPI-SIGN", signature);
   }
+
   void appendParamToQueryString(std::string& queryString, const std::map<std::string, std::string>& param,
                                 const std::map<std::string, std::string> standardizationMap = {
                                     {CCAPI_EM_CLIENT_ORDER_ID, "orderLinkId"},
@@ -85,6 +89,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
     req.set("X-BAPI-RECV-WINDOW", std::to_string(CCAPI_BYBIT_BASE_API_RECEIVE_WINDOW_MILLISECONDS));
     req.set("X-Referer", CCAPI_BYBIT_API_BROKER_ID);
   }
+
   std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription, const TimePoint& now,
                                                                 const std::map<std::string, std::string>& credential) override {
     std::vector<std::string> sendStringList;
@@ -145,6 +150,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
       }
     }
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     this->prepareReq(req, now, credential);
@@ -272,9 +278,10 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
-    std::map<std::string, std::pair<std::string, JsonDataType> > extractionFieldNameMap = {
+    std::map<std::string, std::pair<std::string, JsonDataType>> extractionFieldNameMap = {
         {CCAPI_EM_ORDER_ID, std::make_pair("orderId", JsonDataType::STRING)},
         {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("orderLinkId", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},
@@ -297,6 +304,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
       elementList.emplace_back(std::move(element));
     }
   }
+
   void extractAccountInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                      const rj::Document& document) override {
     switch (request.getOperation()) {
@@ -349,7 +357,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
             message.setCorrelationIdList({subscription.getCorrelationId()});
             message.setTime(time);
             message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_ORDER_UPDATE);
-            const std::map<std::string, std::pair<std::string, JsonDataType> >& extractionFieldNameMap = {
+            const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
                 {CCAPI_EM_ORDER_ID, std::make_pair("orderId", JsonDataType::STRING)},
                 {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("orderLinkId", JsonDataType::STRING)},
                 {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},

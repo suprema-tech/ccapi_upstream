@@ -1,6 +1,8 @@
 #include "ccapi_cpp/ccapi_session.h"
+
 namespace ccapi {
 Logger* Logger::logger = nullptr;  // This line is needed.
+
 class MyEventHandler : public EventHandler {
  public:
   bool processEvent(const Event& event, Session* session) override {
@@ -8,6 +10,7 @@ class MyEventHandler : public EventHandler {
     return true;
   }
 };
+
 class ExecutionManagementServiceCoinbaseCustom : public ExecutionManagementServiceCoinbase {
  public:
   ExecutionManagementServiceCoinbaseCustom(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions,
@@ -29,6 +32,7 @@ class ExecutionManagementServiceCoinbaseCustom : public ExecutionManagementServi
         ExecutionManagementServiceCoinbase::convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void processSuccessfulTextMessageRest(int statusCode, const Request& request, const std::string& textMessage, const TimePoint& timeReceived,
                                         Queue<Event>* eventQueuePtr) override {
     switch (request.getOperation()) {
@@ -61,6 +65,7 @@ class ExecutionManagementServiceCoinbaseCustom : public ExecutionManagementServi
   }
 };
 } /* namespace ccapi */
+
 using ::ccapi::ExecutionManagementServiceCoinbaseCustom;
 using ::ccapi::MyEventHandler;
 using ::ccapi::Request;
@@ -68,6 +73,7 @@ using ::ccapi::Session;
 using ::ccapi::SessionConfigs;
 using ::ccapi::SessionOptions;
 using ::ccapi::UtilSystem;
+
 int main(int argc, char** argv) {
   if (UtilSystem::getEnvAsString("COINBASE_API_KEY").empty()) {
     std::cerr << "Please set environment variable COINBASE_API_KEY" << std::endl;

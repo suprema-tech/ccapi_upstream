@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT
 #ifdef CCAPI_ENABLE_EXCHANGE_KUCOIN
 #include "ccapi_cpp/service/ccapi_execution_management_service_kucoin_base.h"
+
 namespace ccapi {
 class ExecutionManagementServiceKucoin : public ExecutionManagementServiceKucoinBase {
  public:
@@ -27,6 +28,7 @@ class ExecutionManagementServiceKucoin : public ExecutionManagementServiceKucoin
     this->topicTradeOrders = "/spotMarket/tradeOrders";
     this->createOrderMarginTarget = "/api/v1/margin/order";
   }
+
   virtual ~ExecutionManagementServiceKucoin() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 

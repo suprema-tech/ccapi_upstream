@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #ifdef CCAPI_ENABLE_EXCHANGE_GEMINI
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
+
 namespace ccapi {
 class MarketDataServiceGemini : public MarketDataService {
  public:
@@ -18,6 +19,7 @@ class MarketDataServiceGemini : public MarketDataService {
     this->getInstrumentTarget = "/v1/symbols/details/:symbol";
     this->getInstrumentsTarget = "/v1/symbols";
   }
+
   virtual ~MarketDataServiceGemini() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -35,6 +37,7 @@ class MarketDataServiceGemini : public MarketDataService {
       }
     }
   }
+
   std::vector<std::string> createSendStringList(const WsConnection& wsConnection) override { return std::vector<std::string>(); }
 
   void onOpen(std::shared_ptr<WsConnection> wsConnectionPtr) override {
@@ -68,10 +71,12 @@ class MarketDataServiceGemini : public MarketDataService {
     event.setMessageList(messageList);
     this->eventHandler(event, nullptr);
   }
+
   void onClose(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode ec) override {
     this->sequenceByConnectionIdMap.erase(wsConnectionPtr->id);
     MarketDataService::onClose(wsConnectionPtr, ec);
   }
+
   bool checkSequence(std::shared_ptr<WsConnection> wsConnectionPtr, int sequence) {
     if (this->sequenceByConnectionIdMap.find(wsConnectionPtr->id) == this->sequenceByConnectionIdMap.end()) {
       if (sequence != this->sessionConfigs.getInitialSequenceByExchangeMap().at(this->exchangeName)) {
@@ -89,6 +94,7 @@ class MarketDataServiceGemini : public MarketDataService {
       }
     }
   }
+
   void onOutOfSequence(std::shared_ptr<WsConnection> wsConnectionPtr, int sequence, boost::beast::string_view textMessageView, const TimePoint& timeReceived,
                        const std::string& exchangeSubscriptionId) {
     int previous = 0;
@@ -113,7 +119,6 @@ class MarketDataServiceGemini : public MarketDataService {
 
       ,
       const TimePoint& timeReceived, Event& event, std::vector<MarketDataMessage>& marketDataMessageList) override {
-
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
 
@@ -127,7 +132,6 @@ class MarketDataServiceGemini : public MarketDataService {
         this->onOutOfSequence(wsConnectionPtr, sequence, textMessageView, timeReceived, "");
         return;
       }
-
     }
     if (type == "update" && !document["events"].GetArray().Empty()) {
       MarketDataMessage marketDataMessage;
@@ -191,6 +195,7 @@ class MarketDataServiceGemini : public MarketDataService {
       marketDataMessageList.emplace_back(std::move(marketDataMessage));
     }
   }
+
   std::string getInstrumentGroup(const Subscription& subscription) override {
     auto instrument = subscription.getInstrument();
     auto symbolId = instrument;
@@ -218,6 +223,7 @@ class MarketDataServiceGemini : public MarketDataService {
     }
     return url;
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     switch (request.getOperation()) {
@@ -254,6 +260,7 @@ class MarketDataServiceGemini : public MarketDataService {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractInstrumentInfo(Element& element, const rj::Value& x) {
     element.insert(CCAPI_INSTRUMENT, x["symbol"].GetString());
     element.insert(CCAPI_BASE_ASSET, x["base_currency"].GetString());
@@ -261,6 +268,7 @@ class MarketDataServiceGemini : public MarketDataService {
     element.insert(CCAPI_ORDER_PRICE_INCREMENT, Decimal(x["quote_increment"].GetString()).toString());
     element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, Decimal(x["tick_size"].GetString()).toString());
   }
+
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     rj::Document document;
@@ -308,6 +316,7 @@ class MarketDataServiceGemini : public MarketDataService {
         CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);
     }
   }
+
   std::map<std::string, int> sequenceByConnectionIdMap;
 };
 } /* namespace ccapi */

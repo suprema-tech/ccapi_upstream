@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT
 #ifdef CCAPI_ENABLE_EXCHANGE_MEXC
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
+
 namespace ccapi {
 class ExecutionManagementServiceMexc : public ExecutionManagementService {
  public:
@@ -26,6 +27,7 @@ class ExecutionManagementServiceMexc : public ExecutionManagementService {
     this->listenKeyTarget = CCAPI_MEXC_LISTEN_KEY_PATH;
     this->getAccountBalancesTarget = "/api/v3/account";
   }
+
   virtual ~ExecutionManagementServiceMexc() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -52,6 +54,7 @@ class ExecutionManagementServiceMexc : public ExecutionManagementService {
     queryString += "&signature=";
     queryString += signature;
   }
+
   void signRequest(std::string& queryString, const std::map<std::string, std::string>& param, const TimePoint& now,
                    const std::map<std::string, std::string>& credential) {
     if (param.find("timestamp") == param.end()) {
@@ -67,6 +70,7 @@ class ExecutionManagementServiceMexc : public ExecutionManagementService {
     queryString += "&signature=";
     queryString += signature;
   }
+
   void appendParam(std::string& queryString, const std::map<std::string, std::string>& param,
                    const std::map<std::string, std::string> standardizationMap = {}) {
     for (const auto& kv : param) {
@@ -76,15 +80,18 @@ class ExecutionManagementServiceMexc : public ExecutionManagementService {
       queryString += "&";
     }
   }
+
   void appendSymbolId(std::string& queryString, const std::string& symbolId) {
     queryString += "symbol=";
     queryString += Url::urlEncode(symbolId);
     queryString += "&";
   }
+
   void prepareReq(http::request<http::string_body>& req, const std::map<std::string, std::string>& credential) {
     auto apiKey = mapGetWithDefault(credential, this->apiKeyName);
     req.set("X-MEXC-APIKEY", apiKey);
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     this->prepareReq(req, credential);
@@ -166,9 +173,10 @@ class ExecutionManagementServiceMexc : public ExecutionManagementService {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
-    std::map<std::string, std::pair<std::string, JsonDataType> > extractionFieldNameMap = {
+    std::map<std::string, std::pair<std::string, JsonDataType>> extractionFieldNameMap = {
         {CCAPI_EM_ORDER_ID, std::make_pair("orderId", JsonDataType::INTEGER)},
         {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_QUANTITY, std::make_pair("origQty", JsonDataType::STRING)},
@@ -195,6 +203,7 @@ class ExecutionManagementServiceMexc : public ExecutionManagementService {
       }
     }
   }
+
   void extractAccountInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                      const rj::Document& document) override {
     switch (request.getOperation()) {
@@ -256,10 +265,12 @@ class ExecutionManagementServiceMexc : public ExecutionManagementService {
         },
         this->sessionOptions.httpRequestTimeoutMilliseconds);
   }
+
   void onOpen(std::shared_ptr<WsConnection> wsConnectionPtr) override {
     ExecutionManagementService::onOpen(wsConnectionPtr);
     this->setPingListenKeyTimer(wsConnectionPtr);
   }
+
   void setPingListenKeyTimer(std::shared_ptr<WsConnection> wsConnectionPtr) {
     TimerPtr timerPtr(
         new boost::asio::steady_timer(*this->serviceContextPtr->ioContextPtr, std::chrono::milliseconds(this->pingListenKeyIntervalSeconds * 1000)));
@@ -302,6 +313,7 @@ class ExecutionManagementServiceMexc : public ExecutionManagementService {
     });
     this->pingListenKeyTimerMapByConnectionIdMap[wsConnectionPtr->id] = timerPtr;
   }
+
   void onClose(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode ec) override {
     if (this->pingListenKeyTimerMapByConnectionIdMap.find(wsConnectionPtr->id) != this->pingListenKeyTimerMapByConnectionIdMap.end()) {
       this->pingListenKeyTimerMapByConnectionIdMap.at(wsConnectionPtr->id)->cancel();
@@ -347,7 +359,6 @@ class ExecutionManagementServiceMexc : public ExecutionManagementService {
       this->eventHandler(event, nullptr);
     }
   }
-
 
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const TimePoint& timeReceived) {
@@ -404,7 +415,7 @@ class ExecutionManagementServiceMexc : public ExecutionManagementService {
         } else if (c == "spot@private.orders.v3.api" && fieldSet.find(CCAPI_EM_ORDER_UPDATE) != fieldSet.end()) {
           message.setTime(TimePoint(std::chrono::milliseconds(std::stoll(document["t"].GetString()))));
           message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_ORDER_UPDATE);
-          const std::map<std::string, std::pair<std::string, JsonDataType> >& extractionFieldNameMap = {
+          const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
               {CCAPI_EM_ORDER_ID, std::make_pair("i", JsonDataType::STRING)},
               {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("c", JsonDataType::STRING)},
               {CCAPI_EM_ORDER_LIMIT_PRICE, std::make_pair("p", JsonDataType::STRING)},
@@ -429,6 +440,7 @@ class ExecutionManagementServiceMexc : public ExecutionManagementService {
     event.setMessageList(messageList);
     return event;
   }
+
   std::string listenKeyTarget;
   int pingListenKeyIntervalSeconds;
   std::map<std::string, TimerPtr> pingListenKeyTimerMapByConnectionIdMap;

@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT
 #ifdef CCAPI_ENABLE_EXCHANGE_KUCOIN_FUTURES
 #include "ccapi_cpp/service/ccapi_execution_management_service_kucoin_base.h"
+
 namespace ccapi {
 class ExecutionManagementServiceKucoinFutures : public ExecutionManagementServiceKucoinBase {
  public:
@@ -27,6 +28,7 @@ class ExecutionManagementServiceKucoinFutures : public ExecutionManagementServic
     this->topicTradeOrders = "/contractMarket/tradeOrders";
     this->isDerivatives = true;
   }
+
   virtual ~ExecutionManagementServiceKucoinFutures() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 

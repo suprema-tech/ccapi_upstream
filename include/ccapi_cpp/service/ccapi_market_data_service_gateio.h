@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #ifdef CCAPI_ENABLE_EXCHANGE_GATEIO
 #include "ccapi_cpp/service/ccapi_market_data_service_gateio_base.h"
+
 namespace ccapi {
 class MarketDataServiceGateio : public MarketDataServiceGateioBase {
  public:
@@ -26,7 +27,9 @@ class MarketDataServiceGateio : public MarketDataServiceGateioBase {
     this->websocketChannelCandlesticks = CCAPI_WEBSOCKET_GATEIO_CHANNEL_CANDLESTICKS;
     this->symbolName = "currency_pair";
   }
+
   virtual ~MarketDataServiceGateio() {}
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     req.set("Accept", "application/json");
@@ -64,6 +67,7 @@ class MarketDataServiceGateio : public MarketDataServiceGateioBase {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractInstrumentInfo(Element& element, const rj::Value& x) {
     element.insert(CCAPI_INSTRUMENT, x["id"].GetString());
     element.insert(CCAPI_BASE_ASSET, x["base"].GetString());
@@ -81,6 +85,7 @@ class MarketDataServiceGateio : public MarketDataServiceGateioBase {
       element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, "1");
     }
   }
+
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     rj::Document document;

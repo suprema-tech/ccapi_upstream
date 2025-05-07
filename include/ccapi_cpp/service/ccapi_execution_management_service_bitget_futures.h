@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT
 #ifdef CCAPI_ENABLE_EXCHANGE_BITGET_FUTURES
 #include "ccapi_cpp/service/ccapi_execution_management_service_bitget_base.h"
+
 namespace ccapi {
 class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServiceBitgetBase {
  public:
@@ -28,6 +29,7 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
     this->getAccountPositionsTarget = "/api/v2/mix/position/single-position";
     this->getAccountAllPositionsTarget = "/api/v2/mix/position/all-position";
   }
+
   virtual ~ExecutionManagementServiceBitgetFutures() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -51,6 +53,7 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
       rjValue.AddMember(rj::Value(key.c_str(), allocator).Move(), rj::Value(value.c_str(), allocator).Move(), allocator);
     }
   }
+
   void appendParam(std::string& queryString, const std::map<std::string, std::string>& param,
                    const std::map<std::string, std::string> standardizationMap = {
                        {CCAPI_MARGIN_ASSET, "marginCoin"},
@@ -66,6 +69,7 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
       queryString += "&";
     }
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     this->prepareReq(req, request, now, symbolId, credential);
@@ -197,6 +201,7 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
     const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
@@ -235,6 +240,7 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
       }
     }
   }
+
   void extractAccountInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                      const rj::Document& document) override {
     switch (request.getOperation()) {
@@ -266,6 +272,7 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
         CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);
     }
   }
+
   void extractOrderInfo(Element& element, const rj::Value& x, const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap,
                         const std::map<std::string, std::function<std::string(const std::string&)>> conversionMap = {}) override {
     ExecutionManagementService::extractOrderInfo(element, x, extractionFieldNameMap);
@@ -282,6 +289,7 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
       }
     }
   }
+
   std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription, const TimePoint& now,
                                                                 const std::map<std::string, std::string>& credential) override {
     std::vector<std::string> sendStringList;
@@ -365,7 +373,6 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
           this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "subscribe");
         }
       } else {
-
         Event event = this->createEvent(wsConnectionPtr, subscription, textMessageView, document, eventStr, timeReceived);
 
         if (!event.getMessageList().empty()) {
@@ -510,6 +517,7 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
     event.setMessageList(messageList);
     return event;
   }
+
   std::string getAllOpenOrdersTarget, getAccountAllPositionsTarget;
 };
 } /* namespace ccapi */

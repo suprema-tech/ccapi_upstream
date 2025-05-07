@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #if defined(CCAPI_ENABLE_EXCHANGE_HUOBI) || defined(CCAPI_ENABLE_EXCHANGE_HUOBI_USDT_SWAP) || defined(CCAPI_ENABLE_EXCHANGE_HUOBI_COIN_SWAP)
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
+
 namespace ccapi {
 class MarketDataServiceHuobiBase : public MarketDataService {
  public:
@@ -19,6 +20,7 @@ class MarketDataServiceHuobiBase : public MarketDataService {
     }
     // this->convertNumberToStringInJsonRegex = std::regex("(\\[|,|\":)\\s?(-?\\d+\\.?\\d*[eE]?-?\\d*)");
   }
+
   virtual ~MarketDataServiceHuobiBase() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -90,6 +92,7 @@ class MarketDataServiceHuobiBase : public MarketDataService {
     }
     return sendStringList;
   }
+
   std::string getInstrumentGroup(const Subscription& subscription) override {
     auto url = this->baseUrlWs;
     auto field = subscription.getField();
@@ -100,13 +103,13 @@ class MarketDataServiceHuobiBase : public MarketDataService {
     }
     return url + "|" + field + "|" + subscription.getSerializedOptions();
   }
+
   void processTextMessage(
 
       std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView
 
       ,
       const TimePoint& timeReceived, Event& event, std::vector<MarketDataMessage>& marketDataMessageList) override {
-
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
 
@@ -292,6 +295,7 @@ class MarketDataServiceHuobiBase : public MarketDataService {
       event.setMessageList(messageList);
     }
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     switch (request.getOperation()) {
@@ -314,6 +318,7 @@ class MarketDataServiceHuobiBase : public MarketDataService {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractInstrumentInfo(Element& element, const rj::Value& x) {
     element.insert(CCAPI_INSTRUMENT, x["symbol"].GetString());
     element.insert(CCAPI_BASE_ASSET, x["base-currency"].GetString());
@@ -333,6 +338,7 @@ class MarketDataServiceHuobiBase : public MarketDataService {
     element.insert(CCAPI_ORDER_QUANTITY_MIN, x["limit-order-min-order-amt"].GetString());
     element.insert(CCAPI_ORDER_PRICE_TIMES_QUANTITY_MIN, x["min-order-value"].GetString());
   }
+
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     rj::Document document;
@@ -393,6 +399,7 @@ class MarketDataServiceHuobiBase : public MarketDataService {
         CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);
     }
   }
+
   bool isDerivatives{};
   std::map<int, std::string> exchangeSubscriptionIdByExchangeJsonPayloadIdMap;
 };

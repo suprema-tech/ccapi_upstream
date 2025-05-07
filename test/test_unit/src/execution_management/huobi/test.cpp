@@ -4,11 +4,13 @@
 #include "gtest/gtest.h"
 #include "ccapi_cpp/ccapi_test_execution_management_helper.h"
 #include "ccapi_cpp/service/ccapi_execution_management_service_huobi.h"
+
 // clang-format on
 namespace ccapi {
 class ExecutionManagementServiceHuobiTest : public ::testing::Test {
  public:
   typedef Service::ServiceContextPtr ServiceContextPtr;
+
   void SetUp() override {
     this->service = std::make_shared<ExecutionManagementServiceHuobi>([](Event&, Queue<Event>*) {}, SessionOptions(), SessionConfigs(), &this->serviceContext);
     this->credential = {
@@ -18,6 +20,7 @@ class ExecutionManagementServiceHuobiTest : public ::testing::Test {
     this->timestamp = "2017-05-11T15:19:30";
     this->now = UtilTime::parse(this->timestamp + "Z");
   }
+
   ServiceContext serviceContext;
   std::shared_ptr<ExecutionManagementServiceHuobi> service{nullptr};
   std::map<std::string, std::string> credential;

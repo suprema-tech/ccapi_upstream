@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT
 #ifdef CCAPI_ENABLE_EXCHANGE_BITMART
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
+
 namespace ccapi {
 class ExecutionManagementServiceBitmart : public ExecutionManagementService {
  public:
@@ -30,6 +31,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
       CCAPI_LOGGER_FATAL(ec.message());
     }
   }
+
   virtual ~ExecutionManagementServiceBitmart() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -39,6 +41,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
   void pingOnApplicationLevel(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode& ec) override { this->send(wsConnectionPtr, "ping", ec); }
 
   bool doesHttpBodyContainError(const std::string& body) override { return !std::regex_search(body, std::regex("\"code\":\\s*1000")); }
+
   void signReqeustForRestGenericPrivateRequest(http::request<http::string_body>& req, const Request& request, std::string& methodString,
                                                std::string& headerString, std::string& path, std::string& queryString, std::string& body, const TimePoint& now,
                                                const std::map<std::string, std::string>& credential) override {
@@ -60,6 +63,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
     }
     headerString += "X-BM-SIGN:" + signature;
   }
+
   void signRequest(http::request<http::string_body>& req, const std::string& paramString, const std::map<std::string, std::string>& credential) {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
     auto preSignedText = req.base().at("X-BM-TIMESTAMP").to_string();
@@ -70,6 +74,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
     auto signature = Hmac::hmac(Hmac::ShaVersion::SHA256, apiSecret, preSignedText, true);
     req.set("X-BM-SIGN", signature);
   }
+
   void appendParam(Request::Operation operation, rj::Value& rjValue, rj::Document::AllocatorType& allocator, const std::map<std::string, std::string>& param,
                    const std::map<std::string, std::string> standardizationMap = {
                        {CCAPI_EM_ORDER_SIDE, "side"},
@@ -88,6 +93,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
       rjValue.AddMember(rj::Value(key.c_str(), allocator).Move(), rj::Value(value.c_str(), allocator).Move(), allocator);
     }
   }
+
   void appendParam(std::string& queryString, const std::map<std::string, std::string>& param,
                    const std::map<std::string, std::string> standardizationMap = {
                        {CCAPI_EM_ORDER_ID, "order_id"},
@@ -100,14 +106,17 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
       queryString += "&";
     }
   }
+
   void appendSymbolId(rj::Value& rjValue, rj::Document::AllocatorType& allocator, const std::string& symbolId) {
     rjValue.AddMember("symbol", rj::Value(symbolId.c_str(), allocator).Move(), allocator);
   }
+
   void appendSymbolId(std::string& queryString, const std::string& symbolId) {
     queryString += "symbol=";
     queryString += Url::urlEncode(symbolId);
     queryString += "&";
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     req.set(beast::http::field::content_type, "application/json");
@@ -215,9 +224,10 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
-    const std::map<std::string, std::pair<std::string, JsonDataType> >& extractionFieldNameMap = {
+    const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
         {CCAPI_EM_ORDER_ID, std::make_pair("order_id", JsonDataType::STRING)},
         {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("client_order_id", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},
@@ -241,6 +251,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
       elementList.emplace_back(std::move(element));
     }
   }
+
   void extractAccountInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                      const rj::Document& document) override {
     switch (request.getOperation()) {
@@ -259,6 +270,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
         CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);
     }
   }
+
   std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription, const TimePoint& now,
                                                                 const std::map<std::string, std::string>& credential) override {
     std::vector<std::string> sendStringList;
@@ -349,6 +361,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
       }
     }
   }
+
   Event createEvent(const Subscription& subscription, const std::string& textMessage, const rj::Document& document, const std::string& eventStr,
                     const TimePoint& timeReceived) {
     Event event;
@@ -410,7 +423,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
               message.setCorrelationIdList({subscription.getCorrelationId()});
               message.setTime(UtilTime::makeTimePointFromMilliseconds(std::stoll(std::string(x["ms_t"].GetString()))));
               message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_ORDER_UPDATE);
-              const std::map<std::string, std::pair<std::string, JsonDataType> >& extractionFieldNameMap = {
+              const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
                   {CCAPI_EM_ORDER_ID, std::make_pair("order_id", JsonDataType::STRING)},
                   {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("client_order_id", JsonDataType::STRING)},
                   {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},
@@ -435,6 +448,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
     event.setMessageList(messageList);
     return event;
   }
+
   // void onClose(wspp::connection_hdl hdl) override {
   //   WsConnection& wsConnection = this->getWsConnectionFromConnectionPtr(this->serviceContextPtr->tlsClientPtr->get_con_from_hdl(hdl));
   //   this->subscriptionFailedByConnectionIdCorrelationIdMap.erase(wsConnection.id);

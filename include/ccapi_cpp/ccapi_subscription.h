@@ -6,6 +6,7 @@
 #include "ccapi_cpp/ccapi_logger.h"
 #include "ccapi_cpp/ccapi_macro.h"
 #include "ccapi_cpp/ccapi_util_private.h"
+
 namespace ccapi {
 /**
  * A single subscription. A 'Subscription' is used when calling 'Session::subscribe()' or 'Session::subscribeByFix'. Subscription objects are created using
@@ -14,6 +15,7 @@ namespace ccapi {
 class Subscription CCAPI_FINAL {
  public:
   Subscription() {}
+
   Subscription(std::string exchange, std::string instrument, std::string field, std::string options = "", std::string correlationId = "",
                std::map<std::string, std::string> credential = {})
       : exchange(exchange), instrument(instrument), field(field), correlationId(correlationId), credential(credential) {
@@ -58,6 +60,7 @@ class Subscription CCAPI_FINAL {
       this->correlationId = UtilString::generateRandomString(CCAPI_CORRELATION_ID_GENERATED_LENGTH);
     }
   }
+
   std::string toString() const {
     std::map<std::string, std::string> shortCredential;
     for (const auto& x : credential) {
@@ -69,17 +72,29 @@ class Subscription CCAPI_FINAL {
                          ", timeSent = " + UtilTime::getISOTimestamp(timeSent) + "]";
     return output;
   }
+
   const std::string& getCorrelationId() const { return correlationId; }
+
   const std::string& getExchange() const { return exchange; }
+
   const std::string& getInstrument() const { return instrument; }
+
   const std::string& getInstrumentType() const { return instrumentType; }
+
   const std::string& getField() const { return field; }
+
   const std::string& getRawOptions() const { return rawOptions; }
+
   const std::map<std::string, std::string>& getOptionMap() const { return optionMap; }
+
   const std::map<std::string, std::string>& getCredential() const { return credential; }
+
   const std::string& getServiceName() const { return serviceName; }
+
   const std::set<std::string>& getInstrumentSet() const { return instrumentSet; }
+
   const std::set<std::string>& getFieldSet() const { return fieldSet; }
+
   const std::string getSerializedOptions() const {
     std::string output;
     if (this->rawOptions.empty()) {
@@ -98,14 +113,22 @@ class Subscription CCAPI_FINAL {
     }
     return output;
   }
+
   const std::string getSerializedCredential() const { return ccapi::toString(this->credential); }
+
   // 'getTimeSent' only works in C++. For other languages, please use 'getTimeSentISO'.
   TimePoint getTimeSent() const { return timeSent; }
+
   std::string getTimeSentISO() const { return UtilTime::getISOTimestamp(timeSent); }
+
   std::pair<long long, long long> getTimeSentPair() const { return UtilTime::divide(timeSent); }
+
   const std::string& getMarginType() const { return marginType; }
+
   void setTimeSent(TimePoint timeSent) { this->timeSent = timeSent; }
+
   void setInstrumentType(const std::string& instrumentType) { this->instrumentType = instrumentType; }
+
   void setMarginType(const std::string& marginType) { this->marginType = marginType; }
   enum class Status {
     UNKNOWN,
@@ -114,6 +137,7 @@ class Subscription CCAPI_FINAL {
     UNSUBSCRIBING,
     UNSUBSCRIBED,
   };
+
   static std::string statusToString(Status status) {
     std::string output;
     switch (status) {

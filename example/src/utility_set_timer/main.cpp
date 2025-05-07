@@ -1,6 +1,8 @@
 #include "ccapi_cpp/ccapi_session.h"
+
 namespace ccapi {
 Logger* Logger::logger = nullptr;  // This line is needed.
+
 class MyEventHandler : public EventHandler {
  public:
   bool processEvent(const Event& event, Session* session) override {
@@ -16,14 +18,17 @@ class MyEventHandler : public EventHandler {
     ++numEvent;
     return true;
   }
+
   int numEvent{};
 };
 } /* namespace ccapi */
+
 using ::ccapi::MyEventHandler;
 using ::ccapi::Session;
 using ::ccapi::SessionConfigs;
 using ::ccapi::SessionOptions;
 using ::ccapi::Subscription;
+
 int main(int argc, char** argv) {
   SessionOptions sessionOptions;
   SessionConfigs sessionConfigs;

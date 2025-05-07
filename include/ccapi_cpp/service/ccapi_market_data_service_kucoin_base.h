@@ -3,18 +3,21 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #if defined(CCAPI_ENABLE_EXCHANGE_KUCOIN) || defined(CCAPI_ENABLE_EXCHANGE_KUCOIN_FUTURES)
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
+
 namespace ccapi {
 class MarketDataServiceKucoinBase : public MarketDataService {
  public:
   MarketDataServiceKucoinBase(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
                               ServiceContext* serviceContextPtr)
       : MarketDataService(eventHandler, sessionOptions, sessionConfigs, serviceContextPtr) {}
+
   virtual ~MarketDataServiceKucoinBase() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
  protected:
 #endif
   bool doesHttpBodyContainError(const std::string& body) override { return !std::regex_search(body, std::regex("\"code\":\\s*\"200000\"")); }
+
   void prepareSubscriptionDetail(std::string& channelId, std::string& symbolId, const std::string& field, const WsConnection& wsConnection,
                                  const Subscription& subscription, const std::map<std::string, std::string> optionMap) override {
     auto marketDepthRequested = std::stoi(optionMap.at(CCAPI_MARKET_DEPTH_MAX));
@@ -52,7 +55,9 @@ class MarketDataServiceKucoinBase : public MarketDataService {
     auto now = UtilTime::now();
     this->send(wsConnectionPtr, "{\"id\":\"" + std::to_string(UtilTime::getUnixTimestamp(now)) + "\",\"type\":\"ping\"}", ec);
   }
+
   void onOpen(std::shared_ptr<WsConnection> wsConnectionPtr) override { wsConnectionPtr->status = WsConnection::Status::OPEN; }
+
   void prepareConnect(std::shared_ptr<WsConnection> wsConnectionPtr) override {
     http::request<http::string_body> req;
     req.set(http::field::host, this->hostRest);
@@ -169,6 +174,7 @@ class MarketDataServiceKucoinBase : public MarketDataService {
     }
     return sendStringList;
   }
+
   void createFetchOrderBookInitialReq(http::request<http::string_body>& req, const std::string& symbolId, const TimePoint& now,
                                       const std::map<std::string, std::string>& credential) override {
     req.set(http::field::host, this->hostRest);
@@ -177,6 +183,7 @@ class MarketDataServiceKucoinBase : public MarketDataService {
     this->prepareReq(req, now, credential);
     this->signRequest(req, "", credential);
   }
+
   void prepareReq(http::request<http::string_body>& req, const TimePoint& now, const std::map<std::string, std::string>& credential) {
     req.set(beast::http::field::content_type, "application/json");
     auto apiKey = mapGetWithDefault(credential, this->apiKeyName);
@@ -187,6 +194,7 @@ class MarketDataServiceKucoinBase : public MarketDataService {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
     this->signApiPassphrase(req, apiPassphrase, apiSecret);
   }
+
   void signRequest(http::request<http::string_body>& req, const std::string& body, const std::map<std::string, std::string>& credential) {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
     auto preSignedText = req.base().at("KC-API-TIMESTAMP").to_string();
@@ -198,12 +206,15 @@ class MarketDataServiceKucoinBase : public MarketDataService {
     req.body() = body;
     req.prepare_payload();
   }
+
   void signApiPassphrase(http::request<http::string_body>& req, const std::string& apiPassphrase, const std::string& apiSecret) {
     req.set("KC-API-PASSPHRASE", UtilAlgorithm::base64Encode(Hmac::hmac(Hmac::ShaVersion::SHA256, apiSecret, apiPassphrase)));
   }
+
   void extractOrderBookInitialVersionId(int64_t& versionId, const rj::Document& document) override {
     versionId = std::stoll(document["data"]["sequence"].GetString());
   }
+
   void extractOrderBookInitialData(MarketDataMessage::TypeForData& input, const rj::Document& document) override {
     for (const auto& x : document["data"]["bids"].GetArray()) {
       MarketDataMessage::TypeForDataPoint dataPoint;
@@ -218,13 +229,13 @@ class MarketDataServiceKucoinBase : public MarketDataService {
       input[MarketDataMessage::DataType::ASK].emplace_back(std::move(dataPoint));
     }
   }
+
   void processTextMessage(
 
       std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView
 
       ,
       const TimePoint& timeReceived, Event& event, std::vector<MarketDataMessage>& marketDataMessageList) override {
-
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
 
@@ -435,6 +446,7 @@ class MarketDataServiceKucoinBase : public MarketDataService {
       }
     }
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     switch (request.getOperation()) {
@@ -521,6 +533,7 @@ class MarketDataServiceKucoinBase : public MarketDataService {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     rj::Document document;
@@ -620,7 +633,9 @@ class MarketDataServiceKucoinBase : public MarketDataService {
         CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);
     }
   }
+
   virtual void extractInstrumentInfo(Element& element, const rj::Value& x) {}
+
   bool isDerivatives{};
   std::string channelMarketTicker;
   std::string channelMarketLevel2Depth5;

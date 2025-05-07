@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #ifdef CCAPI_ENABLE_EXCHANGE_GATEIO_PERPETUAL_FUTURES
 #include "ccapi_cpp/service/ccapi_market_data_service_gateio_base.h"
+
 namespace ccapi {
 class MarketDataServiceGateioPerpetualFutures : public MarketDataServiceGateioBase {
  public:
@@ -27,7 +28,9 @@ class MarketDataServiceGateioPerpetualFutures : public MarketDataServiceGateioBa
     this->websocketChannelCandlesticks = CCAPI_WEBSOCKET_GATEIO_PERPETUAL_FUTURES_CHANNEL_CANDLESTICKS;
     this->symbolName = "contract";
   }
+
   virtual ~MarketDataServiceGateioPerpetualFutures() {}
+
   std::string getInstrumentGroup(const Subscription& subscription) override {
     auto instrument = subscription.getInstrument();
     std::string url(this->baseUrlWs);
@@ -38,6 +41,7 @@ class MarketDataServiceGateioPerpetualFutures : public MarketDataServiceGateioBa
     }
     return url + "|" + subscription.getField() + "|" + subscription.getSerializedOptions();
   }
+
   void substituteParamSettle(std::string& target, const std::map<std::string, std::string>& param, const std::string& symbolId) {
     this->substituteParam(target, param,
                           {
@@ -54,6 +58,7 @@ class MarketDataServiceGateioPerpetualFutures : public MarketDataServiceGateioBa
                                       {"{settle}", settle},
                                   });
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     req.set("Accept", "application/json");
@@ -100,10 +105,12 @@ class MarketDataServiceGateioPerpetualFutures : public MarketDataServiceGateioBa
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractInstrumentInfo(Element& element, const rj::Value& x) {
     element.insert(CCAPI_INSTRUMENT, x["name"].GetString());
     element.insert(CCAPI_ORDER_PRICE_INCREMENT, x["order_price_round"].GetString());
   }
+
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     rj::Document document;

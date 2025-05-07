@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT
 #ifdef CCAPI_ENABLE_EXCHANGE_BINANCE_US
 #include "ccapi_cpp/service/ccapi_execution_management_service_binance_base.h"
+
 namespace ccapi {
 class ExecutionManagementServiceBinanceUs : public ExecutionManagementServiceBinanceBase {
  public:
@@ -25,6 +26,7 @@ class ExecutionManagementServiceBinanceUs : public ExecutionManagementServiceBin
     this->listenKeyTarget = CCAPI_BINANCE_US_LISTEN_KEY_PATH;
     this->getAccountBalancesTarget = "/api/v3/account";
   }
+
   virtual ~ExecutionManagementServiceBinanceUs() {}
 };
 } /* namespace ccapi */

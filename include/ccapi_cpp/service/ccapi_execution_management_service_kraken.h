@@ -4,6 +4,7 @@
 #ifdef CCAPI_ENABLE_EXCHANGE_KRAKEN
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
 #include "openssl/evp.h"
+
 namespace ccapi {
 class ExecutionManagementServiceKraken : public ExecutionManagementService {
  public:
@@ -28,6 +29,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
     this->getAccountPositionsTarget = prefix + "/OpenPositions";
     this->getWebSocketsTokenTarget = prefix + "/GetWebSocketsToken";
   }
+
   virtual ~ExecutionManagementServiceKraken() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -40,6 +42,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
   }
 
   bool doesHttpBodyContainError(const std::string& body) override { return body.find(R"("error":[])") == std::string::npos; }
+
   void signReqeustForRestGenericPrivateRequest(http::request<http::string_body>& req, const Request& request, std::string& methodString,
                                                std::string& headerString, std::string& path, std::string& queryString, std::string& body, const TimePoint& now,
                                                const std::map<std::string, std::string>& credential) override {
@@ -58,6 +61,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
     }
     headerString += "API-Sign:" + signature;
   }
+
   void signRequest(http::request<http::string_body>& req, const std::string& body, const std::map<std::string, std::string>& credential,
                    const std::string& nonce) {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
@@ -70,6 +74,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
     req.body() = body;
     req.prepare_payload();
   }
+
   void appendParam(std::string& body, const std::map<std::string, std::string>& param, const std::string& nonce,
                    const std::map<std::string, std::string> standardizationMap = {
                        {CCAPI_EM_ORDER_SIDE, "type"},
@@ -95,11 +100,13 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
       body += "&";
     }
   }
+
   void appendSymbolId(std::string& body, const std::string& symbolId) {
     body += "pair=";
     body += Url::urlEncode(symbolId);
     body += "&";
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     req.set(beast::http::field::content_type, "application/x-www-form-urlencoded; charset=utf-8");
@@ -185,9 +192,10 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
-    const std::map<std::string, std::pair<std::string, JsonDataType> >& extractionFieldNameMap = {
+    const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
         {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("userref", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_QUANTITY, std::make_pair("vol", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUANTITY, std::make_pair("vol_exec", JsonDataType::STRING)},
@@ -204,7 +212,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
       for (auto itr = orders.MemberBegin(); itr != orders.MemberEnd(); ++itr) {
         Element element;
         this->extractOrderInfo(element, itr->value, extractionFieldNameMap);
-        const std::map<std::string, std::pair<std::string, JsonDataType> >& extractionMoreFieldNameMap = {
+        const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionMoreFieldNameMap = {
             {CCAPI_EM_ORDER_SIDE, std::make_pair("type", JsonDataType::STRING)},
             {CCAPI_EM_ORDER_LIMIT_PRICE, std::make_pair("price", JsonDataType::STRING)},
             {CCAPI_EM_ORDER_INSTRUMENT, std::make_pair("pair", JsonDataType::STRING)}};
@@ -220,6 +228,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
       }
     }
   }
+
   void extractAccountInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                      const rj::Document& document) override {
     switch (request.getOperation()) {
@@ -343,7 +352,6 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
     }
   }
 
-
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const TimePoint& timeReceived) {
     std::string textMessage(textMessageView);
@@ -391,7 +399,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
           message.setTimeReceived(timeReceived);
           message.setCorrelationIdList({subscription.getCorrelationId()});
           std::vector<Element> elementList;
-          const std::map<std::string, std::pair<std::string, JsonDataType> >& extractionFieldNameMap = {
+          const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
               {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("userref", JsonDataType::STRING)},
               {CCAPI_EM_ORDER_QUANTITY, std::make_pair("vol", JsonDataType::STRING)},
               {CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUANTITY, std::make_pair("vol_exec", JsonDataType::STRING)},
@@ -405,7 +413,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
                 if (instrumentSet.empty() || instrumentSet.find(instrument) != instrumentSet.end()) {
                   Element element;
                   this->extractOrderInfo(element, itr->value, extractionFieldNameMap);
-                  const std::map<std::string, std::pair<std::string, JsonDataType> >& extractionMoreFieldNameMap = {
+                  const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionMoreFieldNameMap = {
                       {CCAPI_EM_ORDER_SIDE, std::make_pair("type", JsonDataType::STRING)},
                       {CCAPI_EM_ORDER_LIMIT_PRICE, std::make_pair("price", JsonDataType::STRING)},
                       {CCAPI_EM_ORDER_INSTRUMENT, std::make_pair("pair", JsonDataType::STRING)}};
@@ -461,6 +469,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
     event.setMessageList(messageList);
     return event;
   }
+
   std::string getWebSocketsTokenTarget;
 };
 } /* namespace ccapi */

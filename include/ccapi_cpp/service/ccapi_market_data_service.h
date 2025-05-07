@@ -10,6 +10,7 @@
 #include "ccapi_cpp/ccapi_logger.h"
 #include "ccapi_cpp/ccapi_util_private.h"
 #include "ccapi_cpp/service/ccapi_service.h"
+
 namespace ccapi {
 /**
  * The MarketDataService class inherits from the Service class and provides implemenations more specific to market data such as order book, trades, etc..
@@ -35,6 +36,7 @@ class MarketDataService : public Service {
     };
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
+
   virtual ~MarketDataService() {
     for (const auto& x : this->conflateTimerMapByConnectionIdChannelIdSymbolIdMap) {
       for (const auto& y : x.second) {
@@ -126,6 +128,7 @@ class MarketDataService : public Service {
     }
     return groups;
   }
+
   virtual std::string getInstrumentGroup(const Subscription& subscription) {
     const auto& field = subscription.getField();
     if (field == CCAPI_GENERIC_PUBLIC_SUBSCRIPTION) {
@@ -134,6 +137,7 @@ class MarketDataService : public Service {
       return this->baseUrlWs + "|" + subscription.getField() + "|" + subscription.getSerializedOptions() + "|" + subscription.getSerializedCredential();
     }
   }
+
   void prepareSubscription(const WsConnection& wsConnection, const Subscription& subscription) {
     auto instrument = subscription.getInstrument();
     CCAPI_LOGGER_TRACE("instrument = " + instrument);
@@ -257,6 +261,7 @@ class MarketDataService : public Service {
       }
     }
   }
+
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessage, const TimePoint& timeReceived) override {
     CCAPI_LOGGER_FUNCTION_ENTER;
     if (this->correlationIdByConnectionIdMap.find(wsConnectionPtr->id) == this->correlationIdByConnectionIdMap.end()) {
@@ -285,6 +290,7 @@ class MarketDataService : public Service {
     this->onPongByMethod(PingPongMethod::WEBSOCKET_APPLICATION_LEVEL, wsConnectionPtr, timeReceived, false);
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
+
   virtual void onIncorrectStatesFound(std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView, const TimePoint& timeReceived,
                                       const std::string& exchangeSubscriptionId, std::string const& reason) {
     std::string errorMessage = "incorrect states found: connection = " + toString(*wsConnectionPtr) + ", textMessage = " + std::string(textMessageView) +
@@ -308,6 +314,7 @@ class MarketDataService : public Service {
     this->shouldProcessRemainingMessageOnClosingByConnectionIdMap[wsConnectionPtr->id] = false;
     this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::INCORRECT_STATE_FOUND, errorMessage);
   }
+
   void connect(std::shared_ptr<WsConnection> wsConnectionPtr) override {
     CCAPI_LOGGER_FUNCTION_ENTER;
     Service::connect(wsConnectionPtr);
@@ -315,6 +322,7 @@ class MarketDataService : public Service {
     CCAPI_LOGGER_DEBUG("this->instrumentGroupByWsConnectionIdMap = " + toString(this->instrumentGroupByWsConnectionIdMap));
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
+
   void onOpen(std::shared_ptr<WsConnection> wsConnectionPtr) override {
     CCAPI_LOGGER_FUNCTION_ENTER;
     WsConnection& wsConnection = *wsConnectionPtr;
@@ -328,12 +336,14 @@ class MarketDataService : public Service {
       this->startSubscribe(wsConnectionPtr);
     }
   }
+
   void onFail_(std::shared_ptr<WsConnection> wsConnectionPtr) override {
     WsConnection& wsConnection = *wsConnectionPtr;
     WsConnection thisWsConnection = wsConnection;
     Service::onFail_(wsConnectionPtr);
     this->instrumentGroupByWsConnectionIdMap.erase(thisWsConnection.id);
   }
+
   void clearStates(std::shared_ptr<WsConnection> wsConnectionPtr) override {
     WsConnection& wsConnection = *wsConnectionPtr;
     Service::clearStates(wsConnectionPtr);
@@ -374,6 +384,7 @@ class MarketDataService : public Service {
     }
     this->orderbookVersionIdByConnectionIdExchangeSubscriptionIdMap.erase(wsConnection.id);
   }
+
   virtual void onClose(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode ec) override {
     CCAPI_LOGGER_FUNCTION_ENTER;
     WsConnection& wsConnection = *wsConnectionPtr;
@@ -383,6 +394,7 @@ class MarketDataService : public Service {
     this->correlationIdByConnectionIdMap.erase(wsConnection.id);
     Service::onClose(wsConnectionPtr, ec);
   }
+
   virtual void subscribeToExchange(std::shared_ptr<WsConnection> wsConnectionPtr) {
     WsConnection& wsConnection = *wsConnectionPtr;
     CCAPI_LOGGER_INFO("exchange is " + this->exchangeName);
@@ -402,6 +414,7 @@ class MarketDataService : public Service {
       }
     }
   }
+
   void startSubscribe(std::shared_ptr<WsConnection> wsConnectionPtr) {
     WsConnection& wsConnection = *wsConnectionPtr;
     auto instrumentGroup = wsConnection.group;
@@ -417,6 +430,7 @@ class MarketDataService : public Service {
     CCAPI_LOGGER_INFO("about to subscribe to exchange");
     this->subscribeToExchange(wsConnectionPtr);
   }
+
   virtual void logonToExchange(std::shared_ptr<WsConnection> wsConnectionPtr, const TimePoint& now, const std::map<std::string, std::string>& credential) {
     WsConnection& wsConnection = *wsConnectionPtr;
     CCAPI_LOGGER_INFO("about to logon to exchange");
@@ -451,6 +465,7 @@ class MarketDataService : public Service {
       }
     }
   }
+
   void updateElementListWithInitialMarketDepth(const std::string& field, const std::map<std::string, std::string>& optionMap,
                                                const std::map<Decimal, std::string>& snapshotBid, const std::map<Decimal, std::string>& snapshotAsk,
                                                std::vector<Element>& elementList) {
@@ -492,6 +507,7 @@ class MarketDataService : public Service {
     }
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
+
   void updateElementListWithOrderBookSnapshot(const std::string& field, int maxMarketDepth, const std::map<Decimal, std::string>& snapshotBid,
                                               const std::map<Decimal, std::string>& snapshotAsk, std::vector<Element>& elementList) {
     CCAPI_LOGGER_FUNCTION_ENTER;
@@ -531,6 +547,7 @@ class MarketDataService : public Service {
     }
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
+
   std::map<Decimal, std::string> calculateMarketDepthUpdate(bool isBid, const std::map<Decimal, std::string>& c1, const std::map<Decimal, std::string>& c2,
                                                             int maxMarketDepth) {
     if (c1.empty()) {
@@ -616,6 +633,7 @@ class MarketDataService : public Service {
       return output;
     }
   }
+
   void updateElementListWithUpdateMarketDepth(const std::string& field, const std::map<std::string, std::string>& optionMap,
                                               const std::map<Decimal, std::string>& snapshotBid, const std::map<Decimal, std::string>& snapshotBidPrevious,
                                               const std::map<Decimal, std::string>& snapshotAsk, const std::map<Decimal, std::string>& snapshotAskPrevious,
@@ -689,6 +707,7 @@ class MarketDataService : public Service {
     }
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
+
   void updateElementListWithTrade(const std::string& field, MarketDataMessage::TypeForData& input, std::vector<Element>& elementList) {
     if (field == CCAPI_TRADE || field == CCAPI_AGG_TRADE) {
       for (auto& x : input) {
@@ -734,6 +753,7 @@ class MarketDataService : public Service {
       }
     }
   }
+
   void updateElementListWithExchangeProvidedCandlestick(const std::string& field, MarketDataMessage::TypeForData& input, std::vector<Element>& elementList) {
     if (field == CCAPI_CANDLESTICK) {
       for (auto& x : input) {
@@ -772,6 +792,7 @@ class MarketDataService : public Service {
       }
     }
   }
+
   void updateElementListWithCalculatedCandlestick(const WsConnection& wsConnection, const std::string& channelId, const std::string& symbolId,
                                                   const std::string& field, std::vector<Element>& elementList) {
     if (field == CCAPI_TRADE || field == CCAPI_AGG_TRADE) {
@@ -794,6 +815,7 @@ class MarketDataService : public Service {
       this->closeByConnectionIdChannelIdSymbolIdMap[wsConnection.id][channelId][symbolId] = "";
     }
   }
+
   void copySnapshot(bool isBid, const std::map<Decimal, std::string>& original, std::map<Decimal, std::string>& copy, const int maxMarketDepth) {
     size_t nToCopy = std::min(original.size(), static_cast<size_t>(maxMarketDepth));
     if (isBid) {
@@ -802,6 +824,7 @@ class MarketDataService : public Service {
       std::copy_n(original.begin(), nToCopy, std::inserter(copy, copy.end()));
     }
   }
+
   void processOrderBookInitial(const WsConnection& wsConnection, const std::string& channelId, const std::string& symbolId, Event& event, const TimePoint& tp,
                                const TimePoint& timeReceived, MarketDataMessage::TypeForData& input, const std::string& field,
                                const std::map<std::string, std::string>& optionMap, const std::vector<std::string>& correlationIdList,
@@ -873,6 +896,7 @@ class MarketDataService : public Service {
       }
     }
   }
+
   void processOrderBookUpdate(const WsConnection& wsConnection, const std::string& channelId, const std::string& symbolId, Event& event, const TimePoint& tp,
                               const TimePoint& timeReceived, MarketDataMessage::TypeForData& input, const std::string& field,
                               const std::map<std::string, std::string>& optionMap, const std::vector<std::string>& correlationIdList,
@@ -991,6 +1015,7 @@ class MarketDataService : public Service {
       }
     }
   }
+
   void processTrade(const WsConnection& wsConnection, const std::string& channelId, const std::string& symbolId, Event& event, const TimePoint& tp,
                     const TimePoint& timeReceived, MarketDataMessage::TypeForData& input, const std::string& field,
                     const std::map<std::string, std::string>& optionMap, const std::vector<std::string>& correlationIdList, bool isSolicited) {
@@ -1052,6 +1077,7 @@ class MarketDataService : public Service {
       this->updateCalculatedCandlestick(wsConnection, channelId, symbolId, field, input);
     }
   }
+
   void processExchangeProvidedCandlestick(const WsConnection& wsConnection, const std::string& channelId, const std::string& symbolId, Event& event,
                                           const TimePoint& tp, const TimePoint& timeReceived, MarketDataMessage::TypeForData& input, const std::string& field,
                                           const std::map<std::string, std::string>& optionMap, const std::vector<std::string>& correlationIdList,
@@ -1073,6 +1099,7 @@ class MarketDataService : public Service {
       event.addMessages(messageList);
     }
   }
+
   void processExchangeProvidedCandlestick(Event& event, const TimePoint& tp, const TimePoint& timeReceived, MarketDataMessage::TypeForData& input,
                                           const std::vector<std::string>& correlationIdList, Message::Type messageType) {
     std::vector<Message> messageList;
@@ -1091,6 +1118,7 @@ class MarketDataService : public Service {
       event.addMessages(messageList);
     }
   }
+
   void updateCalculatedCandlestick(const WsConnection& wsConnection, const std::string& channelId, const std::string& symbolId, const std::string& field,
                                    const MarketDataMessage::TypeForData& input) {
     if (field == CCAPI_TRADE || field == CCAPI_AGG_TRADE) {
@@ -1121,6 +1149,7 @@ class MarketDataService : public Service {
       }
     }
   }
+
   virtual void alignSnapshot(std::map<Decimal, std::string>& snapshotBid, std::map<Decimal, std::string>& snapshotAsk, int marketDepthSubscribedToExchange) {
     CCAPI_LOGGER_TRACE("snapshotBid.size() = " + toString(snapshotBid.size()));
     if (snapshotBid.size() > marketDepthSubscribedToExchange) {
@@ -1133,6 +1162,7 @@ class MarketDataService : public Service {
     }
     CCAPI_LOGGER_TRACE("snapshotAsk.size() = " + toString(snapshotAsk.size()));
   }
+
   virtual bool checkOrderBookChecksum(const std::map<Decimal, std::string>& snapshotBid, const std::map<Decimal, std::string>& snapshotAsk,
                                       const std::string& receivedOrderBookChecksumStr, bool& shouldProcessRemainingMessage) {
     if (this->sessionOptions.enableCheckOrderBookChecksum) {
@@ -1151,6 +1181,7 @@ class MarketDataService : public Service {
     }
     return true;
   }
+
   virtual bool checkOrderBookCrossed(const std::map<Decimal, std::string>& snapshotBid, const std::map<Decimal, std::string>& snapshotAsk,
                                      bool& shouldProcessRemainingMessage) {
     if (this->sessionOptions.enableCheckOrderBookCrossed) {
@@ -1169,6 +1200,7 @@ class MarketDataService : public Service {
     }
     return true;
   }
+
   int calculateMarketDepthAllowedByExchange(int depthWanted, std::vector<int> availableMarketDepth) {
     int i = ceilSearch(availableMarketDepth, 0, availableMarketDepth.size(), depthWanted);
     if (i < 0) {
@@ -1176,6 +1208,7 @@ class MarketDataService : public Service {
     }
     return availableMarketDepth[i];
   }
+
   Message::Type convertFieldToMessageType(std::string field) {
     if (field == CCAPI_MARKET_DEPTH) {
       return Message::Type::MARKET_DATA_EVENTS_MARKET_DEPTH;
@@ -1187,6 +1220,7 @@ class MarketDataService : public Service {
       return Message::Type::UNKNOWN;
     }
   }
+
   void setConflateTimer(const TimePoint& previousConflateTp, const std::chrono::milliseconds& interval, const std::chrono::milliseconds& gracePeriod,
                         const WsConnection& wsConnection, const std::string& channelId, const std::string& symbolId, const std::string& field,
                         const std::map<std::string, std::string>& optionMap, const std::vector<std::string>& correlationIdList) {
@@ -1266,6 +1300,7 @@ class MarketDataService : public Service {
     }
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
+
   void processSuccessfulTextMessageRest(int statusCode, const Request& request, const std::string& textMessage, const TimePoint& timeReceived,
                                         Queue<Event>* eventQueuePtr) override {
     CCAPI_LOGGER_FUNCTION_ENTER;
@@ -1308,6 +1343,7 @@ class MarketDataService : public Service {
     }
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
+
   void processMarketDataMessageList(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
                                     std::vector<MarketDataMessage>& marketDataMessageList) {
     CCAPI_LOGGER_TRACE("marketDataMessageList = " + toString(marketDataMessageList));
@@ -1339,6 +1375,7 @@ class MarketDataService : public Service {
     }
     CCAPI_LOGGER_TRACE("event type is " + event.typeToString(event.getType()));
   }
+
   void processTrade(Event& event, const TimePoint& tp, const TimePoint& timeReceived, MarketDataMessage::TypeForData& input,
                     const std::vector<std::string>& correlationIdList, Message::Type messageType) {
     std::vector<Message> messageList;
@@ -1354,6 +1391,7 @@ class MarketDataService : public Service {
     messageList.emplace_back(std::move(message));
     event.addMessages(messageList);
   }
+
   void processOrderBookSnapshot(Event& event, const TimePoint& tp, const TimePoint& timeReceived, MarketDataMessage::TypeForData& input,
                                 const std::vector<std::string>& correlationIdList, Message::Type messageType, int maxMarketDepth) {
     std::vector<Message> messageList;
@@ -1393,6 +1431,7 @@ class MarketDataService : public Service {
     messageList.emplace_back(std::move(message));
     event.addMessages(messageList);
   }
+
   void convertRequestForRestGenericPublicRequest(http::request<http::string_body>& req, const Request& request, const TimePoint& now,
                                                  const std::string& symbolId, const std::map<std::string, std::string>& credential) {
     const std::map<std::string, std::string> param = request.getFirstParamWithDefault();
@@ -1415,6 +1454,7 @@ class MarketDataService : public Service {
       req.prepare_payload();
     }
   }
+
   void processOrderBookWithVersionId(int64_t versionId, const WsConnection& wsConnection, const std::string& channelId, const std::string& symbolId,
                                      const std::string& exchangeSubscriptionId, const std::map<std::string, std::string>& optionMap,
                                      std::vector<MarketDataMessage>& marketDataMessageList, const MarketDataMessage& marketDataMessage) {
@@ -1445,6 +1485,7 @@ class MarketDataService : public Service {
           marketDataMessage.data;
     }
   }
+
   void buildOrderBookInitialOnFail(const WsConnection& wsConnection, const std::string& exchangeSubscriptionId, long delayMilliseconds) {
     auto thisDelayMilliseconds = delayMilliseconds * 2;
     if (thisDelayMilliseconds > 0) {
@@ -1461,6 +1502,7 @@ class MarketDataService : public Service {
       this->buildOrderBookInitial(wsConnection, exchangeSubscriptionId, thisDelayMilliseconds);
     }
   }
+
   void buildOrderBookInitial(const WsConnection& wsConnection, const std::string& exchangeSubscriptionId, long delayMilliseconds) {
     auto now = UtilTime::now();
     http::request<http::string_body> req;
@@ -1626,6 +1668,7 @@ class MarketDataService : public Service {
         },
         this->sessionOptions.httpRequestTimeoutMilliseconds);
   }
+
   std::string convertCandlestickIntervalSecondsToInterval(int intervalSeconds, const std::string& secondStr, const std::string& minuteStr,
                                                           const std::string& hourStr, const std::string& dayStr, const std::string& weekStr) {
     std::string interval;
@@ -1642,10 +1685,12 @@ class MarketDataService : public Service {
     }
     return interval;
   }
+
   virtual std::vector<std::string> createSendStringListFromSubscriptionList(const WsConnection& wsConnection, const std::vector<Subscription>& subscriptionList,
                                                                             const TimePoint& now, const std::map<std::string, std::string>& credential) {
     return {};
   }
+
   virtual void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
                                                      std::vector<MarketDataMessage>& marketDataMessageList) {}
 
@@ -1655,13 +1700,19 @@ class MarketDataService : public Service {
   virtual std::string calculateOrderBookChecksum(const std::map<Decimal, std::string>& snapshotBid, const std::map<Decimal, std::string>& snapshotAsk) {
     return {};
   }
+
   virtual std::vector<std::string> createSendStringList(const WsConnection& wsConnection) { return {}; }
+
   virtual void prepareSubscriptionDetail(std::string& channelId, std::string& symbolId, const std::string& field, const WsConnection& wsConnection,
                                          const Subscription& subscription, const std::map<std::string, std::string> optionMap) {}
+
   virtual void createFetchOrderBookInitialReq(http::request<http::string_body>& req, const std::string& symbolId, const TimePoint& now,
                                               const std::map<std::string, std::string>& credential) {}
+
   virtual void extractOrderBookInitialVersionId(int64_t& versionId, const rj::Document& document) {}
+
   virtual void extractOrderBookInitialData(MarketDataMessage::TypeForData& input, const rj::Document& document) {}
+
   std::map<std::string, std::map<std::string, std::map<std::string, std::string>>> fieldByConnectionIdChannelIdSymbolIdMap;
   std::map<std::string, std::map<std::string, std::map<std::string, std::map<std::string, std::string>>>> optionMapByConnectionIdChannelIdSymbolIdMap;
   std::map<std::string, std::map<std::string, std::map<std::string, int>>> marketDepthSubscribedToExchangeByConnectionIdChannelIdSymbolIdMap;

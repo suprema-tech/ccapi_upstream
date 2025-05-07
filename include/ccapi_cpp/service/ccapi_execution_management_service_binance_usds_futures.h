@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT
 #ifdef CCAPI_ENABLE_EXCHANGE_BINANCE_USDS_FUTURES
 #include "ccapi_cpp/service/ccapi_execution_management_service_binance_derivatives_base.h"
+
 namespace ccapi {
 class ExecutionManagementServiceBinanceUsdsFutures : public ExecutionManagementServiceBinanceDerivativesBase {
  public:
@@ -27,6 +28,7 @@ class ExecutionManagementServiceBinanceUsdsFutures : public ExecutionManagementS
     this->getAccountBalancesTarget = "/fapi/v2/account";
     this->getAccountPositionsTarget = "/fapi/v2/positionRisk";
   }
+
   virtual ~ExecutionManagementServiceBinanceUsdsFutures() {}
 };
 } /* namespace ccapi */

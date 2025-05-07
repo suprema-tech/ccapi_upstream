@@ -5,10 +5,12 @@
 
 #include "app/common.h"
 #include "ccapi_cpp/ccapi_event.h"
+
 namespace ccapi {
 class HistoricalMarketDataEventProcessor {
  public:
   explicit HistoricalMarketDataEventProcessor(std::function<bool(const Event& event)> eventHandler) : eventHandler(eventHandler) {}
+
   void processEvent() {
     this->clockSeconds = 0;
     auto currentDateTp = this->historicalMarketDataStartDateTp;
@@ -89,6 +91,7 @@ class HistoricalMarketDataEventProcessor {
       currentDateTp += std::chrono::hours(24);
     }
   }
+
   TimePoint historicalMarketDataStartDateTp{std::chrono::seconds{0}}, historicalMarketDataEndDateTp{std::chrono::seconds{0}},
       startTimeTp{std::chrono::seconds{0}};
   std::string exchange, baseAsset, quoteAsset, historicalMarketDataDirectory, historicalMarketDataFilePrefix, historicalMarketDataFileSuffix;
@@ -115,6 +118,7 @@ class HistoricalMarketDataEventProcessor {
       }
     }
   }
+
   void processMarketDataEventTrade(const std::vector<std::string>& splittedLine) {
     Event event;
     event.setType(Event::Type::SUBSCRIPTION_DATA);
@@ -136,6 +140,7 @@ class HistoricalMarketDataEventProcessor {
     APP_LOGGER_DEBUG("Generated a backtest event: " + event.toStringPretty());
     this->eventHandler(event);
   }
+
   void processMarketDataEventMarketDepth(const std::vector<std::string>& splittedLine) {
     Event event;
     event.setType(Event::Type::SUBSCRIPTION_DATA);

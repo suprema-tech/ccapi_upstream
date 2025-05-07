@@ -83,6 +83,7 @@
 
 #include "ccapi_cpp/ccapi_logger.h"
 #include "ccapi_cpp/ccapi_util_private.h"
+
 namespace ccapi {
 class AppUtil {
  public:
@@ -91,6 +92,7 @@ class AppUtil {
     static std::default_random_engine re;
     return unif(re);
   }
+
   static std::string generateUuidV4() {
     static std::random_device rd;
     static std::mt19937 gen(rd());
@@ -121,7 +123,9 @@ class AppUtil {
     };
     return ss.str();
   }
+
   static double linearInterpolate(double x1, double y1, double x2, double y2, double x) { return y1 + (y2 - y1) / (x2 - x1) * (x - x1); }
+
   static std::string roundInput(double input, const std::string& inputIncrement, bool roundUp) {
     int64_t x = std::floor(input / std::stod(inputIncrement));
     if (roundUp) {
@@ -148,25 +152,31 @@ class AppUtil {
     return output;
   }
 };
+
 class AppLogger {
  public:
   void log(const std::string& message, const std::string& tag = "") { this->log(std::chrono::system_clock::now(), message, tag); }
+
   void log(const std::string& filename, const std::string& lineNumber, const std::string& message, const std::string& tag = "") {
     this->log(std::chrono::system_clock::now(), filename, lineNumber, message, tag);
   }
+
   void log(const TimePoint& now, const std::string& message, const std::string& tag) {
     std::lock_guard<std::mutex> lock(m);
     std::cout << "[" << UtilTime::getISOTimestamp(now) << "] " << tag << " " << message << std::endl;
   }
+
   void log(const TimePoint& now, const std::string& filename, const std::string& lineNumber, const std::string& message, const std::string& tag) {
     std::lock_guard<std::mutex> lock(m);
     std::cout << "[" << UtilTime::getISOTimestamp(now) << "] {" << filename << ":" << lineNumber << "} " << tag << " " << message << std::endl;
   }
+
   static AppLogger* logger;
 
  private:
   std::mutex m;
 };
+
 class CcapiLogger : public Logger {
  public:
   // explicit CcapiLogger(AppLogger* appLogger) : Logger(), appLogger(appLogger) {}
@@ -176,21 +186,27 @@ class CcapiLogger : public Logger {
     oss << threadId << ": {" << filename << ":" << lineNumber << "} " << severity << std::string(8, ' ') << message;
     AppLogger::logger->log(filename, lineNumber, oss.str());
   }
+
   // private:
   //  AppLogger* appLogger;
 };
+
 class CsvWriter {
  public:
   CsvWriter() {}
+
   void open(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in | std::ios_base::out) { this->f.open(filename, mode); }
+
   void close() {
     std::lock_guard<std::mutex> lock(m);
     this->f.close();
   }
+
   void writeString(const std::string& str) {
     std::lock_guard<std::mutex> lock(m);
     this->f << str.c_str();
   }
+
   void writeRow(const std::vector<std::string>& row) {
     std::lock_guard<std::mutex> lock(m);
     size_t numCol = row.size();
@@ -204,6 +220,7 @@ class CsvWriter {
     }
     this->f << "\n";
   }
+
   void writeRows(const std::vector<std::vector<std::string>>& rows) {
     std::lock_guard<std::mutex> lock(m);
     for (const auto& row : rows) {
@@ -219,10 +236,12 @@ class CsvWriter {
       this->f << "\n";
     }
   }
+
   void flush() {
     std::lock_guard<std::mutex> lock(m);
     this->f.flush();
   }
+
   std::ofstream& getFileStream() { return f; }
 
  private:

@@ -1,6 +1,8 @@
 #include "ccapi_cpp/ccapi_session.h"
+
 namespace ccapi {
 Logger* Logger::logger = nullptr;  // This line is needed.
+
 class MyEventHandler : public EventHandler {
  public:
   bool processEvent(const Event& event, Session* session) override {
@@ -9,6 +11,7 @@ class MyEventHandler : public EventHandler {
   }
 };
 } /* namespace ccapi */
+
 using ::ccapi::Event;
 using ::ccapi::EventDispatcher;
 using ::ccapi::MyEventHandler;
@@ -17,6 +20,7 @@ using ::ccapi::SessionConfigs;
 using ::ccapi::SessionOptions;
 using ::ccapi::Subscription;
 using ::ccapi::toString;
+
 int main(int argc, char** argv) {
   std::vector<std::string> modeList = {
       "dispatch_events_to_multiple_threads",

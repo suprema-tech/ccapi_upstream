@@ -4,11 +4,13 @@
 #include "gtest/gtest.h"
 #include "ccapi_cpp/ccapi_test_execution_management_helper.h"
 #include "ccapi_cpp/service/ccapi_execution_management_service_bitmex.h"
+
 // clang-format on
 namespace ccapi {
 class ExecutionManagementServiceBitmexTest : public ::testing::Test {
  public:
   typedef Service::ServiceContextPtr ServiceContextPtr;
+
   void SetUp() override {
     this->service = std::make_shared<ExecutionManagementServiceBitmex>([](Event&, Queue<Event>*) {}, SessionOptions(), SessionConfigs(), &this->serviceContext);
     this->credential = {
@@ -18,6 +20,7 @@ class ExecutionManagementServiceBitmexTest : public ::testing::Test {
     this->timestamp = 1499827319;
     this->now = UtilTime::makeTimePointFromMilliseconds(this->timestamp * 1000LL);
   }
+
   ServiceContext serviceContext;
   std::shared_ptr<ExecutionManagementServiceBitmex> service{nullptr};
   std::map<std::string, std::string> credential;

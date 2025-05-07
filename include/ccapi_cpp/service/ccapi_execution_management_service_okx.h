@@ -379,7 +379,6 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
 
       ,
       const TimePoint& timeReceived) override {
-
     std::string textMessage(textMessageView);
 
     if (textMessage != "pong") {

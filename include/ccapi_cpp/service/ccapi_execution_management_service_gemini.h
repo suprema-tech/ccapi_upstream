@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT
 #ifdef CCAPI_ENABLE_EXCHANGE_GEMINI
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
+
 namespace ccapi {
 class ExecutionManagementServiceGemini : public ExecutionManagementService {
  public:
@@ -25,6 +26,7 @@ class ExecutionManagementServiceGemini : public ExecutionManagementService {
     this->getAccountsTarget = "/v1/account/list";
     this->getAccountBalancesTarget = "/v1/balances";
   }
+
   virtual ~ExecutionManagementServiceGemini() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -42,6 +44,7 @@ class ExecutionManagementServiceGemini : public ExecutionManagementService {
     }
     headerString += "X-GEMINI-SIGNATURE:" + signature;
   }
+
   void signRequest(http::request<http::string_body>& req, rj::Document& document, rj::Document::AllocatorType& allocator,
                    const std::map<std::string, std::string>& param, const TimePoint& now, const std::map<std::string, std::string>& credential, int64_t nonce) {
     document.AddMember("request", rj::Value(req.target().to_string().c_str(), allocator).Move(), allocator);
@@ -52,6 +55,7 @@ class ExecutionManagementServiceGemini : public ExecutionManagementService {
     auto body = stringBuffer.GetString();
     this->signRequest(req, body, credential);
   }
+
   void signRequest(http::request<http::string_body>& req, const std::string& body, const std::map<std::string, std::string>& credential) {
     auto base64Payload = UtilAlgorithm::base64Encode(body);
     req.set("X-GEMINI-PAYLOAD", base64Payload);
@@ -59,6 +63,7 @@ class ExecutionManagementServiceGemini : public ExecutionManagementService {
     auto signature = Hmac::hmac(Hmac::ShaVersion::SHA384, apiSecret, base64Payload, true);
     req.set("X-GEMINI-SIGNATURE", signature);
   }
+
   void appendParam(rj::Document& document, rj::Document::AllocatorType& allocator, const std::map<std::string, std::string>& param,
                    const std::map<std::string, std::string> standardizationMap = {}) {
     for (const auto& kv : param) {
@@ -74,9 +79,11 @@ class ExecutionManagementServiceGemini : public ExecutionManagementService {
       }
     }
   }
+
   void appendSymbolId(rj::Document& document, rj::Document::AllocatorType& allocator, const std::string& symbolId) {
     document.AddMember("symbol", rj::Value(symbolId.c_str(), allocator).Move(), allocator);
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     auto apiKey = mapGetWithDefault(credential, this->apiKeyName);
@@ -185,6 +192,7 @@ class ExecutionManagementServiceGemini : public ExecutionManagementService {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
     const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
@@ -213,6 +221,7 @@ class ExecutionManagementServiceGemini : public ExecutionManagementService {
       }
     }
   }
+
   void extractAccountInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                      const rj::Document& document) override {
     switch (request.getOperation()) {
@@ -236,6 +245,7 @@ class ExecutionManagementServiceGemini : public ExecutionManagementService {
         CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);
     }
   }
+
   void extractOrderInfo(Element& element, const rj::Value& x, const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap,
                         const std::map<std::string, std::function<std::string(const std::string&)>> conversionMap = {}) override {
     ExecutionManagementService::extractOrderInfo(element, x, extractionFieldNameMap);
@@ -302,7 +312,6 @@ class ExecutionManagementServiceGemini : public ExecutionManagementService {
       this->eventHandler(event, nullptr);
     }
   }
-
 
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const TimePoint& timeReceived) {
@@ -404,6 +413,7 @@ class ExecutionManagementServiceGemini : public ExecutionManagementService {
     event.setMessageList(messageList);
     return event;
   }
+
   std::set<std::string> websocketOrderUpdateTypeSet{"accepted", "rejected", "booked", "fill", "cancelled", "cancel_rejected", "closed"};
 };
 } /* namespace ccapi */

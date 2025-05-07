@@ -5,6 +5,7 @@
 
 #include "ccapi_cpp/ccapi_macro.h"
 #include "ccapi_cpp/ccapi_util_private.h"
+
 namespace ccapi {
 /**
  * This class contains the options which the user can specify when creating a session. To use non-default options on a Session, create a SessionOptions instance
@@ -33,6 +34,7 @@ class SessionOptions CCAPI_FINAL {
                          ", enableOneHttpConnectionPerRequest = " + ccapi::toString(enableOneHttpConnectionPerRequest) + "]";
     return output;
   }
+
   // long warnLateEventMaxMilliseconds{};                      // used to print a warning log message if en event arrives late
   bool enableCheckSequence{};                               // used to check sequence number discontinuity
   bool enableCheckOrderBookChecksum{};                      // used to check order book checksum

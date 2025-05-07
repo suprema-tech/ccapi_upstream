@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #ifdef CCAPI_ENABLE_EXCHANGE_FTX_US
 #include "ccapi_cpp/service/ccapi_market_data_service_ftx_base.h"
+
 namespace ccapi {
 class MarketDataServiceFtxUs : public MarketDataServiceFtxBase {
  public:
@@ -25,8 +26,8 @@ class MarketDataServiceFtxUs : public MarketDataServiceFtxBase {
     } catch (const std::exception& e) {
       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
     }
-
   }
+
   virtual ~MarketDataServiceFtxUs() {}
 };
 } /* namespace ccapi */

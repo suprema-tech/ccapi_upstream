@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #ifdef CCAPI_ENABLE_EXCHANGE_BITGET_FUTURES
 #include "ccapi_cpp/service/ccapi_market_data_service_bitget_base.h"
+
 namespace ccapi {
 class MarketDataServiceBitgetFutures : public MarketDataServiceBitgetBase {
  public:
@@ -24,6 +25,7 @@ class MarketDataServiceBitgetFutures : public MarketDataServiceBitgetBase {
     this->getBbosTarget = "/api/v2/mix/market/ticker";
     this->isDerivatives = true;
   }
+
   virtual ~MarketDataServiceBitgetFutures() {}
 };
 } /* namespace ccapi */

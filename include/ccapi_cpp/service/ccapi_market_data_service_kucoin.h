@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #if defined(CCAPI_ENABLE_EXCHANGE_KUCOIN)
 #include "ccapi_cpp/service/ccapi_market_data_service_kucoin_base.h"
+
 namespace ccapi {
 class MarketDataServiceKucoin : public MarketDataServiceKucoinBase {
  public:
@@ -37,6 +38,7 @@ class MarketDataServiceKucoin : public MarketDataServiceKucoinBase {
     this->level2Subject = "level2";
     this->recentTradesTimeKey = "time";
   }
+
   virtual ~MarketDataServiceKucoin() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 

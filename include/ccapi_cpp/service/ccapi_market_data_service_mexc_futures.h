@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #ifdef CCAPI_ENABLE_EXCHANGE_MEXC_FUTURES
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
+
 namespace ccapi {
 class MarketDataServiceMexcFutures : public MarketDataService {
  public:
@@ -17,6 +18,7 @@ class MarketDataServiceMexcFutures : public MarketDataService {
     this->getRecentTradesTarget = "/api/v1/contract/deals/{symbol}";
     this->getInstrumentsTarget = "/api/v1/contract/detail";
   }
+
   virtual ~MarketDataServiceMexcFutures() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -53,15 +55,18 @@ class MarketDataServiceMexcFutures : public MarketDataService {
     }
     return sendStringList;
   }
+
   void createFetchOrderBookInitialReq(http::request<http::string_body>& req, const std::string& symbolId, const TimePoint& now,
                                       const std::map<std::string, std::string>& credential) override {
     req.set(http::field::host, this->hostRest);
     req.method(http::verb::get);
     req.target("/api/v1/contract/depth/" + Url::urlEncode(symbolId));
   }
+
   void extractOrderBookInitialVersionId(int64_t& versionId, const rj::Document& document) override {
     versionId = std::stoll(document["data"]["version"].GetString());
   }
+
   void extractOrderBookInitialData(MarketDataMessage::TypeForData& input, const rj::Document& document) override {
     for (const auto& x : document["data"]["bids"].GetArray()) {
       MarketDataMessage::TypeForDataPoint dataPoint;
@@ -76,13 +81,13 @@ class MarketDataServiceMexcFutures : public MarketDataService {
       input[MarketDataMessage::DataType::ASK].emplace_back(std::move(dataPoint));
     }
   }
+
   void processTextMessage(
 
       std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView
 
       ,
       const TimePoint& timeReceived, Event& event, std::vector<MarketDataMessage>& marketDataMessageList) override {
-
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
 
@@ -161,6 +166,7 @@ class MarketDataServiceMexcFutures : public MarketDataService {
       }
     }
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     switch (request.getOperation()) {
@@ -196,6 +202,7 @@ class MarketDataServiceMexcFutures : public MarketDataService {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractInstrumentInfo(Element& element, const rj::Value& x) {
     element.insert(CCAPI_INSTRUMENT, x["symbol"].GetString());
     element.insert(CCAPI_MARGIN_ASSET, x["settleCoin"].GetString());
@@ -204,6 +211,7 @@ class MarketDataServiceMexcFutures : public MarketDataService {
     element.insert(CCAPI_ORDER_QUANTITY_MIN, x["minVol"].GetString());
     element.insert(CCAPI_CONTRACT_SIZE, x["contractSize"].GetString());
   }
+
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     rj::Document document;

@@ -4,11 +4,13 @@
 #include "gtest/gtest.h"
 #include "ccapi_cpp/ccapi_test_execution_management_helper.h"
 #include "ccapi_cpp/service/ccapi_execution_management_service_okx.h"
+
 // clang-format on
 namespace ccapi {
 class ExecutionManagementServiceOkxTest : public ::testing::Test {
  public:
   typedef Service::ServiceContextPtr ServiceContextPtr;
+
   void SetUp() override {
     this->service = std::make_shared<ExecutionManagementServiceOkx>([](Event&, Queue<Event>*) {}, SessionOptions(), SessionConfigs(), &this->serviceContext);
     this->credential = {
@@ -20,6 +22,7 @@ class ExecutionManagementServiceOkxTest : public ::testing::Test {
     this->now = UtilTime::makeTimePointFromMilliseconds(this->timestamp * 1000LL);
     this->timestampStr = "2017-07-12T02:41:59.000Z";
   }
+
   ServiceContext serviceContext;
   std::shared_ptr<ExecutionManagementServiceOkx> service{nullptr};
   std::map<std::string, std::string> credential;

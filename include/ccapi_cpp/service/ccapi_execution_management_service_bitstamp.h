@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT
 #ifdef CCAPI_ENABLE_EXCHANGE_BITSTAMP
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
+
 namespace ccapi {
 class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
  public:
@@ -26,6 +27,7 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
     this->getAccountBalancesTarget = prefix + "/balance/{currency_pair}/";
     this->getWebSocketsTokenTarget = prefix + "/websockets_token/";
   }
+
   virtual ~ExecutionManagementServiceBitstamp() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -40,6 +42,7 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
     return body.find(R"("status": "error")") != std::string::npos || body.find(R"("status":"error")") != std::string::npos ||
            body.find(R"("error":)") != std::string::npos;
   }
+
   void signReqeustForRestGenericPrivateRequest(http::request<http::string_body>& req, const Request& request, std::string& methodString,
                                                std::string& headerString, std::string& path, std::string& queryString, std::string& body, const TimePoint& now,
                                                const std::map<std::string, std::string>& credential) override {
@@ -67,6 +70,7 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
     }
     headerString += "X-Auth-Signature:" + signature;
   }
+
   void signRequest(http::request<http::string_body>& req, const std::string& body, const std::map<std::string, std::string>& credential) {
     if (!body.empty()) {
       req.set(beast::http::field::content_type, "application/x-www-form-urlencoded");
@@ -90,6 +94,7 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
       req.prepare_payload();
     }
   }
+
   void appendParam(std::string& body, const std::map<std::string, std::string>& param,
                    const std::map<std::string, std::string> standardizationMap = {
                        {CCAPI_EM_ORDER_QUANTITY, "amount"},
@@ -108,6 +113,7 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
       }
     }
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     auto apiKey = mapGetWithDefault(credential, this->apiKeyName);
@@ -187,6 +193,7 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractOrderInfo(Element& element, const rj::Value& x, const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap,
                         const std::map<std::string, std::function<std::string(const std::string&)>> conversionMap = {}) override {
     ExecutionManagementService::extractOrderInfo(element, x, extractionFieldNameMap);
@@ -197,6 +204,7 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
       }
     }
   }
+
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
     std::map<std::string, std::pair<std::string, JsonDataType>> extractionFieldNameMap = {
@@ -228,6 +236,7 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
       }
     }
   }
+
   void extractAccountInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                      const rj::Document& document) override {
     switch (request.getOperation()) {
@@ -354,7 +363,6 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
     }
   }
 
-
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const TimePoint& timeReceived) {
     std::string textMessage(textMessageView);
@@ -439,6 +447,7 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
     event.setMessageList(messageList);
     return event;
   }
+
   std::string getWebSocketsTokenTarget;
 };
 } /* namespace ccapi */

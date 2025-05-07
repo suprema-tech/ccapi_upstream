@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #ifdef CCAPI_ENABLE_EXCHANGE_KRAKEN
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
+
 namespace ccapi {
 class MarketDataServiceKraken : public MarketDataService {
  public:
@@ -19,6 +20,7 @@ class MarketDataServiceKraken : public MarketDataService {
     this->getInstrumentsTarget = "/0/public/AssetPairs";
     this->shouldAlignSnapshot = true;
   }
+
   virtual ~MarketDataServiceKraken() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -31,6 +33,7 @@ class MarketDataServiceKraken : public MarketDataService {
   }
 
   bool doesHttpBodyContainError(const std::string& body) override { return body.find(R"("error":[])") == std::string::npos; }
+
   void prepareSubscriptionDetail(std::string& channelId, std::string& symbolId, const std::string& field, const WsConnection& wsConnection,
                                  const Subscription& subscription, const std::map<std::string, std::string> optionMap) override {
     auto marketDepthRequested = std::stoi(optionMap.at(CCAPI_MARKET_DEPTH_MAX));
@@ -45,12 +48,13 @@ class MarketDataServiceKraken : public MarketDataService {
       channelId += "-" + interval;
     }
   }
+
   std::vector<std::string> createSendStringList(const WsConnection& wsConnection) override {
     std::vector<std::string> sendStringList;
     for (const auto& subscriptionListByChannelIdSymbolId : this->subscriptionListByConnectionIdChannelIdSymbolIdMap.at(wsConnection.id)) {
       auto channelId = subscriptionListByChannelIdSymbolId.first;
       if (channelId.rfind(CCAPI_WEBSOCKET_KRAKEN_CHANNEL_BOOK, 0) == 0) {
-        std::map<int, std::vector<std::string> > symbolIdListByMarketDepthSubscribedToExchangeMap;
+        std::map<int, std::vector<std::string>> symbolIdListByMarketDepthSubscribedToExchangeMap;
         for (const auto& subscriptionListBySymbolId : subscriptionListByChannelIdSymbolId.second) {
           auto symbolId = subscriptionListBySymbolId.first;
           int marketDepthSubscribedToExchange =
@@ -133,13 +137,13 @@ class MarketDataServiceKraken : public MarketDataService {
     }
     return sendStringList;
   }
+
   void processTextMessage(
 
       std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView
 
       ,
       const TimePoint& timeReceived, Event& event, std::vector<MarketDataMessage>& marketDataMessageList) override {
-
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
 
@@ -308,6 +312,7 @@ class MarketDataServiceKraken : public MarketDataService {
       }
     }
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     switch (request.getOperation()) {
@@ -339,6 +344,7 @@ class MarketDataServiceKraken : public MarketDataService {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractInstrumentInfo(Element& element, const rj::Value& x) {
     element.insert(CCAPI_BASE_ASSET, x["base"].GetString());
     element.insert(CCAPI_QUOTE_ASSET, x["quote"].GetString());
@@ -352,6 +358,7 @@ class MarketDataServiceKraken : public MarketDataService {
     element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, "0." + std::string(lotDecimals - 1, '0') + "1");
     element.insert(CCAPI_ORDER_QUANTITY_MIN, x["ordermin"].GetString());
   }
+
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     rj::Document document;

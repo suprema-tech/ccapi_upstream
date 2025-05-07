@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT
 #ifdef CCAPI_ENABLE_EXCHANGE_GATEIO
 #include "ccapi_cpp/service/ccapi_execution_management_service_gateio_base.h"
+
 namespace ccapi {
 class ExecutionManagementServiceGateio : public ExecutionManagementServiceGateioBase {
  public:
@@ -29,6 +30,7 @@ class ExecutionManagementServiceGateio : public ExecutionManagementServiceGateio
     this->websocketChannelOrders = "spot.orders";
     this->amountName = "amount";
   }
+
   virtual ~ExecutionManagementServiceGateio() {}
 };
 } /* namespace ccapi */

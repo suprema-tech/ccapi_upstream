@@ -1,6 +1,8 @@
 #include "ccapi_cpp/ccapi_session.h"
+
 namespace ccapi {
 Logger* Logger::logger = nullptr;  // This line is needed.
+
 class MyEventHandler : public EventHandler {
  public:
   bool processEvent(const Event& event, Session* session) override {
@@ -19,6 +21,7 @@ class MyEventHandler : public EventHandler {
     }
     return true;
   }
+
   std::pair<std::string, std::string> getBBO() {
     std::lock_guard<std::mutex> lock(m);
     return std::make_pair(bestBidPrice, bestAskPrice);
@@ -30,11 +33,13 @@ class MyEventHandler : public EventHandler {
   std::string bestAskPrice;
 };
 } /* namespace ccapi */
+
 std::string roundPrice(double price) {
   std::stringstream stream;
   stream << std::fixed << std::setprecision(2) << price;
   return stream.str();
 }
+
 using ::ccapi::MyEventHandler;
 using ::ccapi::Request;
 using ::ccapi::Session;
@@ -42,6 +47,7 @@ using ::ccapi::SessionConfigs;
 using ::ccapi::SessionOptions;
 using ::ccapi::Subscription;
 using ::ccapi::UtilSystem;
+
 int main(int argc, char** argv) {
   if (argc != 3) {
     std::cerr << "Usage: <program name> <spread proportion> <order quantity>\n"

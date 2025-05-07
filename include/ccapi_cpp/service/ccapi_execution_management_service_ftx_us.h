@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT
 #ifdef CCAPI_ENABLE_EXCHANGE_FTX_US
 #include "ccapi_cpp/service/ccapi_execution_management_service_ftx_base.h"
+
 namespace ccapi {
 class ExecutionManagementServiceFtxUs : public ExecutionManagementServiceFtxBase {
  public:
@@ -32,6 +33,7 @@ class ExecutionManagementServiceFtxUs : public ExecutionManagementServiceFtxBase
     this->setupCredential({this->apiKeyName, this->apiSecretName, this->apiSubaccountName});
     this->ftx = "FTXUS";
   }
+
   virtual ~ExecutionManagementServiceFtxUs() {}
 };
 } /* namespace ccapi */

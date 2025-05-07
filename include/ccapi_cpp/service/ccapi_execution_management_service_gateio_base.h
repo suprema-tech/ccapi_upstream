@@ -3,12 +3,14 @@
 #ifdef CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT
 #if defined(CCAPI_ENABLE_EXCHANGE_GATEIO) || defined(CCAPI_ENABLE_EXCHANGE_GATEIO_PERPETUAL_FUTURES)
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
+
 namespace ccapi {
 class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
  public:
   ExecutionManagementServiceGateioBase(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
                                        ServiceContextPtr serviceContextPtr)
       : ExecutionManagementService(eventHandler, sessionOptions, sessionConfigs, serviceContextPtr) {}
+
   virtual ~ExecutionManagementServiceGateioBase() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -41,6 +43,7 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
     }
     headerString += "SIGN:" + signature;
   }
+
   void signRequest(http::request<http::string_body>& req, const std::string& path, const std::string& queryString, const std::string& body,
                    const std::map<std::string, std::string>& credential) {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
@@ -59,6 +62,7 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
     req.body() = body;
     req.prepare_payload();
   }
+
   void appendParam(std::string& queryString, const std::map<std::string, std::string>& param,
                    const std::map<std::string, std::string> standardizationMap = {}) {
     for (const auto& kv : param) {
@@ -68,12 +72,14 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
       queryString += "&";
     }
   }
+
   void appendSymbolId(std::string& queryString, const std::string& symbolId) {
     queryString += this->symbolName;
     queryString += "=";
     queryString += Url::urlEncode(symbolId);
     queryString += "&";
   }
+
   void appendParam(rj::Document& document, rj::Document::AllocatorType& allocator, const std::map<std::string, std::string>& param,
                    const std::map<std::string, std::string> standardizationMap) {
     for (const auto& kv : param) {
@@ -91,6 +97,7 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
       }
     }
   }
+
   void appendParam(rj::Document& document, rj::Document::AllocatorType& allocator, const std::map<std::string, std::string>& param) {
     this->appendParam(document, allocator, param,
                       {
@@ -102,9 +109,11 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
                           {CCAPI_EM_ACCOUNT_TYPE, "account"},
                       });
   }
+
   void appendSymbolId(rj::Document& document, rj::Document::AllocatorType& allocator, const std::string& symbolId) {
     document.AddMember(rj::Value(symbolName.c_str(), allocator).Move(), rj::Value(symbolId.c_str(), allocator).Move(), allocator);
   }
+
   void substituteParamSettle(std::string& target, const std::map<std::string, std::string>& param, const std::string& symbolId) {
     this->substituteParam(target, param,
                           {
@@ -121,6 +130,7 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
                                       {"{settle}", settle},
                                   });
   }
+
   void prepareReq(http::request<http::string_body>& req, const TimePoint& now, const std::map<std::string, std::string>& credential) {
     req.set("Accept", "application/json");
     req.set(beast::http::field::content_type, "application/json");
@@ -128,6 +138,7 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
     req.set("KEY", apiKey);
     req.set("TIMESTAMP", std::to_string(std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count()));
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     this->prepareReq(req, now, credential);
@@ -258,6 +269,7 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractAccountInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                      const rj::Document& document) override {
     switch (request.getOperation()) {
@@ -275,9 +287,10 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
         CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);
     }
   }
+
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
-    const std::map<std::string, std::pair<std::string, JsonDataType> >& extractionFieldNameMap = {
+    const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
         {CCAPI_EM_ORDER_ID, std::make_pair("id", JsonDataType::STRING)},
         {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("text", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},
@@ -300,6 +313,7 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
       elementList.emplace_back(std::move(element));
     }
   }
+
   std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription, const TimePoint& now,
                                                                 const std::map<std::string, std::string>& credential) override {
     std::vector<std::string> sendStringList;
@@ -357,7 +371,6 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
     }
   }
 
-
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const TimePoint& timeReceived) {
     std::string textMessage(textMessageView);
@@ -409,7 +422,7 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
               message.setTimeReceived(timeReceived);
               message.setCorrelationIdList({subscription.getCorrelationId()});
               message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_ORDER_UPDATE);
-              const std::map<std::string, std::pair<std::string, JsonDataType> >& extractionFieldNameMap = {
+              const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
                   {CCAPI_EM_ORDER_ID, std::make_pair("id", JsonDataType::STRING)},
                   {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("text", JsonDataType::STRING)},
                   {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},
@@ -442,6 +455,7 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
     event.setMessageList(messageList);
     return event;
   }
+
   bool isDerivatives{};
   std::string symbolName;
   std::string websocketChannelUserTrades;

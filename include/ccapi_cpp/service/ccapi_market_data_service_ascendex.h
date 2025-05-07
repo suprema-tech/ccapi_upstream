@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #ifdef CCAPI_ENABLE_EXCHANGE_ASCENDEX
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
+
 namespace ccapi {
 class MarketDataServiceAscendex : public MarketDataService {
  public:
@@ -18,12 +19,14 @@ class MarketDataServiceAscendex : public MarketDataService {
     this->getInstrumentTarget = "/api/pro/v1/products";
     this->getInstrumentsTarget = "/api/pro/v1/products";
   }
+
   virtual ~MarketDataServiceAscendex() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
  private:
 #endif
   bool doesHttpBodyContainError(const std::string& body) override { return body.find(R"("code":0)") == std::string::npos; }
+
   void prepareSubscriptionDetail(std::string& channelId, std::string& symbolId, const std::string& field, const WsConnection& wsConnection,
                                  const Subscription& subscription, const std::map<std::string, std::string> optionMap) override {
     auto marketDepthRequested = std::stoi(optionMap.at(CCAPI_MARKET_DEPTH_MAX));
@@ -65,13 +68,13 @@ class MarketDataServiceAscendex : public MarketDataService {
     }
     return sendStringList;
   }
+
   void processTextMessage(
 
       std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView
 
       ,
       const TimePoint& timeReceived, Event& event, std::vector<MarketDataMessage>& marketDataMessageList) override {
-
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
 
@@ -227,6 +230,7 @@ class MarketDataServiceAscendex : public MarketDataService {
       // TODO(cryptochassis): implement
     }
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     switch (request.getOperation()) {
@@ -262,6 +266,7 @@ class MarketDataServiceAscendex : public MarketDataService {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractInstrumentInfo(Element& element, const rj::Value& x) {
     element.insert(CCAPI_INSTRUMENT, x["symbol"].GetString());
     element.insert(CCAPI_BASE_ASSET, x["baseAsset"].GetString());
@@ -270,6 +275,7 @@ class MarketDataServiceAscendex : public MarketDataService {
     element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, x["lotSize"].GetString());
     element.insert(CCAPI_ORDER_PRICE_TIMES_QUANTITY_MIN, x["minNotional"].GetString());
   }
+
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     rj::Document document;

@@ -1,6 +1,7 @@
 #include "app/common.h"
 
 #include "gtest/gtest.h"
+
 namespace ccapi {
 TEST(AppUtilTest, linearInterpolate) {
   EXPECT_DOUBLE_EQ(

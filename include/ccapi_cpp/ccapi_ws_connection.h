@@ -5,6 +5,7 @@
 
 #include "ccapi_cpp/ccapi_logger.h"
 #include "ccapi_cpp/ccapi_subscription.h"
+
 namespace ccapi {
 /**
  * This class represents a TCP socket connection for the websocket API.
@@ -12,7 +13,7 @@ namespace ccapi {
 class WsConnection CCAPI_FINAL {
  public:
   WsConnection(std::string url, std::string group, std::vector<Subscription> subscriptionList, std::map<std::string, std::string> credential,
-               std::shared_ptr<beast::websocket::stream<beast::ssl_stream<beast::tcp_stream> > > streamPtr)
+               std::shared_ptr<beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>> streamPtr)
       : url(url), group(group), subscriptionList(subscriptionList), credential(credential), streamPtr(streamPtr) {
     this->id = this->url + "||" + this->group + "||" + ccapi::toString(this->subscriptionList) + "||" + ccapi::toString(this->credential);
     this->correlationIdList.reserve(subscriptionList.size());
@@ -20,7 +21,9 @@ class WsConnection CCAPI_FINAL {
                    [](Subscription subscription) { return subscription.getCorrelationId(); });
     this->setUrlParts();
   }
+
   WsConnection() {}
+
   std::string toString() const {
     std::map<std::string, std::string> shortCredential;
     for (const auto& x : credential) {
@@ -44,6 +47,7 @@ class WsConnection CCAPI_FINAL {
     CLOSING,
     CLOSED,
   };
+
   static std::string statusToString(Status status) {
     std::string output;
     switch (status) {
@@ -70,11 +74,14 @@ class WsConnection CCAPI_FINAL {
     }
     return output;
   }
+
   std::string getUrl() const { return url; }
+
   void setUrl(const std::string& url) {
     this->url = url;
     this->setUrlParts();
   }
+
   void setUrlParts() {
     auto splitted1 = UtilString::split(url, "://");
     if (splitted1.size() >= 2) {
@@ -102,10 +109,12 @@ class WsConnection CCAPI_FINAL {
       }
     }
   }
+
   void appendUrlPart(const std::string& urlPart) {
     this->url += urlPart;
     this->setUrlParts();
   }
+
   std::string id;
   std::string url;
   std::string group;
@@ -114,7 +123,7 @@ class WsConnection CCAPI_FINAL {
   Status status{Status::UNKNOWN};
   std::map<std::string, std::string> headers;
   std::map<std::string, std::string> credential;
-  std::shared_ptr<beast::websocket::stream<beast::ssl_stream<beast::tcp_stream> > > streamPtr;
+  std::shared_ptr<beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>> streamPtr;
   beast::websocket::close_code remoteCloseCode{};
   beast::websocket::close_reason remoteCloseReason{};
   std::string hostHttpHeaderValue;

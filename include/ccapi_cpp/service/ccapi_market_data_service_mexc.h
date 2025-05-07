@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #ifdef CCAPI_ENABLE_EXCHANGE_MEXC
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
+
 namespace ccapi {
 class MarketDataServiceMexc : public MarketDataService {
  public:
@@ -18,6 +19,7 @@ class MarketDataServiceMexc : public MarketDataService {
     this->getRecentAggTradesTarget = "/api/v3/aggTrades";
     this->getInstrumentsTarget = "/api/v3/exchangeInfo";
   }
+
   virtual ~MarketDataServiceMexc() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -61,15 +63,18 @@ class MarketDataServiceMexc : public MarketDataService {
     sendStringList.push_back(sendString);
     return sendStringList;
   }
+
   void createFetchOrderBookInitialReq(http::request<http::string_body>& req, const std::string& symbolId, const TimePoint& now,
                                       const std::map<std::string, std::string>& credential) override {
     req.set(http::field::host, this->hostRest);
     req.method(http::verb::get);
     req.target("/api/v3/depth?symbol=" + Url::urlEncode(symbolId) + "&limit=5000");
   }
+
   void extractOrderBookInitialVersionId(int64_t& versionId, const rj::Document& document) override {
     versionId = std::stoll(document["lastUpdateId"].GetString());
   }
+
   void extractOrderBookInitialData(MarketDataMessage::TypeForData& input, const rj::Document& document) override {
     for (const auto& x : document["bids"].GetArray()) {
       MarketDataMessage::TypeForDataPoint dataPoint;
@@ -84,13 +89,13 @@ class MarketDataServiceMexc : public MarketDataService {
       input[MarketDataMessage::DataType::ASK].emplace_back(std::move(dataPoint));
     }
   }
+
   void processTextMessage(
 
       std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView
 
       ,
       const TimePoint& timeReceived, Event& event, std::vector<MarketDataMessage>& marketDataMessageList) override {
-
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
 
@@ -202,6 +207,7 @@ class MarketDataServiceMexc : public MarketDataService {
       }
     }
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     switch (request.getOperation()) {
@@ -248,6 +254,7 @@ class MarketDataServiceMexc : public MarketDataService {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractInstrumentInfo(Element& element, const rj::Value& x) {
     element.insert(CCAPI_INSTRUMENT, x["symbol"].GetString());
     element.insert(CCAPI_BASE_ASSET, x["baseAsset"].GetString());
@@ -262,6 +269,7 @@ class MarketDataServiceMexc : public MarketDataService {
     element.insert(CCAPI_ORDER_QUANTITY_MIN, x["baseSizePrecision"].GetString());
     element.insert(CCAPI_ORDER_PRICE_TIMES_QUANTITY_MIN, x["quoteAmountPrecision"].GetString());
   }
+
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     rj::Document document;
@@ -334,6 +342,7 @@ class MarketDataServiceMexc : public MarketDataService {
         CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);
     }
   }
+
   std::string getRecentAggTradesTarget;
 };
 } /* namespace ccapi */

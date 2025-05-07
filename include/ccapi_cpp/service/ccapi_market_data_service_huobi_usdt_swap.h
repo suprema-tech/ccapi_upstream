@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #ifdef CCAPI_ENABLE_EXCHANGE_HUOBI_USDT_SWAP
 #include "ccapi_cpp/service/ccapi_market_data_service_huobi_derivatives_base.h"
+
 namespace ccapi {
 class MarketDataServiceHuobiUsdtSwap : public MarketDataServiceHuobiDerivativesBase {
  public:
@@ -18,6 +19,7 @@ class MarketDataServiceHuobiUsdtSwap : public MarketDataServiceHuobiDerivativesB
     this->getInstrumentTarget = "/linear-swap-api/v1/swap_contract_info";
     this->getInstrumentsTarget = "/linear-swap-api/v1/swap_contract_info";
   }
+
   virtual ~MarketDataServiceHuobiUsdtSwap() {}
 };
 } /* namespace ccapi */

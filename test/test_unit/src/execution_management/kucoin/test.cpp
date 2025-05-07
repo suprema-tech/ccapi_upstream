@@ -4,11 +4,13 @@
 #include "gtest/gtest.h"
 #include "ccapi_cpp/ccapi_test_execution_management_helper.h"
 #include "ccapi_cpp/service/ccapi_execution_management_service_kucoin.h"
+
 // clang-format on
 namespace ccapi {
 class ExecutionManagementServiceKucoinTest : public ::testing::Test {
  public:
   typedef Service::ServiceContextPtr ServiceContextPtr;
+
   void SetUp() override {
     this->service = std::make_shared<ExecutionManagementServiceKucoin>([](Event&, Queue<Event>*) {}, SessionOptions(), SessionConfigs(), &this->serviceContext);
     this->credential = {
@@ -20,6 +22,7 @@ class ExecutionManagementServiceKucoinTest : public ::testing::Test {
     this->timestamp = 1499827319;
     this->now = UtilTime::makeTimePointFromMilliseconds(this->timestamp * 1000LL);
   }
+
   ServiceContext serviceContext;
   std::shared_ptr<ExecutionManagementServiceKucoin> service{nullptr};
   std::map<std::string, std::string> credential;

@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT
 #ifdef CCAPI_ENABLE_EXCHANGE_HUOBI_COIN_SWAP
 #include "ccapi_cpp/service/ccapi_execution_management_service_huobi_derivatives_base.h"
+
 namespace ccapi {
 class ExecutionManagementServiceHuobiCoinSwap : public ExecutionManagementServiceHuobiDerivativesBase {
  public:
@@ -27,6 +28,7 @@ class ExecutionManagementServiceHuobiCoinSwap : public ExecutionManagementServic
     this->orderDataTopic = CCAPI_HUOBI_COIN_SWAP_SUBSCRIBE_ORDER_DATA_TOPIC;
     this->matchOrderDataTopic = CCAPI_HUOBI_COIN_SWAP_SUBSCRIBE_MATCH_ORDER_DATA_TOPIC;
   }
+
   virtual ~ExecutionManagementServiceHuobiCoinSwap() {}
 };
 } /* namespace ccapi */

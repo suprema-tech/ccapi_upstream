@@ -41,13 +41,18 @@
 #include "ccapi_cpp/ccapi_message.h"
 #include "ccapi_cpp/ccapi_request.h"
 #include "ccapi_cpp/ccapi_subscription.h"
+
 namespace ccapi {
 class Session {
  public:
   virtual void subscribe(std::vector<Subscription>& subscriptionList) {}
+
   virtual void sendRequest(const Event& event, Session* session, std::vector<Request>& requestList) {}
+
   virtual void sendRequest(Request& request) {}
+
   virtual void sendRequestByWebsocket(Request& request) {}
+
   virtual void stop() {}
 };
 }  // namespace ccapi
@@ -81,8 +86,11 @@ class EventHandlerBase : public EventHandler {
     POV,
     IS,
   };
+
   virtual ~EventHandlerBase() {}
+
   virtual void onInit(Session* session) {}
+
   bool processEvent(const Event& event, Session* session) override {
     if (this->skipProcessEvent) {
       return true;
@@ -997,6 +1005,7 @@ class EventHandlerBase : public EventHandler {
     }
     return true;
   }
+
   AppMode appMode{AppMode::MARKET_MAKING};
   std::string previousMessageTimeISODate, exchange, instrumentRest, instrumentWebsocket, baseAsset, quoteAsset, accountId, orderPriceIncrement,
       orderQuantityIncrement, privateDataDirectory, privateDataFilePrefix, privateDataFileSuffix, bestBidPrice, bestBidSize, bestAskPrice, bestAskSize,
@@ -1050,6 +1059,7 @@ class EventHandlerBase : public EventHandler {
 
  protected:
   virtual void processEventFurther(const Event& event, Session* session, std::vector<Request>& requestList) {}
+
   virtual void createSubscriptionList(std::vector<Subscription>& subscriptionList) {
     {
       std::string options;
@@ -1083,7 +1093,9 @@ class EventHandlerBase : public EventHandler {
       }
     }
   }
+
   virtual void postProcessMessageMarketDataEventMarketDepth(const Message& message, const TimePoint& messageTime) {}
+
   virtual void postProcessMessageMarketDataEventTrade(const Message& message, const TimePoint& messageTime) {
     if (this->enableAdverseSelectionGuard) {
       int intervalStart = UtilTime::getUnixTimestamp(messageTime) / this->adverseSelectionGuardMarketDataSampleIntervalSeconds *
@@ -1100,6 +1112,7 @@ class EventHandlerBase : public EventHandler {
       }
     }
   }
+
   virtual void extractInstrumentInfo(const Element& element) {
     this->baseAsset = element.getValue(CCAPI_BASE_ASSET);
     APP_LOGGER_INFO("Base asset is " + this->baseAsset);
@@ -1118,6 +1131,7 @@ class EventHandlerBase : public EventHandler {
     }
     APP_LOGGER_INFO("Order quantity increment is " + this->orderQuantityIncrement);
   }
+
   virtual void extractBalanceInfo(const Element& element) {
     const auto& asset = element.getValue(CCAPI_EM_ASSET);
     if (asset == this->baseAsset) {
@@ -1126,6 +1140,7 @@ class EventHandlerBase : public EventHandler {
       this->quoteBalance = std::stod(element.getValue(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING)) * this->quoteAvailableBalanceProportion;
     }
   }
+
   virtual void updateAccountBalancesByFee(const std::string& feeAsset, double feeQuantity, const std::string& side, bool isMaker) {
     if (feeAsset == this->baseAsset) {
       this->baseBalance -= feeQuantity;
@@ -1133,6 +1148,7 @@ class EventHandlerBase : public EventHandler {
       this->quoteBalance -= feeQuantity;
     }
   }
+
   virtual void cancelOpenOrders(const Event& event, Session* session, std::vector<Request>& requestList, const TimePoint& messageTime,
                                 const std::string& messageTimeISO, bool alwaysCancel) {
     if (alwaysCancel || this->numOpenOrders != 0) {
@@ -1189,6 +1205,7 @@ class EventHandlerBase : public EventHandler {
     this->orderRefreshLastTime = messageTime;
     this->cancelOpenOrdersLastTime = messageTime;
   }
+
   virtual void getAccountBalances(const Event& event, Session* session, std::vector<Request>& requestList, const TimePoint& messageTime,
                                   const std::string& messageTimeISO) {
 #ifdef GET_ACCOUNT_BALANCES_REQUEST_CORRELATION_ID
@@ -1217,6 +1234,7 @@ class EventHandlerBase : public EventHandler {
       this->onPostGetAccountBalancesSingleOrderExecution(messageTime);
     }
   }
+
   virtual void onPostGetAccountBalancesMarketMaking(const TimePoint& now) {
     this->orderRefreshIntervalIndex += 1;
     if (now >= this->startTimeTp + std::chrono::seconds(this->totalDurationSeconds)) {
@@ -1225,6 +1243,7 @@ class EventHandlerBase : public EventHandler {
       this->skipProcessEvent = true;
     }
   }
+
   virtual void onPostGetAccountBalancesSingleOrderExecution(const TimePoint& now) {
     this->orderRefreshIntervalIndex += 1;
     if (now >= this->startTimeTp + std::chrono::seconds(this->totalDurationSeconds) ||
@@ -1234,6 +1253,7 @@ class EventHandlerBase : public EventHandler {
       this->skipProcessEvent = true;
     }
   }
+
   virtual void placeOrders(const Event& event, Session* session, std::vector<Request>& requestList, const TimePoint& now) {
     if (this->midPrice == 0) {
       APP_LOGGER_INFO("At least one side of the order book is empty. Skip.");
@@ -1253,6 +1273,7 @@ class EventHandlerBase : public EventHandler {
       APP_LOGGER_INFO("Account has no assets. Skip.");
     }
   }
+
   virtual void placeOrdersMarketMaking(const Event& event, Session* session, std::vector<Request>& requestList, const TimePoint& now) {
     double totalBalance = this->baseBalance * this->midPrice + this->quoteBalance;
     if (totalBalance > this->totalBalancePeak) {
@@ -1413,6 +1434,7 @@ class EventHandlerBase : public EventHandler {
       this->orderRefreshIntervalSeconds = this->originalOrderRefreshIntervalSeconds;
     }
   }
+
   virtual void placeOrdersSingleOrderExecution(const Event& event, Session* session, std::vector<Request>& requestList, const TimePoint& now) {
     double price = 0;
     if (this->orderSide == CCAPI_EM_ORDER_SIDE_BUY) {
@@ -1513,6 +1535,7 @@ class EventHandlerBase : public EventHandler {
       }
     }
   }
+
   virtual Request createRequestForCreateOrder(const std::string& side, const std::string& price, const std::string& quantity, const TimePoint& now) {
     const auto& messageTimeISO = UtilTime::getISOTimestamp<std::chrono::milliseconds>(std::chrono::time_point_cast<std::chrono::milliseconds>(now));
     Request request(Request::Operation::CREATE_ORDER, this->exchange, this->instrumentRest, "CREATE_ORDER_" + side);
@@ -1543,6 +1566,7 @@ class EventHandlerBase : public EventHandler {
     APP_LOGGER_INFO("Place order - side: " + side + ", price: " + price + ", quantity: " + quantity + ".");
     return request;
   }
+
   virtual void extractOrderInfo(Element& element, const Order& order) {
     element.insert(CCAPI_EM_ORDER_ID, order.orderId);
     element.insert(CCAPI_EM_CLIENT_ORDER_ID, order.clientOrderId);
@@ -1553,6 +1577,7 @@ class EventHandlerBase : public EventHandler {
     element.insert(CCAPI_EM_ORDER_REMAINING_QUANTITY, order.remainingQuantity.toString());
     element.insert(CCAPI_EM_ORDER_STATUS, order.status);
   }
+
   virtual void checkAdverseSelectionGuardByRollCorrelationCoefficient(AdverseSelectionGuardInformedTraderSide& adverseSelectionGuardInformedTraderSide) {
     if (this->publicTradeMap[APP_PUBLIC_TRADE_LAST].size() >= this->adverseSelectionGuardTriggerRollCorrelationCoefficientNumObservations) {
       int size = this->adverseSelectionGuardTriggerRollCorrelationCoefficientNumObservations - 1;
@@ -1602,6 +1627,7 @@ class EventHandlerBase : public EventHandler {
       }
     }
   }
+
   virtual void checkAdverseSelectionGuardByRoc(AdverseSelectionGuardInformedTraderSide& adverseSelectionGuardInformedTraderSide) {
     if (this->publicTradeMap[APP_PUBLIC_TRADE_LAST].size() >= this->adverseSelectionGuardTriggerRocNumObservations) {
       int size = this->adverseSelectionGuardTriggerRocNumObservations - 1;
@@ -1625,6 +1651,7 @@ class EventHandlerBase : public EventHandler {
       }
     }
   }
+
   virtual void checkAdverseSelectionGuardByRsi(AdverseSelectionGuardInformedTraderSide& adverseSelectionGuardInformedTraderSide) {
     if (this->publicTradeMap[APP_PUBLIC_TRADE_LAST].size() >= this->adverseSelectionGuardTriggerRsiNumObservations) {
       int size = this->adverseSelectionGuardTriggerRsiNumObservations - 1;
@@ -1678,6 +1705,7 @@ class EventHandlerBase : public EventHandler {
       }
     }
   }
+
   CsvWriter* privateTradeCsvWriter = nullptr;
   CsvWriter* orderUpdateCsvWriter = nullptr;
   CsvWriter* accountBalanceCsvWriter = nullptr;

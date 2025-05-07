@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #ifdef CCAPI_ENABLE_EXCHANGE_BITSTAMP
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
+
 namespace ccapi {
 class MarketDataServiceBitstamp : public MarketDataService {
  public:
@@ -19,6 +20,7 @@ class MarketDataServiceBitstamp : public MarketDataService {
     this->getInstrumentTarget = "/api/v2/trading-pairs-info/";
     this->getInstrumentsTarget = "/api/v2/trading-pairs-info/";
   }
+
   virtual ~MarketDataServiceBitstamp() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -32,6 +34,7 @@ class MarketDataServiceBitstamp : public MarketDataService {
   bool doesHttpBodyContainError(const std::string& body) override {
     return body.find(R"("status": "error")") != std::string::npos || body.find(R"("status":"error")") != std::string::npos;
   }
+
   std::vector<std::string> createSendStringList(const WsConnection& wsConnection) override {
     std::vector<std::string> sendStringList;
     for (const auto& subscriptionListByChannelIdSymbolId : this->subscriptionListByConnectionIdChannelIdSymbolIdMap.at(wsConnection.id)) {
@@ -60,13 +63,13 @@ class MarketDataServiceBitstamp : public MarketDataService {
     }
     return sendStringList;
   }
+
   void processTextMessage(
 
       std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView
 
       ,
       const TimePoint& timeReceived, Event& event, std::vector<MarketDataMessage>& marketDataMessageList) override {
-
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
 
@@ -158,6 +161,7 @@ class MarketDataServiceBitstamp : public MarketDataService {
       }
     }
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     switch (request.getOperation()) {
@@ -189,6 +193,7 @@ class MarketDataServiceBitstamp : public MarketDataService {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractInstrumentInfo(Element& element, const rj::Value& x) {
     element.insert(CCAPI_INSTRUMENT, x["url_symbol"].GetString());
     std::string name = x["name"].GetString();
@@ -218,6 +223,7 @@ class MarketDataServiceBitstamp : public MarketDataService {
       }
     }
   }
+
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     rj::Document document;

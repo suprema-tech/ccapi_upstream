@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT
 #ifdef CCAPI_ENABLE_EXCHANGE_HUOBI
 #include "ccapi_cpp/service/ccapi_execution_management_service_huobi_base.h"
+
 namespace ccapi {
 class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBase {
  public:
@@ -27,18 +28,22 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
     this->getAccountsTarget = "/v1/account/accounts";
     this->getAccountBalancesTarget = "/v1/account/accounts/{account-id}/balance";
   }
+
   virtual ~ExecutionManagementServiceHuobi() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
  private:
 #endif
   bool doesHttpBodyContainError(const std::string& body) override { return body.find("err-code") != std::string::npos; }
+
   void appendSymbolId(rj::Document& document, rj::Document::AllocatorType& allocator, const std::string& symbolId) {
     ExecutionManagementServiceHuobiBase::appendSymbolId(document, allocator, symbolId, "symbol");
   }
+
   void appendSymbolId(std::map<std::string, std::string>& queryParamMap, const std::string& symbolId) {
     ExecutionManagementServiceHuobiBase::appendSymbolId(queryParamMap, symbolId, "symbol");
   }
+
   void convertReqDetail(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                         const std::map<std::string, std::string>& credential, std::map<std::string, std::string>& queryParamMap) override {
     switch (request.getOperation()) {
@@ -159,9 +164,10 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
-    const std::map<std::string, std::pair<std::string, JsonDataType> >& extractionFieldNameMap = {
+    const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
         {CCAPI_EM_ORDER_ID, std::make_pair("id", JsonDataType::INTEGER)},
         {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("client-order-id", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_SIDE, std::make_pair("type", JsonDataType::STRING)},
@@ -192,6 +198,7 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
       }
     }
   }
+
   void extractAccountInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                      const rj::Document& document) override {
     const auto& data = document["data"];
@@ -219,6 +226,7 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
         CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);
     }
   }
+
   std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription, const TimePoint& now,
                                                                 const std::map<std::string, std::string>& credential) override {
     auto apiKey = mapGetWithDefault(credential, this->apiKeyName);
@@ -326,6 +334,7 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
       }
     }
   }
+
   Event createEvent(const Subscription& subscription, const std::string& textMessage, const rj::Document& document, const std::string& actionStr,
                     const TimePoint& timeReceived) {
     Event event;
@@ -354,7 +363,7 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
           }
           message.setTime(UtilTime::makeTimePointFromMilliseconds(std::stoll(it->value.GetString())));
           message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_ORDER_UPDATE);
-          const std::map<std::string, std::pair<std::string, JsonDataType> >& extractionFieldNameMap = {
+          const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
               {CCAPI_EM_ORDER_ID, std::make_pair("orderId", JsonDataType::INTEGER)},
               {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("clientOrderId", JsonDataType::STRING)},
               {CCAPI_EM_ORDER_SIDE, std::make_pair("type", JsonDataType::STRING)},
@@ -418,6 +427,7 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
     event.setMessageList(messageList);
     return event;
   }
+
   std::string cancelOrderByClientOrderIdTarget;
   std::string getOrderByClientOrderIdTarget;
 };

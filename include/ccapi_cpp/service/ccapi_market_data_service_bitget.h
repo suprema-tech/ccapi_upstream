@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #ifdef CCAPI_ENABLE_EXCHANGE_BITGET
 #include "ccapi_cpp/service/ccapi_market_data_service_bitget_base.h"
+
 namespace ccapi {
 class MarketDataServiceBitget : public MarketDataServiceBitgetBase {
  public:
@@ -23,6 +24,7 @@ class MarketDataServiceBitget : public MarketDataServiceBitgetBase {
     this->getBboTarget = "/api/v2/spot/market/tickers";
     this->getBbosTarget = "/api/v2/spot/market/tickers";
   }
+
   virtual ~MarketDataServiceBitget() {}
 };
 } /* namespace ccapi */
