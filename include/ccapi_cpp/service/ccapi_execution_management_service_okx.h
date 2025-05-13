@@ -213,7 +213,10 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
       } break;
       case Request::Operation::GET_ACCOUNT_POSITIONS: {
         req.method(http::verb::get);
-        req.target(this->getAccountPositionsTarget);
+        std::string queryString;
+        const std::map<std::string, std::string> param = request.getFirstParamWithDefault();
+        this->appendParam(queryString, param);
+        req.target(queryString.empty() ? this->getAccountPositionsTarget : this->getAccountPositionsTarget + "?" + queryString);
         this->signRequest(req, "", credential);
       } break;
       default:
