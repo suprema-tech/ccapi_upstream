@@ -464,7 +464,6 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
     const auto& correlationId = subscription.getCorrelationId();
     message.setCorrelationIdList({correlationId});
     const auto& fieldSet = subscription.getFieldSet();
-    const auto& instrumentSet = subscription.getInstrumentSet();
     if (eventStr.empty()) {
       auto it = document.FindMember("op");
       std::string op = it != document.MemberEnd() ? it->value.GetString() : "";

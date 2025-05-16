@@ -773,7 +773,6 @@ class Session {
       if (this->eventHandler) {
         CCAPI_LOGGER_TRACE("handle event in immediate mode");
 #ifdef CCAPI_USE_SINGLE_THREAD
-        bool shouldContinue = true;
         try {
           this->eventHandler->processEvent(event, this);
         } catch (const std::runtime_error& e) {
