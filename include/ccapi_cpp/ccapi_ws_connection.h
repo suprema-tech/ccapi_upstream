@@ -19,7 +19,7 @@ class WsConnection CCAPI_FINAL {
     for (const auto& x : credential) {
       shortCredential.insert(std::make_pair(x.first, UtilString::firstNCharacter(x.second, CCAPI_CREDENTIAL_DISPLAY_LENGTH)));
     }
-    this->id = this->url + "||" + this->group + "||" + ccapi::toString(this->subscriptionList) + "||" + ccapi::toString(this->shortCredential);
+    this->id = this->url + "||" + this->group + "||" + ccapi::toString(this->subscriptionList) + "||" + ccapi::toString(shortCredential);
     this->correlationIdList.reserve(subscriptionList.size());
     std::transform(subscriptionList.cbegin(), subscriptionList.cend(), std::back_inserter(this->correlationIdList),
                    [](Subscription subscription) { return subscription.getCorrelationId(); });

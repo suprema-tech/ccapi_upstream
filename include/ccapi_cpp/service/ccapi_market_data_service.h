@@ -406,7 +406,7 @@ class MarketDataService : public Service {
       sendStringList = std::vector<std::string>(1, subscription.getRawOptions());
     }
     for (const auto& sendString : sendStringList) {
-      CCAPI_LOGGER_INFO("sendString = " + sendString);
+      CCAPI_LOGGER_FINE("sendString = " + sendString);
       ErrorCode ec;
       this->send(wsConnectionPtr, sendString, ec);
       if (ec) {
@@ -438,7 +438,7 @@ class MarketDataService : public Service {
     auto subscriptionList = wsConnection.subscriptionList;
     std::vector<std::string> sendStringList = this->createSendStringListFromSubscriptionList(wsConnection, subscriptionList, now, credential);
     for (const auto& sendString : sendStringList) {
-      CCAPI_LOGGER_INFO("sendString = " + sendString);
+      CCAPI_LOGGER_FINE("sendString = " + sendString);
       ErrorCode ec;
       this->send(wsConnectionPtr, sendString, ec);
       if (ec) {
