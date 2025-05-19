@@ -15,19 +15,6 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
     this->setHostWsFromUrlWs(this->baseUrlWs);
-    //     try {
-    //       this->tcpResolverResultsRest = this->resolver.resolve(this->hostRest, this->portRest);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-    // #else
-    //     try {
-    //       this->tcpResolverResultsWs = this->resolverWs.resolve(this->hostWs, this->portWs);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #endif
     this->apiKeyName = CCAPI_OKX_API_KEY;
     this->apiSecretName = CCAPI_OKX_API_SECRET;
     this->apiPassphraseName = CCAPI_OKX_API_PASSPHRASE;
@@ -46,18 +33,16 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
 
  private:
 #endif
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  void pingOnApplicationLevel(wspp::connection_hdl hdl, ErrorCode& ec) override { this->send(hdl, "ping", wspp::frame::opcode::text, ec); }
-#else
+
   void pingOnApplicationLevel(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode& ec) override { this->send(wsConnectionPtr, "ping", ec); }
-#endif
+
   bool doesHttpBodyContainError(const std::string& body) override { return !std::regex_search(body, std::regex("\"code\":\\s*\"0\"")); }
 
   void signReqeustForRestGenericPrivateRequest(http::request<http::string_body>& req, const Request& request, std::string& methodString,
                                                std::string& headerString, std::string& path, std::string& queryString, std::string& body, const TimePoint& now,
                                                const std::map<std::string, std::string>& credential) override {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    auto preSignedText = req.base().at("OK-ACCESS-TIMESTAMP").to_string();
+    auto preSignedText = std::string(req.base().at("OK-ACCESS-TIMESTAMP"));
     preSignedText += methodString;
     auto target = path;
     if (!queryString.empty()) {
@@ -74,9 +59,9 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
 
   void signRequest(http::request<http::string_body>& req, const std::string& body, const std::map<std::string, std::string>& credential) {
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    auto preSignedText = req.base().at("OK-ACCESS-TIMESTAMP").to_string();
+    auto preSignedText = std::string(req.base().at("OK-ACCESS-TIMESTAMP"));
     preSignedText += std::string(req.method_string());
-    preSignedText += req.target().to_string();
+    preSignedText += std::string(req.target());
     preSignedText += body;
     auto signature = UtilAlgorithm::base64Encode(Hmac::hmac(Hmac::ShaVersion::SHA256, apiSecret, preSignedText));
     req.set("OK-ACCESS-SIGN", signature);
@@ -228,7 +213,10 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
       } break;
       case Request::Operation::GET_ACCOUNT_POSITIONS: {
         req.method(http::verb::get);
-        req.target(this->getAccountPositionsTarget);
+        std::string queryString;
+        const std::map<std::string, std::string> param = request.getFirstParamWithDefault();
+        this->appendParam(queryString, param);
+        req.target(queryString.empty() ? this->getAccountPositionsTarget : this->getAccountPositionsTarget + "?" + queryString);
         this->signRequest(req, "", credential);
       } break;
       default:
@@ -332,6 +320,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
           element.insert(CCAPI_EM_POSITION_ASSET, x["posCcy"].GetString());
           element.insert(CCAPI_EM_POSITION_MARGIN_TYPE,
                          std::string(x["mgnMode"].GetString()) == "cross" ? CCAPI_EM_MARGIN_TYPE_CROSS_MARGIN : CCAPI_EM_MARGIN_TYPE_ISOLATED_MARGIN);
+          element.insert(CCAPI_MARGIN_ASSET, x["ccy"].GetString());
           element.insert(CCAPI_EM_POSITION_ENTRY_PRICE, x["avgPx"].GetString());
           element.insert(CCAPI_EM_POSITION_LEVERAGE, x["lever"].GetString());
           elementList.emplace_back(std::move(element));
@@ -389,17 +378,13 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
   }
 
   void onTextMessage(
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-      const WsConnection& wsConnection, const Subscription& subscription, const std::string& textMessage
-#else
+
       std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView
-#endif
+
       ,
       const TimePoint& timeReceived) override {
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-#else
     std::string textMessage(textMessageView);
-#endif
+
     if (textMessage != "pong") {
       rj::Document document;
       document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
@@ -455,15 +440,9 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
         document.Accept(writerSubscribe);
         std::string sendString = stringBufferSubscribe.GetString();
         ErrorCode ec;
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-        this->send(wsConnection.hdl, sendString, wspp::frame::opcode::text, ec);
-#else
+
         this->send(wsConnectionPtr, sendString, ec);
-#endif
-#else
-        this->send(wsConnectionPtr, sendString, ec);
-#endif
+
         if (ec) {
           this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "subscribe");
         }
@@ -485,7 +464,6 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
     const auto& correlationId = subscription.getCorrelationId();
     message.setCorrelationIdList({correlationId});
     const auto& fieldSet = subscription.getFieldSet();
-    const auto& instrumentSet = subscription.getInstrumentSet();
     if (eventStr.empty()) {
       auto it = document.FindMember("op");
       std::string op = it != document.MemberEnd() ? it->value.GetString() : "";
@@ -609,6 +587,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
             element.insert(CCAPI_EM_POSITION_ASSET, x["posCcy"].GetString());
             element.insert(CCAPI_EM_POSITION_MARGIN_TYPE,
                            std::string(x["mgnMode"].GetString()) == "cross" ? CCAPI_EM_MARGIN_TYPE_CROSS_MARGIN : CCAPI_EM_MARGIN_TYPE_ISOLATED_MARGIN);
+            element.insert(CCAPI_MARGIN_ASSET, x["ccy"].GetString());
             element.insert(CCAPI_EM_POSITION_ENTRY_PRICE, x["avgPx"].GetString());
             element.insert(CCAPI_EM_UNREALIZED_PNL, x["upl"].GetString());
             elementList.emplace_back(std::move(element));

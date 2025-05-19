@@ -241,6 +241,7 @@
 #include "ccapi_cpp/service/ccapi_service.h"
 #include "ccapi_cpp/service/ccapi_service_context.h"
 using steady_timer = boost::asio::steady_timer;
+
 namespace ccapi {
 /**
  * This class provides a consumer session for making requests and subscriptions for services. Sessions manage access to services either by requests and
@@ -252,6 +253,7 @@ class Session {
  public:
   Session(const Session&) = delete;
   Session& operator=(const Session&) = delete;
+
   Session(const SessionOptions& sessionOptions = SessionOptions(), const SessionConfigs& sessionConfigs = SessionConfigs(),
           EventHandler* eventHandler = nullptr, EventDispatcher* eventDispatcher = nullptr
 #ifndef SWIG
@@ -290,6 +292,7 @@ class Session {
     this->start();
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
+
   virtual ~Session() {
     CCAPI_LOGGER_FUNCTION_ENTER;
 #ifndef CCAPI_USE_SINGLE_THREAD
@@ -300,6 +303,7 @@ class Session {
     delete this->serviceContextPtr;
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
+
   virtual void start() {
     CCAPI_LOGGER_FUNCTION_ENTER;
     std::thread t([this]() {
@@ -613,6 +617,7 @@ class Session {
     }
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
+
   virtual void stop() {
 #ifndef CCAPI_USE_SINGLE_THREAD
     if (this->useInternalEventDispatcher) {
@@ -627,11 +632,13 @@ class Session {
     this->serviceContextPtr->stop();
     this->t.join();
   }
+
   virtual void subscribe(Subscription& subscription) {
     std::vector<Subscription> subscriptionList;
     subscriptionList.push_back(subscription);
     this->subscribe(subscriptionList);
   }
+
   virtual void subscribe(std::vector<Subscription>& subscriptionList) {
     CCAPI_LOGGER_FUNCTION_ENTER;
     for (auto& subscription : subscriptionList) {
@@ -662,7 +669,7 @@ class Session {
         subscription.setInstrumentType(instrumentType);
       }
     }
-    std::map<std::string, std::vector<Subscription> > subscriptionListByServiceNameMap;
+    std::map<std::string, std::vector<Subscription>> subscriptionListByServiceNameMap;
     for (const auto& subscription : subscriptionList) {
       auto serviceName = subscription.getServiceName();
       subscriptionListByServiceNameMap[serviceName].push_back(subscription);
@@ -697,7 +704,7 @@ class Session {
                         "unsupported exchange fields: " + toString(unsupportedExchangeFieldSet));
           return;
         }
-        std::map<std::string, std::vector<Subscription> > subscriptionListByExchangeMap;
+        std::map<std::string, std::vector<Subscription>> subscriptionListByExchangeMap;
         for (const auto& subscription : subscriptionList) {
           auto exchange = subscription.getExchange();
           subscriptionListByExchangeMap[exchange].push_back(subscription);
@@ -706,7 +713,7 @@ class Session {
         for (auto& subscriptionListByExchange : subscriptionListByExchangeMap) {
           auto exchange = subscriptionListByExchange.first;
           auto subscriptionList = subscriptionListByExchange.second;
-          std::map<std::string, std::shared_ptr<Service> >& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
+          std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
           if (serviceByExchangeMap.find(exchange) == serviceByExchangeMap.end()) {
             this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, "please enable exchange: " + exchange);
             return;
@@ -714,7 +721,7 @@ class Session {
           serviceByExchangeMap.at(exchange)->subscribe(subscriptionList);
         }
       } else if (serviceName == CCAPI_EXECUTION_MANAGEMENT) {
-        std::map<std::string, std::vector<Subscription> > subscriptionListByExchangeMap;
+        std::map<std::string, std::vector<Subscription>> subscriptionListByExchangeMap;
         for (const auto& subscription : subscriptionList) {
           auto exchange = subscription.getExchange();
           subscriptionListByExchangeMap[exchange].push_back(subscription);
@@ -723,7 +730,7 @@ class Session {
         for (auto& subscriptionListByExchange : subscriptionListByExchangeMap) {
           auto exchange = subscriptionListByExchange.first;
           auto subscriptionList = subscriptionListByExchange.second;
-          std::map<std::string, std::shared_ptr<Service> >& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
+          std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
           if (serviceByExchangeMap.find(exchange) == serviceByExchangeMap.end()) {
             this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, "please enable exchange: " + exchange);
             return;
@@ -734,6 +741,7 @@ class Session {
     }
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
+
   virtual void subscribeByFix(Subscription& subscription) {
     auto serviceName = subscription.getServiceName();
     CCAPI_LOGGER_DEBUG("serviceName = " + serviceName);
@@ -742,18 +750,20 @@ class Session {
       return;
     }
     auto exchange = subscription.getExchange();
-    std::map<std::string, std::shared_ptr<Service> >& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
+    std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
     if (serviceByExchangeMap.find(exchange) == serviceByExchangeMap.end()) {
       this->onError(Event::Type::FIX_STATUS, Message::Type::FIX_FAILURE, "please enable exchange: " + exchange);
       return;
     }
     serviceByExchangeMap.at(exchange)->subscribeByFix(subscription);
   }
+
   virtual void subscribeByFix(std::vector<Subscription>& subscriptionList) {
     for (auto& x : subscriptionList) {
       this->subscribeByFix(x);
     }
   }
+
   virtual void onEvent(Event& event, Queue<Event>* eventQueue) {
     CCAPI_LOGGER_FUNCTION_ENTER;
     CCAPI_LOGGER_TRACE("event = " + toString(event));
@@ -763,7 +773,6 @@ class Session {
       if (this->eventHandler) {
         CCAPI_LOGGER_TRACE("handle event in immediate mode");
 #ifdef CCAPI_USE_SINGLE_THREAD
-        bool shouldContinue = true;
         try {
           this->eventHandler->processEvent(event, this);
         } catch (const std::runtime_error& e) {
@@ -790,6 +799,7 @@ class Session {
     }
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
+
   virtual void sendRequestByFix(Request& request) {
     CCAPI_LOGGER_FUNCTION_ENTER;
     auto serviceName = request.getServiceName();
@@ -798,7 +808,7 @@ class Session {
       this->onError(Event::Type::FIX_STATUS, Message::Type::FIX_FAILURE, "please enable service: " + serviceName + ", and the exchanges that you want");
       return;
     }
-    std::map<std::string, std::shared_ptr<Service> >& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
+    std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
     auto exchange = request.getExchange();
     if (serviceByExchangeMap.find(exchange) == serviceByExchangeMap.end()) {
       this->onError(Event::Type::FIX_STATUS, Message::Type::FIX_FAILURE, "please enable exchange: " + exchange);
@@ -809,11 +819,13 @@ class Session {
     servicePtr->sendRequestByFix(request, now);
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
+
   virtual void sendRequestByFix(std::vector<Request>& requestList) {
     for (auto& x : requestList) {
       this->sendRequestByFix(x);
     }
   }
+
   virtual void sendRequestByWebsocket(Request& request) {
     CCAPI_LOGGER_FUNCTION_ENTER;
     auto serviceName = request.getServiceName();
@@ -822,7 +834,7 @@ class Session {
       this->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE, "please enable service: " + serviceName + ", and the exchanges that you want");
       return;
     }
-    std::map<std::string, std::shared_ptr<Service> >& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
+    std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
     auto exchange = request.getExchange();
     if (serviceByExchangeMap.find(exchange) == serviceByExchangeMap.end()) {
       this->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE, "please enable exchange: " + exchange);
@@ -833,20 +845,23 @@ class Session {
     servicePtr->sendRequestByWebsocket(request, now);
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
+
   virtual void sendRequestByWebsocket(std::vector<Request>& requestList) {
     for (auto& x : requestList) {
       this->sendRequestByWebsocket(x);
     }
   }
+
   virtual void sendRequest(Request& request, Queue<Event>* eventQueuePtr = nullptr, long delayMilliseconds = 0) {
     CCAPI_LOGGER_FUNCTION_ENTER;
     std::vector<Request> requestList({request});
     this->sendRequest(requestList, eventQueuePtr, delayMilliseconds);
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
+
   virtual void sendRequest(std::vector<Request>& requestList, Queue<Event>* eventQueuePtr = nullptr, long delayMilliseconds = 0) {
     CCAPI_LOGGER_FUNCTION_ENTER;
-    std::vector<std::shared_ptr<std::future<void> > > futurePtrList;
+    std::vector<std::shared_ptr<std::future<void>>> futurePtrList;
     // std::set<std::string> serviceNameExchangeSet;
     int i = 0;
     for (auto& request : requestList) {
@@ -858,7 +873,7 @@ class Session {
                       "please enable service: " + serviceName + ", and the exchanges that you want", eventQueuePtr);
         return;
       }
-      std::map<std::string, std::shared_ptr<Service> >& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
+      std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
       auto exchange = request.getExchange();
       if (serviceByExchangeMap.find(exchange) == serviceByExchangeMap.end()) {
         this->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE, "please enable exchange: " + exchange, eventQueuePtr);
@@ -886,7 +901,9 @@ class Session {
     }
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
+
   virtual Queue<Event>& getEventQueue() { return eventQueue; }
+
   virtual void onError(const Event::Type eventType, const Message::Type messageType, const std::string& errorMessage, Queue<Event>* eventQueuePtr = nullptr) {
     CCAPI_LOGGER_ERROR("errorMessage = " + errorMessage);
     Event event;
@@ -916,6 +933,7 @@ class Session {
       }
     });
   }
+
   virtual void setTimer(const std::string& id, long delayMilliseconds, std::function<void(const boost::system::error_code&)> errorHandler,
                         std::function<void()> successHandler) {
     boost::asio::post(*this->serviceContextPtr->ioContextPtr, [this, id, delayMilliseconds, errorHandler, successHandler]() {
@@ -944,6 +962,7 @@ class Session {
       this->delayTimerByIdMap[id] = timerPtr;
     });
   }
+
   virtual void cancelTimer(const std::string& id) {
     boost::asio::post(*this->serviceContextPtr->ioContextPtr, [this, id]() {
       if (this->delayTimerByIdMap.find(id) != this->delayTimerByIdMap.end()) {
@@ -952,6 +971,7 @@ class Session {
       }
     });
   }
+
   void purgeHttpConnectionPool(const std::string& serviceName = "", const std::string& exchangeName = "") {
     for (const auto& x : this->serviceByServiceNameExchangeMap) {
       if (serviceName.empty() || serviceName == x.first) {
@@ -963,6 +983,7 @@ class Session {
       }
     }
   }
+
   void forceCloseWebsocketConnections(const std::string& serviceName = "", const std::string& exchangeName = "") {
     for (const auto& x : this->serviceByServiceNameExchangeMap) {
       if (serviceName.empty() || serviceName == x.first) {
@@ -986,12 +1007,12 @@ class Session {
   EventDispatcher* eventDispatcher{nullptr};
   bool useInternalEventDispatcher{};
 #endif
-  std::map<std::string, std::map<std::string, std::shared_ptr<Service> > > serviceByServiceNameExchangeMap;
+  std::map<std::string, std::map<std::string, std::shared_ptr<Service>>> serviceByServiceNameExchangeMap;
   std::thread t;
   Queue<Event> eventQueue;
   ServiceContext* serviceContextPtr{nullptr};
   std::function<void(Event& event, Queue<Event>* eventQueue)> internalEventHandler;
-  std::map<std::string, std::shared_ptr<steady_timer> > delayTimerByIdMap;
+  std::map<std::string, std::shared_ptr<steady_timer>> delayTimerByIdMap;
 };
 } /* namespace ccapi */
 #endif  // INCLUDE_CCAPI_CPP_CCAPI_SESSION_H_

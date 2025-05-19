@@ -1,6 +1,8 @@
 #include "ccapi_cpp/ccapi_session.h"
+
 namespace ccapi {
 Logger* Logger::logger = nullptr;  // This line is needed.
+
 class MyEventHandler : public EventHandler {
  public:
   bool processEvent(const Event& event, Session* session) override {
@@ -28,12 +30,14 @@ class MyEventHandler : public EventHandler {
   }
 };
 } /* namespace ccapi */
+
 using ::ccapi::MyEventHandler;
 using ::ccapi::Session;
 using ::ccapi::SessionConfigs;
 using ::ccapi::SessionOptions;
 using ::ccapi::Subscription;
 using ::ccapi::UtilSystem;
+
 int main(int argc, char** argv) {
   if (UtilSystem::getEnvAsString("COINBASE_API_KEY").empty()) {
     std::cerr << "Please set environment variable COINBASE_API_KEY" << std::endl;
