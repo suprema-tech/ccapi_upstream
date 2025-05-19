@@ -21,6 +21,7 @@ class MarketDataServiceGateio : public MarketDataServiceGateioBase {
     this->getRecentTradesTarget = prefix + "/spot/trades";
     this->getInstrumentTarget = prefix + "/spot/currency_pairs/{currency_pair}";
     this->getInstrumentsTarget = prefix + "/spot/currency_pairs";
+    this->getBbosTarget = "/api/v4/spot/tickers";
     this->websocketChannelTrades = CCAPI_WEBSOCKET_GATEIO_CHANNEL_TRADES;
     this->websocketChannelBookTicker = CCAPI_WEBSOCKET_GATEIO_CHANNEL_BOOK_TICKER;
     this->websocketChannelOrderBook = CCAPI_WEBSOCKET_GATEIO_CHANNEL_ORDER_BOOK;
@@ -62,6 +63,17 @@ class MarketDataServiceGateio : public MarketDataServiceGateioBase {
         req.method(http::verb::get);
         auto target = this->getInstrumentsTarget;
         req.target(target);
+      } break;
+      case Request::Operation::GET_BBOS: {
+        req.method(http::verb::get);
+        auto target = this->getBbosTarget;
+        std::string queryString;
+        const std::map<std::string, std::string> param = request.getFirstParamWithDefault();
+        this->appendParam(queryString, param,
+                          {
+                              {CCAPI_INSTRUMENT, "currency_pair"},
+                          });
+        req.target(target + "?" + queryString);
       } break;
       default:
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
@@ -123,6 +135,34 @@ class MarketDataServiceGateio : public MarketDataServiceGateioBase {
         for (const auto& x : document.GetArray()) {
           Element element;
           this->extractInstrumentInfo(element, x);
+          elementList.push_back(element);
+        }
+        message.setElementList(elementList);
+        message.setCorrelationIdList({request.getCorrelationId()});
+        event.addMessages({message});
+      } break;
+      case Request::Operation::GET_BBOS: {
+        Message message;
+        message.setTimeReceived(timeReceived);
+        message.setType(this->requestOperationToMessageTypeMap.at(request.getOperation()));
+        std::vector<Element> elementList;
+        for (const auto& x : document.GetArray()) {
+          Element element;
+          element.insert(CCAPI_INSTRUMENT, x["currency_pair"].GetString());
+          element.insert(CCAPI_BEST_BID_N_PRICE, x["highest_bid"].GetString());
+          {
+            const auto& it = x.FindMember("highest_size");
+            if (it != x.MemberEnd()) {
+              element.insert(CCAPI_BEST_BID_N_SIZE, it->value.GetString());
+            }
+          }
+          element.insert(CCAPI_BEST_ASK_N_PRICE, x["lowest_ask"].GetString());
+          {
+            const auto& it = x.FindMember("lowest_size");
+            if (it != x.MemberEnd()) {
+              element.insert(CCAPI_BEST_ASK_N_SIZE, it->value.GetString());
+            }
+          }
           elementList.push_back(element);
         }
         message.setElementList(elementList);

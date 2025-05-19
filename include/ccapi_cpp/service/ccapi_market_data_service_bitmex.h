@@ -80,12 +80,8 @@ class MarketDataServiceBitmex : public MarketDataService {
     return sendStringList;
   }
 
-  void processTextMessage(
-
-      std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView
-
-      ,
-      const TimePoint& timeReceived, Event& event, std::vector<MarketDataMessage>& marketDataMessageList) override {
+  void processTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
+                          std::vector<MarketDataMessage>& marketDataMessageList) override {
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
 
