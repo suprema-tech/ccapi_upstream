@@ -1213,7 +1213,7 @@
 #define CCAPI_BITGET_API_CHANNEL_API_CODE "95mpa"
 #endif
 #ifndef CCAPI_GATEIO_API_CHANNEL_ID
-#define CCAPI_GATEIO_API_CHANNEL_ID "cryptochassis"
+#define CCAPI_GATEIO_API_CHANNEL_ID "cryptochassis2"
 #endif
 #ifndef CCAPI_MEXC_API_SOURCE
 #define CCAPI_MEXC_API_SOURCE "CHAS"
