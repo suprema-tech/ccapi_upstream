@@ -92,6 +92,7 @@
 
 #include "ccapi_cpp/ccapi_macro.h"
 #include "ccapi_cpp/ccapi_util_private.h"
+
 namespace ccapi {
 /**
  * This class is used for library logging.
@@ -106,39 +107,49 @@ class Logger {
   std::string LOG_SEVERITY_FINE = "FINE";
   std::string LOG_SEVERITY_DEBUG = "DEBUG";
   std::string LOG_SEVERITY_TRACE = "TRACE";
+
   virtual ~Logger() {}
+
   void fatal(const std::thread::id& threadId, const std::chrono::system_clock::time_point& time, const std::string& fileName, const std::string& lineNumber,
              const std::string& message) {
     this->logMessagePrivate(LOG_SEVERITY_FATAL, threadId, time, fileName, lineNumber, message);
   }
+
   void error(const std::thread::id& threadId, const std::chrono::system_clock::time_point& time, const std::string& fileName, const std::string& lineNumber,
              const std::string& message) {
     this->logMessagePrivate(LOG_SEVERITY_ERROR, threadId, time, fileName, lineNumber, message);
   }
+
   void warn(const std::thread::id& threadId, const std::chrono::system_clock::time_point& time, const std::string& fileName, const std::string& lineNumber,
             const std::string& message) {
     this->logMessagePrivate(LOG_SEVERITY_WARN, threadId, time, fileName, lineNumber, message);
   }
+
   void info(const std::thread::id& threadId, const std::chrono::system_clock::time_point& time, const std::string& fileName, const std::string& lineNumber,
             const std::string& message) {
     this->logMessagePrivate(LOG_SEVERITY_INFO, threadId, time, fileName, lineNumber, message);
   }
+
   void detail(const std::thread::id& threadId, const std::chrono::system_clock::time_point& time, const std::string& fileName, const std::string& lineNumber,
               const std::string& message) {
     this->logMessagePrivate(LOG_SEVERITY_DETAIL, threadId, time, fileName, lineNumber, message);
   }
+
   void fine(const std::thread::id& threadId, const std::chrono::system_clock::time_point& time, const std::string& fileName, const std::string& lineNumber,
             const std::string& message) {
     this->logMessagePrivate(LOG_SEVERITY_FINE, threadId, time, fileName, lineNumber, message);
   }
+
   void debug(const std::thread::id& threadId, const std::chrono::system_clock::time_point& time, const std::string& fileName, const std::string& lineNumber,
              const std::string& message) {
     this->logMessagePrivate(LOG_SEVERITY_DEBUG, threadId, time, fileName, lineNumber, message);
   }
+
   void trace(const std::thread::id& threadId, const std::chrono::system_clock::time_point& time, const std::string& fileName, const std::string& lineNumber,
              const std::string& message) {
     this->logMessagePrivate(LOG_SEVERITY_TRACE, threadId, time, fileName, lineNumber, message);
   }
+
   static Logger* logger;
 
   virtual void logMessage(const std::string& severity, const std::string& threadId, const std::string& timeISO, const std::string& fileName,

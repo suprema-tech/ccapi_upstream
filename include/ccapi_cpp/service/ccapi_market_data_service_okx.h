@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #ifdef CCAPI_ENABLE_EXCHANGE_OKX
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
+
 namespace ccapi {
 class MarketDataServiceOkx : public MarketDataService {
  public:
@@ -14,19 +15,6 @@ class MarketDataServiceOkx : public MarketDataService {
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
     this->setHostWsFromUrlWs(this->baseUrlWs);
-    //     try {
-    //       this->tcpResolverResultsRest = this->resolver.resolve(this->hostRest, this->portRest);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-    // #else
-    //     try {
-    //       this->tcpResolverResultsWs = this->resolverWs.resolve(this->hostWs, this->portWs);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #endif
     this->apiKeyName = CCAPI_OKX_API_KEY;
     this->apiSecretName = CCAPI_OKX_API_SECRET;
     this->apiPassphraseName = CCAPI_OKX_API_PASSPHRASE;
@@ -42,6 +30,7 @@ class MarketDataServiceOkx : public MarketDataService {
     this->getInstrumentsTarget = "/api/v5/public/instruments";
     this->getBbosTarget = "/api/v5/market/tickers";
   }
+
   virtual ~MarketDataServiceOkx() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -55,7 +44,9 @@ class MarketDataServiceOkx : public MarketDataService {
     return baseUrlWsGivenSubscription + "|" + subscription.getField() + "|" + subscription.getSerializedOptions() + "|" +
            subscription.getSerializedCredential();
   }
+
   bool doesHttpBodyContainError(const std::string& body) override { return !std::regex_search(body, std::regex("\"code\":\\s*\"0\"")); }
+
   void prepareSubscriptionDetail(std::string& channelId, std::string& symbolId, const std::string& field, const WsConnection& wsConnection,
                                  const Subscription& subscription, const std::map<std::string, std::string> optionMap) override {
     auto marketDepthRequested = std::stoi(optionMap.at(CCAPI_MARKET_DEPTH_MAX));
@@ -82,11 +73,9 @@ class MarketDataServiceOkx : public MarketDataService {
       channelId = CCAPI_WEBSOCKET_OKX_CHANNEL_CANDLESTICK + interval;
     }
   }
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  void pingOnApplicationLevel(wspp::connection_hdl hdl, ErrorCode& ec) override { this->send(hdl, "ping", wspp::frame::opcode::text, ec); }
-#else
+
   void pingOnApplicationLevel(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode& ec) override { this->send(wsConnectionPtr, "ping", ec); }
-#endif
+
   std::vector<std::string> createSendStringList(const WsConnection& wsConnection) override {
     std::vector<std::string> sendStringList;
     rj::Document document;
@@ -118,6 +107,7 @@ class MarketDataServiceOkx : public MarketDataService {
     sendStringList.push_back(sendString);
     return sendStringList;
   }
+
   std::string calculateOrderBookChecksum(const std::map<Decimal, std::string>& snapshotBid, const std::map<Decimal, std::string>& snapshotAsk) override {
     auto i = 0;
     auto i1 = snapshotBid.rbegin();
@@ -140,30 +130,20 @@ class MarketDataServiceOkx : public MarketDataService {
     uint_fast32_t csCalc = UtilAlgorithm::crc(csStr.begin(), csStr.end());
     return intToHex(csCalc);
   }
-  void processTextMessage(
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-      WsConnection& wsConnection, wspp::connection_hdl hdl, const std::string& textMessage
-#else
-      std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView
-#endif
-      ,
-      const TimePoint& timeReceived, Event& event, std::vector<MarketDataMessage>& marketDataMessageList) override {
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-#else
+
+  void processTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
+                          std::vector<MarketDataMessage>& marketDataMessageList) override {
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
-#endif
+
     if (textMessage != "pong") {
       rj::Document document;
       document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
       auto it = document.FindMember("event");
       std::string eventStr = it != document.MemberEnd() ? it->value.GetString() : "";
       if (eventStr == "login") {
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-        this->startSubscribe(wsConnection);
-#else
         this->startSubscribe(wsConnectionPtr);
-#endif
+
       } else {
         if (document.IsObject() && document.HasMember("arg")) {
           const rj::Value& arg = document["arg"];
@@ -291,6 +271,7 @@ class MarketDataServiceOkx : public MarketDataService {
       }
     }
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     switch (request.getOperation()) {
@@ -412,6 +393,7 @@ class MarketDataServiceOkx : public MarketDataService {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractInstrumentInfo(Element& element, const rj::Value& x) {
     element.insert(CCAPI_INSTRUMENT, x["instId"].GetString());
     std::string baseCcy = x["baseCcy"].GetString();
@@ -426,6 +408,7 @@ class MarketDataServiceOkx : public MarketDataService {
     element.insert(CCAPI_CONTRACT_SIZE, x["ctVal"].GetString());
     element.insert(CCAPI_CONTRACT_MULTIPLIER, x["ctMult"].GetString());
   }
+
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     rj::Document document;
@@ -541,6 +524,7 @@ class MarketDataServiceOkx : public MarketDataService {
         CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);
     }
   }
+
   std::vector<std::string> createSendStringListFromSubscriptionList(const WsConnection& wsConnection, const std::vector<Subscription>& subscriptionList,
                                                                     const TimePoint& now, const std::map<std::string, std::string>& credential) override {
     std::vector<std::string> sendStringList;
@@ -569,6 +553,7 @@ class MarketDataServiceOkx : public MarketDataService {
     sendStringList.push_back(sendString);
     return sendStringList;
   }
+
   std::string apiPassphraseName;
 };
 } /* namespace ccapi */

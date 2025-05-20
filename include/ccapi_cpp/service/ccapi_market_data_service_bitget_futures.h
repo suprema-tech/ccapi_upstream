@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #ifdef CCAPI_ENABLE_EXCHANGE_BITGET_FUTURES
 #include "ccapi_cpp/service/ccapi_market_data_service_bitget_base.h"
+
 namespace ccapi {
 class MarketDataServiceBitgetFutures : public MarketDataServiceBitgetBase {
  public:
@@ -14,19 +15,6 @@ class MarketDataServiceBitgetFutures : public MarketDataServiceBitgetBase {
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
     this->setHostWsFromUrlWs(this->baseUrlWs);
-    //     try {
-    //       this->tcpResolverResultsRest = this->resolver.resolve(this->hostRest, this->portRest);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-    // #else
-    //     try {
-    //       this->tcpResolverResultsWs = this->resolverWs.resolve(this->hostWs, this->portWs);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #endif
     this->getRecentTradesTarget = "/api/v2/mix/market/fills";
     this->getHistoricalTradesTarget = "/api/v2/mix/market/fills-history";
     this->getInstrumentTarget = "/api/v2/mix/market/contracts";
@@ -37,6 +25,7 @@ class MarketDataServiceBitgetFutures : public MarketDataServiceBitgetBase {
     this->getBbosTarget = "/api/v2/mix/market/ticker";
     this->isDerivatives = true;
   }
+
   virtual ~MarketDataServiceBitgetFutures() {}
 };
 } /* namespace ccapi */

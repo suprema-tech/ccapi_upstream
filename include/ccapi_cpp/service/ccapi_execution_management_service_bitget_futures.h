@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT
 #ifdef CCAPI_ENABLE_EXCHANGE_BITGET_FUTURES
 #include "ccapi_cpp/service/ccapi_execution_management_service_bitget_base.h"
+
 namespace ccapi {
 class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServiceBitgetBase {
  public:
@@ -14,19 +15,6 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
     this->setHostWsFromUrlWs(this->baseUrlWs);
-    //     try {
-    //       this->tcpResolverResultsRest = this->resolver.resolve(this->hostRest, this->portRest);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-    // #else
-    //     try {
-    //       this->tcpResolverResultsWs = this->resolverWs.resolve(this->hostWs, this->portWs);
-    //     } catch (const std::exception& e) {
-    //       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    //     }
-    // #endif
     this->apiKeyName = CCAPI_BITGET_FUTURES_API_KEY;
     this->apiSecretName = CCAPI_BITGET_FUTURES_API_SECRET;
     this->apiPassphraseName = CCAPI_BITGET_FUTURES_API_PASSPHRASE;
@@ -41,6 +29,7 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
     this->getAccountPositionsTarget = "/api/v2/mix/position/single-position";
     this->getAccountAllPositionsTarget = "/api/v2/mix/position/all-position";
   }
+
   virtual ~ExecutionManagementServiceBitgetFutures() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -64,6 +53,7 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
       rjValue.AddMember(rj::Value(key.c_str(), allocator).Move(), rj::Value(value.c_str(), allocator).Move(), allocator);
     }
   }
+
   void appendParam(std::string& queryString, const std::map<std::string, std::string>& param,
                    const std::map<std::string, std::string> standardizationMap = {
                        {CCAPI_MARGIN_ASSET, "marginCoin"},
@@ -79,6 +69,7 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
       queryString += "&";
     }
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     this->prepareReq(req, request, now, symbolId, credential);
@@ -210,6 +201,7 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
     const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
@@ -248,6 +240,7 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
       }
     }
   }
+
   void extractAccountInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                      const rj::Document& document) override {
     switch (request.getOperation()) {
@@ -279,6 +272,7 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
         CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);
     }
   }
+
   void extractOrderInfo(Element& element, const rj::Value& x, const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap,
                         const std::map<std::string, std::function<std::string(const std::string&)>> conversionMap = {}) override {
     ExecutionManagementService::extractOrderInfo(element, x, extractionFieldNameMap);
@@ -295,6 +289,7 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
       }
     }
   }
+
   std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription, const TimePoint& now,
                                                                 const std::map<std::string, std::string>& credential) override {
     std::vector<std::string> sendStringList;
@@ -323,14 +318,11 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
     sendStringList.push_back(sendString);
     return sendStringList;
   }
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  void onTextMessage(const WsConnection& wsConnection, const Subscription& subscription, const std::string& textMessage,
-                     const TimePoint& timeReceived) override {
-#else
+
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
     std::string textMessage(textMessageView);
-#endif
+
     if (textMessage != "pong") {
       rj::Document document;
       document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
@@ -374,34 +366,26 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
         document.Accept(writerSubscribe);
         std::string sendString = stringBufferSubscribe.GetString();
         ErrorCode ec;
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-        this->send(wsConnection.hdl, sendString, wspp::frame::opcode::text, ec);
-#else
+
         this->send(wsConnectionPtr, sendString, ec);
-#endif
+
         if (ec) {
           this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "subscribe");
         }
       } else {
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-        Event event = this->createEvent(wsConnection, wsConnection.hdl, subscription, textMessage, document, eventStr, timeReceived);
-#else
         Event event = this->createEvent(wsConnectionPtr, subscription, textMessageView, document, eventStr, timeReceived);
-#endif
+
         if (!event.getMessageList().empty()) {
           this->eventHandler(event, nullptr);
         }
       }
     }
   }
-#ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  Event createEvent(const WsConnection& wsConnection, wspp::connection_hdl hdl, const Subscription& subscription, const std::string& textMessage,
-                    const rj::Document& document, const std::string& eventStr, const TimePoint& timeReceived) {
-#else
+
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const std::string& eventStr, const TimePoint& timeReceived) {
     std::string textMessage(textMessageView);
-#endif
+
     Event event;
     std::vector<Message> messageList;
     Message message;
@@ -533,6 +517,7 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
     event.setMessageList(messageList);
     return event;
   }
+
   std::string getAllOpenOrdersTarget, getAccountAllPositionsTarget;
 };
 } /* namespace ccapi */

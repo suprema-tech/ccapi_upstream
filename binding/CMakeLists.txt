@@ -108,7 +108,7 @@ if(NOT CCAPI_LEGACY_USE_WEBSOCKETPP)
     include(ExternalProject)
     ExternalProject_Add(
       boost
-      URL https://archives.boost.io/release/1.80.0/source/boost_1_80_0.tar.gz
+      URL https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.gz
       SOURCE_DIR "${CMAKE_BINARY_DIR}/boost"
       CONFIGURE_COMMAND ""
       BUILD_COMMAND ""
@@ -136,7 +136,7 @@ if(NOT CCAPI_LEGACY_USE_WEBSOCKETPP)
     include(ExternalProject)
     ExternalProject_Add(
       hffix
-      URL https://github.com/jamesdbrock/hffix/archive/refs/tags/v1.3.0.tar.gz
+      URL https://github.com/jamesdbrock/hffix/archive/refs/tags/v1.4.1.tar.gz
       SOURCE_DIR "${CMAKE_BINARY_DIR}/hffix"
       CONFIGURE_COMMAND ""
       BUILD_COMMAND ""

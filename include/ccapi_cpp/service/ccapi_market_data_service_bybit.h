@@ -3,6 +3,7 @@
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #ifdef CCAPI_ENABLE_EXCHANGE_BYBIT
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
+
 namespace ccapi {
 class MarketDataServiceBybit : public MarketDataService {
  public:
@@ -24,6 +25,7 @@ class MarketDataServiceBybit : public MarketDataService {
     this->getInstrumentsTarget = "/v5/market/instruments-info";
     this->getBbosTarget = "/v5/market/tickers";
   }
+
   virtual ~MarketDataServiceBybit() {}
 #ifndef CCAPI_EXPOSE_INTERNAL
 
@@ -36,6 +38,7 @@ class MarketDataServiceBybit : public MarketDataService {
     url.replace(url.find(toReplace), toReplace.length(), instrumentTypeSubstitute);
     return url;
   }
+
   std::string convertCandlestickIntervalSecondsToInterval(int intervalSeconds) {
     std::string interval;
     if (intervalSeconds < 86400) {
@@ -47,6 +50,7 @@ class MarketDataServiceBybit : public MarketDataService {
     }
     return interval;
   }
+
   void prepareSubscriptionDetail(std::string& channelId, std::string& symbolId, const std::string& field, const WsConnection& wsConnection,
                                  const Subscription& subscription, const std::map<std::string, std::string> optionMap) override {
     const auto& marketDepthRequested = std::stoi(optionMap.at(CCAPI_MARKET_DEPTH_MAX));
@@ -71,6 +75,7 @@ class MarketDataServiceBybit : public MarketDataService {
       channelId.replace(channelId.find(toReplace), toReplace.length(), interval);
     }
   }
+
   std::vector<std::string> createSendStringList(const WsConnection& wsConnection) override {
     std::vector<std::string> sendStringList;
     std::vector<std::string> exchangeSubscriptionIdList;
@@ -111,6 +116,7 @@ class MarketDataServiceBybit : public MarketDataService {
     sendStringList.push_back(sendString);
     return sendStringList;
   }
+
   void processTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
                           std::vector<MarketDataMessage>& marketDataMessageList) override {
     WsConnection& wsConnection = *wsConnectionPtr;
@@ -217,6 +223,7 @@ class MarketDataServiceBybit : public MarketDataService {
       }
     }
   }
+
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
     switch (request.getOperation()) {
@@ -319,6 +326,7 @@ class MarketDataServiceBybit : public MarketDataService {
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
   }
+
   void extractInstrumentInfo(Element& element, const rj::Value& x, const std::string& category) {
     element.insert(CCAPI_INSTRUMENT, x["symbol"].GetString());
     element.insert(CCAPI_BASE_ASSET, x["baseCoin"].GetString());
@@ -341,6 +349,7 @@ class MarketDataServiceBybit : public MarketDataService {
       element.insert(CCAPI_ORDER_QUANTITY_MIN, x["lotSizeFilter"]["minOrderQty"].GetString());
     }
   }
+
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     rj::Document document;
