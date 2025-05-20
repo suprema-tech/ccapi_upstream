@@ -213,7 +213,10 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
       } break;
       case Request::Operation::GET_ACCOUNT_POSITIONS: {
         req.method(http::verb::get);
-        req.target(this->getAccountPositionsTarget);
+        std::string queryString;
+        const std::map<std::string, std::string> param = request.getFirstParamWithDefault();
+        this->appendParam(queryString, param);
+        req.target(queryString.empty() ? this->getAccountPositionsTarget : this->getAccountPositionsTarget + "?" + queryString);
         this->signRequest(req, "", credential);
       } break;
       default:
@@ -317,6 +320,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
           element.insert(CCAPI_EM_POSITION_ASSET, x["posCcy"].GetString());
           element.insert(CCAPI_EM_POSITION_MARGIN_TYPE,
                          std::string(x["mgnMode"].GetString()) == "cross" ? CCAPI_EM_MARGIN_TYPE_CROSS_MARGIN : CCAPI_EM_MARGIN_TYPE_ISOLATED_MARGIN);
+          element.insert(CCAPI_MARGIN_ASSET, x["ccy"].GetString());
           element.insert(CCAPI_EM_POSITION_ENTRY_PRICE, x["avgPx"].GetString());
           element.insert(CCAPI_EM_POSITION_LEVERAGE, x["lever"].GetString());
           elementList.emplace_back(std::move(element));
@@ -460,7 +464,6 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
     const auto& correlationId = subscription.getCorrelationId();
     message.setCorrelationIdList({correlationId});
     const auto& fieldSet = subscription.getFieldSet();
-    const auto& instrumentSet = subscription.getInstrumentSet();
     if (eventStr.empty()) {
       auto it = document.FindMember("op");
       std::string op = it != document.MemberEnd() ? it->value.GetString() : "";
@@ -584,6 +587,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
             element.insert(CCAPI_EM_POSITION_ASSET, x["posCcy"].GetString());
             element.insert(CCAPI_EM_POSITION_MARGIN_TYPE,
                            std::string(x["mgnMode"].GetString()) == "cross" ? CCAPI_EM_MARGIN_TYPE_CROSS_MARGIN : CCAPI_EM_MARGIN_TYPE_ISOLATED_MARGIN);
+            element.insert(CCAPI_MARGIN_ASSET, x["ccy"].GetString());
             element.insert(CCAPI_EM_POSITION_ENTRY_PRICE, x["avgPx"].GetString());
             element.insert(CCAPI_EM_UNREALIZED_PNL, x["upl"].GetString());
             elementList.emplace_back(std::move(element));

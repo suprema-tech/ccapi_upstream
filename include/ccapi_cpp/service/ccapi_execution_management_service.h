@@ -203,7 +203,7 @@ class ExecutionManagementService : public Service {
     auto subscription = wsConnection.subscriptionList.at(0);
     std::vector<std::string> sendStringList = this->createSendStringListFromSubscription(wsConnection, subscription, now, credential);
     for (const auto& sendString : sendStringList) {
-      CCAPI_LOGGER_INFO("sendString = " + sendString);
+      CCAPI_LOGGER_FINE("sendString = " + sendString);
       ErrorCode ec;
       this->send(wsConnectionPtr, sendString, ec);
       if (ec) {

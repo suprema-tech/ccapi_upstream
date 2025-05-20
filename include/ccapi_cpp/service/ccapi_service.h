@@ -1212,7 +1212,7 @@ class Service : public std::enable_shared_from_this<Service> {
     WsConnection& wsConnection = *wsConnectionPtr;
     wsConnection.status = WsConnection::Status::FAILED;
     this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE_DUE_TO_CONNECTION_FAILURE,
-                  "connection " + toString(wsConnection) + " has failed before opening");
+                  "connection " + toString(wsConnection) + " has failed before opening", wsConnection.correlationIdList);
     WsConnection thisWsConnection = wsConnection;
     this->wsConnectionByIdMap.erase(thisWsConnection.id);
     auto urlBase = UtilString::split(thisWsConnection.url, "?").at(0);
