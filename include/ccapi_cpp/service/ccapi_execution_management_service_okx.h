@@ -377,10 +377,8 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
     return sendStringList;
   }
 
-  void onTextMessage(
-      std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView
-      ,
-      const TimePoint& timeReceived) override {
+  void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
+                     const TimePoint& timeReceived) override {
     std::string textMessage(textMessageView);
 
     if (textMessage != "pong") {
@@ -424,11 +422,11 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
               args.PushBack(arg, allocator);
             }
             if (fieldSet.find(CCAPI_EM_PRIVATE_TRADE_LITE) != fieldSet.end()) {
-                rj::Value arg(rj::kObjectType);
-                arg.AddMember("channel", rj::Value("fills").Move(), allocator);
-                arg.AddMember("instId", rj::Value(instrument.c_str(), allocator).Move(), allocator);
-                args.PushBack(arg, allocator);
-              }
+              rj::Value arg(rj::kObjectType);
+              arg.AddMember("channel", rj::Value("fills").Move(), allocator);
+              arg.AddMember("instId", rj::Value(instrument.c_str(), allocator).Move(), allocator);
+              args.PushBack(arg, allocator);
+            }
             if (fieldSet.find(CCAPI_EM_POSITION_UPDATE) != fieldSet.end()) {
               rj::Value arg(rj::kObjectType);
               arg.AddMember("channel", rj::Value("positions").Move(), allocator);
@@ -566,26 +564,26 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
             }
           }
         } else if (channel == "fills") {
-            for (const auto& x : data.GetArray()) {
-                Message message;
-                message.setTimeReceived(timeReceived);
-                message.setCorrelationIdList({subscription.getCorrelationId()});
-                message.setTime(UtilTime::makeTimePointFromMilliseconds(std::stoll(std::string(x["ts"].GetString()))));
-                message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_PRIVATE_TRADE_LITE);
-                std::vector<Element> elementList;
-                Element element;
-                element.insert(CCAPI_TRADE_ID, x["tradeId"].GetString());
-                element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, std::string(x["fillPx"].GetString()));
-                element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, std::string(x["fillSz"].GetString()));
-                element.insert(CCAPI_EM_ORDER_SIDE, std::string(x["side"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
-                element.insert(CCAPI_IS_MAKER, std::string(x["execType"].GetString()) == "M" ? "1" : "0");
-                element.insert(CCAPI_EM_ORDER_ID, std::string(x["ordId"].GetString()));
-                element.insert(CCAPI_EM_ORDER_INSTRUMENT, x["instId"].GetString());
-                elementList.emplace_back(std::move(element));
-                message.setElementList(elementList);
-                messageList.emplace_back(std::move(message));
-            }
-        }else if (channel == "balance_and_position") {
+          for (const auto& x : data.GetArray()) {
+            Message message;
+            message.setTimeReceived(timeReceived);
+            message.setCorrelationIdList({subscription.getCorrelationId()});
+            message.setTime(UtilTime::makeTimePointFromMilliseconds(std::stoll(std::string(x["ts"].GetString()))));
+            message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_PRIVATE_TRADE_LITE);
+            std::vector<Element> elementList;
+            Element element;
+            element.insert(CCAPI_TRADE_ID, x["tradeId"].GetString());
+            element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, std::string(x["fillPx"].GetString()));
+            element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, std::string(x["fillSz"].GetString()));
+            element.insert(CCAPI_EM_ORDER_SIDE, std::string(x["side"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
+            element.insert(CCAPI_IS_MAKER, std::string(x["execType"].GetString()) == "M" ? "1" : "0");
+            element.insert(CCAPI_EM_ORDER_ID, std::string(x["ordId"].GetString()));
+            element.insert(CCAPI_EM_ORDER_INSTRUMENT, x["instId"].GetString());
+            elementList.emplace_back(std::move(element));
+            message.setElementList(elementList);
+            messageList.emplace_back(std::move(message));
+          }
+        } else if (channel == "balance_and_position") {
           for (const auto& x : data.GetArray()) {
             Message message;
             message.setTimeReceived(timeReceived);
