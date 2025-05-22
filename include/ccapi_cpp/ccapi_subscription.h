@@ -44,7 +44,7 @@ class Subscription CCAPI_FINAL {
       }
     }
     std::set<std::string> executionManagementSubscriptionFieldSet = {std::string(CCAPI_EM_ORDER_UPDATE), std::string(CCAPI_EM_PRIVATE_TRADE),
-                                                                     std::string(CCAPI_EM_BALANCE_UPDATE), std::string(CCAPI_EM_POSITION_UPDATE)};
+        std::string(CCAPI_EM_PRIVATE_TRADE_LITE),std::string(CCAPI_EM_BALANCE_UPDATE), std::string(CCAPI_EM_POSITION_UPDATE)};
     if (field == CCAPI_GENERIC_PUBLIC_SUBSCRIPTION) {
       this->serviceName = CCAPI_MARKET_DATA;
     } else if (field == CCAPI_FIX || field == CCAPI_FIX_MARKET_DATA || field == CCAPI_FIX_EXECUTION_MANAGEMENT) {
