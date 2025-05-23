@@ -2,7 +2,6 @@
 #define INCLUDE_CCAPI_CPP_SERVICE_CCAPI_MARKET_DATA_SERVICE_OKX_H_
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #ifdef CCAPI_ENABLE_EXCHANGE_OKX
-#include <rapidjson/prettywriter.h>
 
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
 
@@ -397,10 +396,6 @@ class MarketDataServiceOkx : public MarketDataService {
   }
 
   void extractInstrumentInfo(Element& element, const rj::Value& x) {
-    rj::StringBuffer buffer;
-    rj::PrettyWriter<rj::StringBuffer> writer(buffer);
-    x.Accept(writer);
-    std::cout << buffer.GetString() << std::endl;
     element.insert(CCAPI_INSTRUMENT, x["instId"].GetString());
     std::string instFamily = x["instFamily"].GetString();
     bool instFamilyHasDash = instFamily.find('-') != std::string::npos;
