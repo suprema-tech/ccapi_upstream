@@ -7,7 +7,7 @@ namespace ccapi {
 /**
  * This class is used for retrying http requests for the REST API.
  */
-class HttpRetry CCAPI_FINAL {
+class HttpRetry {
  public:
   explicit HttpRetry(int numRetry = 0, int numRedirect = 0, std::string redirectUrlStr = "",
                      std::shared_ptr<std::promise<void>> promisePtr = std::shared_ptr<std::promise<void>>(nullptr))

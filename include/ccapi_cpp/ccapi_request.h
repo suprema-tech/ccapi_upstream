@@ -24,7 +24,7 @@ namespace ccapi {
  * modified using the convenience functions appendParam() or appendParamFix() or setParamList() or setParamListFix(). A correlation id can be used as the unique
  * identifier to tag all data associated with this request.
  */
-class Request CCAPI_FINAL {
+class Request {
  public:
   enum class Operation {
     CUSTOM = CCAPI_REQUEST_OPERATION_TYPE_CUSTOM,
