@@ -1,14 +1,5 @@
 #ifndef INCLUDE_CCAPI_CPP_CCAPI_MACRO_H_
 #define INCLUDE_CCAPI_CPP_CCAPI_MACRO_H_
-#ifdef SWIG
-#ifndef CCAPI_FINAL
-#define CCAPI_FINAL
-#endif
-#else
-#ifndef CCAPI_FINAL
-#define CCAPI_FINAL final
-#endif
-#endif
 #ifndef CCAPI_PRINT_DOUBLE_PRECISION_DEFAULT
 #define CCAPI_PRINT_DOUBLE_PRECISION_DEFAULT 10
 #endif

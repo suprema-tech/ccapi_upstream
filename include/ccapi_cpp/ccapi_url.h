@@ -10,7 +10,7 @@ namespace ccapi {
 /**
  * This class represents a url.
  */
-class Url CCAPI_FINAL {
+class Url  {
  public:
   explicit Url(std::string urlStr) {
     std::regex ex("^(.*:)//([A-Za-z0-9\\-\\.]+)(:[0-9]+)?(.*)$");

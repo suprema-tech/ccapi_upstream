@@ -10,7 +10,7 @@ namespace ccapi {
 /**
  * This class represents a TCP socket connection for the websocket API.
  */
-class WsConnection CCAPI_FINAL {
+class WsConnection  {
  public:
   WsConnection(std::string url, std::string group, std::vector<Subscription> subscriptionList, std::map<std::string, std::string> credential,
                std::shared_ptr<beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>> streamPtr)

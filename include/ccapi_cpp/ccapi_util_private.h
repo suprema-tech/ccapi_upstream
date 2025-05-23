@@ -33,7 +33,7 @@ namespace ccapi {
 /**
  * Utilities.
  */
-class UtilString CCAPI_FINAL {
+class UtilString  {
  public:
   static std::string roundInputBySignificantFigure(double input, int numSignificantFigure, int roundDirection) {
     const auto& splitted = UtilString::split(UtilString::printDoubleScientific(input), 'e');
@@ -300,7 +300,7 @@ class UtilString CCAPI_FINAL {
   }
 };
 
-class UtilTime CCAPI_FINAL {
+class UtilTime  {
  public:
   static std::string convertFIXTimeToISO(const std::string& fixTime) {
     //  convert 20200925-15:55:28.093490622 to 2020-09-25T15:55:28.093490622Z
@@ -525,7 +525,7 @@ class UtilTime CCAPI_FINAL {
   static TimePoint makeTimePointFromSeconds(long seconds) { return TimePoint(std::chrono::seconds(seconds)); }
 };
 
-class UtilAlgorithm CCAPI_FINAL {
+class UtilAlgorithm  {
  public:
   enum class ShaVersion {
     UNKNOWN,
@@ -725,7 +725,7 @@ inline uint_fast32_t UtilAlgorithm::crc(InputIterator first, InputIterator last)
                           [](uint_fast32_t checksum, std::uint_fast8_t value) { return table[(checksum ^ value) & 0xFFu] ^ (checksum >> 8); });
 }
 
-class UtilSystem CCAPI_FINAL {
+class UtilSystem  {
  public:
   static bool getEnvAsBool(const std::string variableName, const bool defaultValue = false) {
     const char* env_p = std::getenv(variableName.c_str());

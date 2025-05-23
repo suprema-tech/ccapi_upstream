@@ -8,7 +8,7 @@ namespace ccapi {
 /**
  * This class is used for handling jwt tokens.
  */
-class Jwt CCAPI_FINAL {
+class Jwt  {
  public:
   static std::string generate(const Hmac::ShaVersion shaVersion, const std::string& secret, const std::string& payload) {
     std::string output;

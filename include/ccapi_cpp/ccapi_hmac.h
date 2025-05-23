@@ -8,7 +8,7 @@
 #include <iomanip>
 
 namespace ccapi {
-class Hmac CCAPI_FINAL {
+class Hmac  {
  public:
   enum class ShaVersion {
     UNKNOWN,
