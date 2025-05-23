@@ -20,7 +20,7 @@ namespace ccapi {
  * more internal threads for one or more sessions.
  */
 
-class EventDispatcher CCAPI_FINAL {
+class EventDispatcher {
  public:
   explicit EventDispatcher(const int numDispatcherThreads = 1) : numDispatcherThreads(numDispatcherThreads) {
     CCAPI_LOGGER_FUNCTION_ENTER;

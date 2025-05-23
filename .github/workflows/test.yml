@@ -261,21 +261,6 @@ jobs:
           endif()
         endif()
 
-        execute_process(
-          COMMAND ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake
-            -S performance
-            -B performance/build
-            -D CMAKE_BUILD_TYPE=$ENV{CMAKE_BUILD_TYPE}
-            -G Ninja
-            -D CMAKE_MAKE_PROGRAM=ninja
-            # -D CMAKE_C_COMPILER_LAUNCHER=ccache
-            # -D CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          RESULT_VARIABLE result
-        )
-        if (NOT result EQUAL 0)
-          message(FATAL_ERROR "Bad exit status")
-        endif()
-
     - name: Build 1
       shell: cmake -P {0}
       run: |
@@ -319,22 +304,6 @@ jobs:
 
         execute_process(
           COMMAND rm -rf example/build
-          RESULT_VARIABLE result
-        )
-        if (NOT result EQUAL 0)
-          message(FATAL_ERROR "Bad exit status")
-        endif()
-
-        execute_process(
-          COMMAND ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake --build performance/build -j 2
-          RESULT_VARIABLE result
-        )
-        if (NOT result EQUAL 0)
-          message(FATAL_ERROR "Bad exit status")
-        endif()
-
-        execute_process(
-          COMMAND rm -rf performance/build
           RESULT_VARIABLE result
         )
         if (NOT result EQUAL 0)

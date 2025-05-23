@@ -13,7 +13,7 @@ namespace ccapi {
  * consists of an Type attribute and a RecapType attribute. The exchange timestamp (if any) associated with the Messsage object can be retrieved via the
  * getTime() function. The library timestamp can be retrieved via the getTimeReceived() function.
  */
-class Message CCAPI_FINAL {
+class Message {
  public:
   enum class RecapType {
     UNKNOWN,
@@ -50,6 +50,7 @@ class Message CCAPI_FINAL {
     MARKET_DATA_EVENTS_CANDLESTICK,
     EXECUTION_MANAGEMENT_EVENTS_ORDER_UPDATE,
     EXECUTION_MANAGEMENT_EVENTS_PRIVATE_TRADE,
+    EXECUTION_MANAGEMENT_EVENTS_PRIVATE_TRADE_LITE,
     EXECUTION_MANAGEMENT_EVENTS_BALANCE_UPDATE,
     EXECUTION_MANAGEMENT_EVENTS_POSITION_UPDATE,
     SUBSCRIPTION_STARTED,
@@ -117,6 +118,9 @@ class Message CCAPI_FINAL {
         break;
       case Type::EXECUTION_MANAGEMENT_EVENTS_PRIVATE_TRADE:
         output = "EXECUTION_MANAGEMENT_EVENTS_PRIVATE_TRADE";
+        break;
+      case Type::EXECUTION_MANAGEMENT_EVENTS_PRIVATE_TRADE_LITE:
+        output = "EXECUTION_MANAGEMENT_EVENTS_PRIVATE_TRADE_LITE";
         break;
       case Type::EXECUTION_MANAGEMENT_EVENTS_BALANCE_UPDATE:
         output = "EXECUTION_MANAGEMENT_EVENTS_BALANCE_UPDATE";

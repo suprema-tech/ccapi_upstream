@@ -1469,7 +1469,6 @@ class MarketDataService : public Service {
         if (delayMilliseconds > 0) {
           TimerPtr timerPtr(new boost::asio::steady_timer(*this->serviceContextPtr->ioContextPtr, std::chrono::milliseconds(delayMilliseconds)));
           timerPtr->async_wait([wsConnection, exchangeSubscriptionId, delayMilliseconds, that = this](ErrorCode const& ec) {
-            auto now = UtilTime::now();
             if (ec) {
               that->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
             } else {
