@@ -13,7 +13,7 @@ namespace ccapi {
  * consists of an Type attribute and a RecapType attribute. The exchange timestamp (if any) associated with the Messsage object can be retrieved via the
  * getTime() function. The library timestamp can be retrieved via the getTimeReceived() function.
  */
-class Message  {
+class Message {
  public:
   enum class RecapType {
     UNKNOWN,

@@ -6,7 +6,7 @@
 namespace beast = boost::beast;
 
 namespace ccapi {
-class HttpConnection  {
+class HttpConnection {
   /**
    * This class represents a TCP socket connection for the REST API.
    */

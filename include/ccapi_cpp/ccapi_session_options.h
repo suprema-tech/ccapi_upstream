@@ -11,7 +11,7 @@ namespace ccapi {
  * This class contains the options which the user can specify when creating a session. To use non-default options on a Session, create a SessionOptions instance
  * and set the required options and then supply it when creating a Session.
  */
-class SessionOptions  {
+class SessionOptions {
  public:
   std::string toString() const {
     std::string output = "SessionOptions [enableCheckSequence = " + ccapi::toString(enableCheckSequence) +

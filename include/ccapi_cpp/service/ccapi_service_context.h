@@ -8,7 +8,7 @@ namespace ccapi {
 /**
  * Defines the service that the service depends on.
  */
-class ServiceContext  {
+class ServiceContext {
  public:
   typedef boost::asio::io_context IoContext;
   typedef boost::asio::io_context* IoContextPtr;

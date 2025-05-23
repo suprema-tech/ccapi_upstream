@@ -9,7 +9,7 @@ namespace ccapi {
 /**
  * Due to Huobi using gzip instead of zip in data compression, we cannot use beast::zboost::system::inflate_stream. Therefore we have to create our own.
  */
-class InflateStream  {
+class InflateStream {
  public:
   explicit InflateStream() {
     this->windowBits = 15;

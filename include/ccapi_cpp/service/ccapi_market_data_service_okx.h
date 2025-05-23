@@ -2,6 +2,8 @@
 #define INCLUDE_CCAPI_CPP_SERVICE_CCAPI_MARKET_DATA_SERVICE_OKX_H_
 #ifdef CCAPI_ENABLE_SERVICE_MARKET_DATA
 #ifdef CCAPI_ENABLE_EXCHANGE_OKX
+#include <rapidjson/prettywriter.h>
+
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
 
 namespace ccapi {
@@ -395,11 +397,17 @@ class MarketDataServiceOkx : public MarketDataService {
   }
 
   void extractInstrumentInfo(Element& element, const rj::Value& x) {
+    rj::StringBuffer buffer;
+    rj::PrettyWriter<rj::StringBuffer> writer(buffer);
+    x.Accept(writer);
+    std::cout << buffer.GetString() << std::endl;
     element.insert(CCAPI_INSTRUMENT, x["instId"].GetString());
+    std::string instFamily = x["instFamily"].GetString();
+    bool instFamilyHasDash = instFamily.find('-') != std::string::npos;
     std::string baseCcy = x["baseCcy"].GetString();
-    element.insert(CCAPI_BASE_ASSET, baseCcy.empty() ? UtilString::split(x["instFamily"].GetString(), '-').at(0) : baseCcy);
+    element.insert(CCAPI_BASE_ASSET, baseCcy.empty() ? (instFamilyHasDash ? UtilString::split(instFamily, '-').at(0) : "") : baseCcy);
     std::string quoteCcy = x["quoteCcy"].GetString();
-    element.insert(CCAPI_QUOTE_ASSET, quoteCcy.empty() ? UtilString::split(x["instFamily"].GetString(), '-').at(1) : quoteCcy);
+    element.insert(CCAPI_QUOTE_ASSET, quoteCcy.empty() ? (instFamilyHasDash ? UtilString::split(instFamily, '-').at(1) : "") : quoteCcy);
     element.insert(CCAPI_ORDER_PRICE_INCREMENT, x["tickSz"].GetString());
     element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, x["lotSz"].GetString());
     element.insert(CCAPI_ORDER_QUANTITY_MIN, x["minSz"].GetString());

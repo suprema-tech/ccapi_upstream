@@ -10,7 +10,7 @@ namespace ccapi {
  * This class provides a numeric type for representing an arbitrary precision decimal number. It is minimalistic for the purpose of high performance.
  * Furthermore, unlike double, it is suitable for being used as the key of a map.
  */
-class Decimal  {
+class Decimal {
  public:
   Decimal() {}
 

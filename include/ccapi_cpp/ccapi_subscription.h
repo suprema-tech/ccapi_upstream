@@ -12,7 +12,7 @@ namespace ccapi {
  * A single subscription. A 'Subscription' is used when calling 'Session::subscribe()' or 'Session::subscribeByFix'. Subscription objects are created using
  * Subscription constructors. A correlation id can be used as the unique identifier to tag all data associated with this subscription.
  */
-class Subscription  {
+class Subscription {
  public:
   Subscription() {}
 

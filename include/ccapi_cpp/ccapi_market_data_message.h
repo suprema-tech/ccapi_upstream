@@ -5,7 +5,7 @@
 
 // #include "ccapi_message.h"
 namespace ccapi {
-class MarketDataMessage  {
+class MarketDataMessage {
   /**
    * A handle to a single market data message. Each MarketDataMessage is associated with one 'exchangeSubscriptionId' value. The MarketDataMessage contents are
    * represented in its 'data' attribute. Each MarketDataMessage object consists of an Type attribute and a RecapType attribute. The exchange timestamp (if any)

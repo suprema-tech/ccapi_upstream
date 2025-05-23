@@ -12,7 +12,7 @@ namespace ccapi {
 *event. The event is the basic unit of work provided to applications. Each Event object consists of an Type attribute and zero or more Message objects.
 */
 
-class Event  {
+class Event {
  public:
   enum class Type {
     UNKNOWN,
