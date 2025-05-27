@@ -228,9 +228,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
                                   int wsRequestId, const TimePoint& now, const std::string& symbolId,
                                   const std::map<std::string, std::string>& credential) override {
     document.SetObject();
-    const auto& secondaryCorrelationId = request.getSecondaryCorrelationId();
-    document.AddMember("id", rj::Value((secondaryCorrelationId.empty() ? std::to_string(wsRequestId) : secondaryCorrelationId).c_str(), allocator).Move(),
-                       allocator);
+    document.AddMember("id", rj::Value(request.getCorrelationId().c_str(), allocator).Move(), allocator);
     Request::Operation operation = request.getOperation();
     switch (operation) {
       case Request::Operation::CREATE_ORDER: {
@@ -469,7 +467,6 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
     Message message;
     message.setTimeReceived(timeReceived);
     const auto& correlationId = subscription.getCorrelationId();
-    message.setCorrelationIdList({correlationId});
     const auto& fieldSet = subscription.getFieldSet();
     if (eventStr.empty()) {
       auto it = document.FindMember("op");
@@ -482,9 +479,8 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
           Element element;
           element.insert(CCAPI_ERROR_MESSAGE, textMessage);
           message.setElementList({element});
-          message.setSecondaryCorrelationIdMap({
-              {correlationId, document["id"].GetString()},
-          });
+          std::string id = document["id"].GetString();
+          message.setCorrelationIdList({id});
           messageList.emplace_back(std::move(message));
         } else {
           std::vector<Element> elementList;
@@ -495,12 +491,12 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
           }
           this->extractOrderInfoFromRequest(elementList, document);
           message.setElementList(elementList);
-          message.setSecondaryCorrelationIdMap({
-              {correlationId, document["id"].GetString()},
-          });
+          std::string id = document["id"].GetString();
+          message.setCorrelationIdList({id});
           messageList.emplace_back(std::move(message));
         }
       } else {
+        message.setCorrelationIdList({correlationId});
         const rj::Value& arg = document["arg"];
         const rj::Value& data = document["data"];
         std::string channel = std::string(arg["channel"].GetString());
@@ -627,6 +623,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
     } else if (eventStr == "subscribe") {
       event.setType(Event::Type::SUBSCRIPTION_STATUS);
       message.setType(Message::Type::SUBSCRIPTION_STARTED);
+      message.setCorrelationIdList({correlationId});
       Element element;
       element.insert(CCAPI_INFO_MESSAGE, textMessage);
       message.setElementList({element});
@@ -634,6 +631,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
     } else if (eventStr == "error") {
       event.setType(Event::Type::SUBSCRIPTION_STATUS);
       message.setType(Message::Type::SUBSCRIPTION_FAILURE);
+      message.setCorrelationIdList({correlationId});
       Element element;
       element.insert(CCAPI_ERROR_MESSAGE, textMessage);
       message.setElementList({element});

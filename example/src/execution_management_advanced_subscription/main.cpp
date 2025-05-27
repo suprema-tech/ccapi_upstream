@@ -5,18 +5,21 @@ Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
  public:
+  MyEventHandler(const std::string& websocketOrderEntrySubscriptionCorrelationId)
+      : websocketOrderEntrySubscriptionCorrelationId(websocketOrderEntrySubscriptionCorrelationId) {}
+
   bool processEvent(const Event& event, Session* session) override {
     if (event.getType() == Event::Type::SUBSCRIPTION_STATUS) {
       std::cout << "Received an event of type SUBSCRIPTION_STATUS:\n" + event.toStringPretty(2, 2) << std::endl;
       auto message = event.getMessageList().at(0);
       if (message.getType() == Message::Type::SUBSCRIPTION_STARTED) {
-        Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDT", "same correlation id for subscription and request");
+        Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDT");
         request.appendParam({
             {"SIDE", "BUY"},
             {"LIMIT_PRICE", "20000"},
             {"QUANTITY", "0.001"},
         });
-        session->sendRequestByWebsocket(request);
+        session->sendRequestByWebsocket(this->websocketOrderEntrySubscriptionCorrelationId, request);
       }
     } else if (event.getType() == Event::Type::SUBSCRIPTION_DATA) {
       std::cout << "Received an event of type SUBSCRIPTION_DATA:\n" + event.toStringPretty(2, 2) << std::endl;
@@ -25,6 +28,9 @@ class MyEventHandler : public EventHandler {
     }
     return true;
   }
+
+ private:
+  std::string websocketOrderEntrySubscriptionCorrelationId;
 };
 } /* namespace ccapi */
 
@@ -51,9 +57,10 @@ int main(int argc, char** argv) {
   }
   SessionOptions sessionOptions;
   SessionConfigs sessionConfigs;
-  MyEventHandler eventHandler;
+  std::string websocketOrderEntrySubscriptionCorrelationId("any");
+  MyEventHandler eventHandler(websocketOrderEntrySubscriptionCorrelationId);
   Session session(sessionOptions, sessionConfigs, &eventHandler);
-  Subscription subscription("okx", "BTC-USDT", "ORDER_UPDATE", "", "same correlation id for subscription and request");
+  Subscription subscription("okx", "BTC-USDT", "ORDER_UPDATE", "", websocketOrderEntrySubscriptionCorrelationId);
   session.subscribe(subscription);
   std::this_thread::sleep_for(std::chrono::seconds(10));
   session.stop();

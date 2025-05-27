@@ -132,8 +132,8 @@ class Request {
 
   Request() {}
 
-  Request(Operation operation, std::string exchange, std::string instrument = "", std::string correlationId = "",
-          std::map<std::string, std::string> credential = {})
+  Request(Operation operation, const std::string& exchange, const std::string& instrument = "", const std::string& correlationId = "",
+          const std::map<std::string, std::string>& credential = {})
       : operation(operation), exchange(exchange), instrument(instrument), correlationId(correlationId), credential(credential) {
     if (operation == Operation::CUSTOM) {
       this->serviceName = CCAPI_UNKNOWN;
@@ -158,7 +158,7 @@ class Request {
     }
     std::string output =
         "Request [exchange = " + exchange + ", marginType = " + marginType + ", instrument = " + instrument + ", serviceName = " + serviceName +
-        ", correlationId = " + correlationId + ", secondaryCorrelationId = " + secondaryCorrelationId +
+        ", correlationId = " + correlationId +
         (this->serviceName == CCAPI_FIX ? ", paramListFix = " + ccapi::toString(paramListFix) : ", paramList = " + ccapi::toString(paramList)) +
         ", credential = " + ccapi::toString(shortCredential) + ", operation = " + operationToString(operation) +
         ", timeSent = " + UtilTime::getISOTimestamp(timeSent) + ", index = " + ccapi::toString(index) + ", localIpAddress = " + localIpAddress +
@@ -167,8 +167,6 @@ class Request {
   }
 
   const std::string& getCorrelationId() const { return correlationId; }
-
-  const std::string& getSecondaryCorrelationId() const { return secondaryCorrelationId; }
 
   const std::string& getExchange() const { return exchange; }
 
@@ -231,8 +229,6 @@ class Request {
 
   void setCorrelationId(const std::string& correlationId) { this->correlationId = correlationId; }
 
-  void setSecondaryCorrelationId(const std::string& secondaryCorrelationId) { this->secondaryCorrelationId = secondaryCorrelationId; }
-
   void setMarginType(const std::string& marginType) { this->marginType = marginType; }
 
   void setLocalIpAddress(const std::string& localIpAddress) { this->localIpAddress = localIpAddress; }
@@ -268,7 +264,6 @@ class Request {
   std::string instrument;
   std::string serviceName;
   std::string correlationId;
-  std::string secondaryCorrelationId;
   std::vector<std::map<std::string, std::string>> paramList;
   std::map<std::string, std::string> credential;
   std::vector<std::vector<std::pair<int, std::string>>> paramListFix;

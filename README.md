@@ -1,57 +1,61 @@
 # Some breaking changes introduced
-* Please update boost version to at least 1.87.0.
-* When a subscription fails due to the underlying websocket connection fails to open, the emitted message type is SUBSCRIPTION_FAILURE_DUE_TO_CONNECTION_FAILURE instead of SUBSCRIPTION_FAILURE.
-* Removed the spot market making application and the single order execution application.
+* We made a change on how to "Send request by Websocket API".
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [ccapi](#ccapi)
-  - [Branches](#branches)
-  - [Build](#build)
-    - [C++](#c)
-    - [non-C++](#non-c)
-  - [Constants](#constants)
-  - [Examples](#examples)
-  - [Documentations](#documentations)
-    - [Simple Market Data](#simple-market-data)
-    - [Advanced Market Data](#advanced-market-data)
-      - [Complex request parameters](#complex-request-parameters)
-      - [Specify subscription market depth](#specify-subscription-market-depth)
-      - [Specify correlation id](#specify-correlation-id)
-      - [Multiple exchanges and/or instruments](#multiple-exchanges-andor-instruments)
-      - [Receive subscription events at periodic intervals](#receive-subscription-events-at-periodic-intervals)
-      - [Receive subscription events at periodic intervals including when the market depth snapshot hasn't changed](#receive-subscription-events-at-periodic-intervals-including-when-the-market-depth-snapshot-hasnt-changed)
-      - [Receive subscription market depth updates](#receive-subscription-market-depth-updates)
-      - [Receive subscription trade events](#receive-subscription-trade-events)
-      - [Receive subscription calculated-candlestick events at periodic intervals](#receive-subscription-calculated-candlestick-events-at-periodic-intervals)
-      - [Receive subscription exchange-provided-candlestick events at periodic intervals](#receive-subscription-exchange-provided-candlestick-events-at-periodic-intervals)
-      - [Send generic public requests](#send-generic-public-requests)
-      - [Make generic public subscriptions](#make-generic-public-subscriptions)
-      - [Send generic private requests](#send-generic-private-requests)
-    - [Simple Execution Management](#simple-execution-management)
-    - [Advanced Execution Management](#advanced-execution-management)
-      - [Specify correlation id](#specify-correlation-id-1)
-      - [Multiple exchanges and/or instruments](#multiple-exchanges-andor-instruments-1)
-      - [Multiple subscription fields](#multiple-subscription-fields)
-      - [Make Session::sendRequest blocking](#make-sessionsendrequest-blocking)
-      - [Provide API credentials for an exchange](#provide-api-credentials-for-an-exchange)
-      - [Override exchange urls](#override-exchange-urls)
-      - [Complex request parameters](#complex-request-parameters-1)
-      - [Send request by Websocket API](#send-request-by-websocket-api)
-      - [Specify instrument type](#specify-instrument-type)
-    - [FIX API](#fix-api)
-    - [More Advanced Topics](#more-advanced-topics)
-      - [Handle events in "immediate" vs. "batching" mode](#handle-events-in-immediate-vs-batching-mode)
-      - [Thread safety](#thread-safety)
-      - [Enable library logging](#enable-library-logging)
-      - [Set timer](#set-timer)
-  - [Performance Tuning](#performance-tuning)
-  - [Known Issues and Workarounds](#known-issues-and-workarounds)
-  - [Contributing](#contributing)
+**Table of Contents**  *generated with [DocToc](https://github.com/ktechhub/doctoc)*
+
+<!---toc start-->
+
+* [Some breaking changes introduced](#some-breaking-changes-introduced)
+* [ccapi](#ccapi)
+  * [Branches](#branches)
+  * [Build](#build)
+    * [C++](#c)
+    * [non-C++](#non-c)
+  * [Constants](#constants)
+  * [Examples](#examples)
+  * [Documentations](#documentations)
+    * [Simple Market Data](#simple-market-data)
+    * [Advanced Market Data](#advanced-market-data)
+      * [Complex request parameters](#complex-request-parameters)
+      * [Specify subscription market depth](#specify-subscription-market-depth)
+      * [Specify correlation id](#specify-correlation-id)
+      * [Multiple exchanges and/or instruments](#multiple-exchanges-andor-instruments)
+      * [Receive subscription events at periodic intervals](#receive-subscription-events-at-periodic-intervals)
+      * [Receive subscription events at periodic intervals including when the market depth snapshot hasn't changed](#receive-subscription-events-at-periodic-intervals-including-when-the-market-depth-snapshot-hasnt-changed)
+      * [Receive subscription market depth updates](#receive-subscription-market-depth-updates)
+      * [Receive subscription trade events](#receive-subscription-trade-events)
+      * [Receive subscription calculated-candlestick events at periodic intervals](#receive-subscription-calculated-candlestick-events-at-periodic-intervals)
+      * [Receive subscription exchange-provided-candlestick events at periodic intervals](#receive-subscription-exchange-provided-candlestick-events-at-periodic-intervals)
+      * [Send generic public requests](#send-generic-public-requests)
+      * [Make generic public subscriptions](#make-generic-public-subscriptions)
+      * [Send generic private requests](#send-generic-private-requests)
+    * [Simple Execution Management](#simple-execution-management)
+    * [Advanced Execution Management](#advanced-execution-management)
+      * [Specify correlation id](#specify-correlation-id-1)
+      * [Multiple exchanges and/or instruments](#multiple-exchanges-andor-instruments-1)
+      * [Multiple subscription fields](#multiple-subscription-fields)
+      * [Make Session::sendRequest blocking](#make-sessionsendrequest-blocking)
+      * [Provide API credentials for an exchange](#provide-api-credentials-for-an-exchange)
+      * [Override exchange urls](#override-exchange-urls)
+      * [Complex request parameters](#complex-request-parameters-1)
+      * [Send request by Websocket API](#send-request-by-websocket-api)
+      * [Specify instrument type](#specify-instrument-type)
+    * [FIX API](#fix-api)
+    * [More Advanced Topics](#more-advanced-topics)
+      * [Handle events in "immediate" vs. "batching" mode](#handle-events-in-immediate-vs-batching-mode)
+      * [Thread safety](#thread-safety)
+      * [Enable library logging](#enable-library-logging)
+      * [Set timer](#set-timer)
+  * [Performance Tuning](#performance-tuning)
+  * [Known Issues and Workarounds](#known-issues-and-workarounds)
+  * [Contributing](#contributing)
+
+<!---toc end-->
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # ccapi
 * A header-only C++ library for streaming market data and executing trades directly from cryptocurrency exchanges (i.e. the connections are between your server and the exchange server without anything in-between).
 * Bindings for other languages such as Python, Java, C#, Go, and Javascript are provided.
@@ -775,16 +779,17 @@ request.appendParam({
 
 #### Send request by Websocket API
 ```
-Subscription subscription("okx", "BTC-USDTT", "ORDER_UPDATE", "", "same correlation id for subscription and request");
+std::string websocketOrderEntrySubscriptionCorrelationId("any");
+Subscription subscription("okx", "BTC-USDTT", "ORDER_UPDATE", "", websocketOrderEntrySubscriptionCorrelationId);
 session.subscribe(subscription);
 ...
-Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDTT", "same correlation id for subscription and request");
+Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDTT");
 request.appendParam({
     {"SIDE", "BUY"},
     {"LIMIT_PRICE", "20000"},
     {"QUANTITY", "0.001"},
 });
-session.sendRequestByWebsocket(request);
+session.sendRequestByWebsocket(websocketOrderEntrySubscriptionCorrelationId, request);
 ```
 
 #### Specify instrument type

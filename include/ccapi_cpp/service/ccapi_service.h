@@ -235,7 +235,7 @@ class Service : public std::enable_shared_from_this<Service> {
     return futurePtr;
   }
 
-  virtual void sendRequestByWebsocket(Request& request, const TimePoint& now) {}
+  virtual void sendRequestByWebsocket(const std::string& websocketOrderEntrySubscriptionCorrelationId, Request& request, const TimePoint& now) {}
 
   virtual void sendRequestByFix(Request& request, const TimePoint& now) {}
 

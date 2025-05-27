@@ -282,50 +282,51 @@ class ExecutionManagementService : public Service {
     return nonce;
   }
 
-  void sendRequestByWebsocket(Request& request, const TimePoint& now) override {
+  void sendRequestByWebsocket(const std::string& websocketOrderEntrySubscriptionCorrelationId, Request& request, const TimePoint& now) override {
     CCAPI_LOGGER_FUNCTION_ENTER;
     CCAPI_LOGGER_TRACE("now = " + toString(now));
-    boost::asio::post(*this->serviceContextPtr->ioContextPtr, [that = shared_from_base<ExecutionManagementService>(), request]() mutable {
-      auto now = UtilTime::now();
-      CCAPI_LOGGER_DEBUG("request = " + toString(request));
-      CCAPI_LOGGER_TRACE("now = " + toString(now));
-      request.setTimeSent(now);
-      auto nowFixTimeStr = UtilTime::convertTimePointToFIXTime(now);
-      auto& correlationId = request.getCorrelationId();
-      auto it = that->wsConnectionByCorrelationIdMap.find(correlationId);
-      if (it == that->wsConnectionByCorrelationIdMap.end()) {
-        that->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE, "Websocket connection was not found", {correlationId});
-        return;
-      }
+    boost::asio::post(*this->serviceContextPtr->ioContextPtr,
+                      [that = shared_from_base<ExecutionManagementService>(), websocketOrderEntrySubscriptionCorrelationId, request]() mutable {
+                        auto now = UtilTime::now();
+                        CCAPI_LOGGER_DEBUG("websocketOrderEntrySubscriptionCorrelationId = " + toString(websocketOrderEntrySubscriptionCorrelationId));
+                        CCAPI_LOGGER_DEBUG("request = " + toString(request));
+                        CCAPI_LOGGER_TRACE("now = " + toString(now));
+                        request.setTimeSent(now);
+                        auto it = that->wsConnectionByCorrelationIdMap.find(websocketOrderEntrySubscriptionCorrelationId);
+                        if (it == that->wsConnectionByCorrelationIdMap.end()) {
+                          that->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE, "Websocket connection was not found",
+                                        {websocketOrderEntrySubscriptionCorrelationId});
+                          return;
+                        }
 
-      auto wsConnectionPtr = it->second;
-      auto& wsConnection = *wsConnectionPtr;
+                        auto wsConnectionPtr = it->second;
+                        auto& wsConnection = *wsConnectionPtr;
 
-      CCAPI_LOGGER_TRACE("wsConnection = " + toString(wsConnection));
-      auto instrument = request.getInstrument();
-      auto symbolId = instrument;
-      CCAPI_LOGGER_TRACE("symbolId = " + symbolId);
-      ErrorCode ec;
-      rj::Document document;
-      rj::Document::AllocatorType& allocator = document.GetAllocator();
-      auto credential = request.getCredential();
-      if (credential.empty()) {
-        credential = that->credentialDefault;
-      }
-      that->convertRequestForWebsocket(document, allocator, wsConnection, request, ++that->wsRequestIdByConnectionIdMap[wsConnection.id], now, symbolId,
-                                       credential);
-      rj::StringBuffer stringBuffer;
-      rj::Writer<rj::StringBuffer> writer(stringBuffer);
-      document.Accept(writer);
-      std::string sendString = stringBuffer.GetString();
-      CCAPI_LOGGER_TRACE("sendString = " + sendString);
+                        CCAPI_LOGGER_TRACE("wsConnection = " + toString(wsConnection));
+                        const auto& instrument = request.getInstrument();
+                        const auto& symbolId = instrument;
+                        CCAPI_LOGGER_TRACE("symbolId = " + symbolId);
+                        ErrorCode ec;
+                        rj::Document document;
+                        rj::Document::AllocatorType& allocator = document.GetAllocator();
+                        auto credential = request.getCredential();
+                        if (credential.empty()) {
+                          credential = that->credentialDefault;
+                        }
+                        that->convertRequestForWebsocket(document, allocator, wsConnection, request, ++that->wsRequestIdByConnectionIdMap[wsConnection.id], now,
+                                                         symbolId, credential);
+                        rj::StringBuffer stringBuffer;
+                        rj::Writer<rj::StringBuffer> writer(stringBuffer);
+                        document.Accept(writer);
+                        std::string sendString = stringBuffer.GetString();
+                        CCAPI_LOGGER_TRACE("sendString = " + sendString);
 
-      that->send(wsConnectionPtr, sendString, ec);
+                        that->send(wsConnectionPtr, sendString, ec);
 
-      if (ec) {
-        that->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE, ec, "request");
-      }
-    });
+                        if (ec) {
+                          that->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE, ec, "request");
+                        }
+                      });
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
 

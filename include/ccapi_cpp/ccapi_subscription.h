@@ -16,8 +16,8 @@ class Subscription {
  public:
   Subscription() {}
 
-  Subscription(std::string exchange, std::string instrument, std::string field, std::string options = "", std::string correlationId = "",
-               std::map<std::string, std::string> credential = {})
+  Subscription(const std::string& exchange, const std::string& instrument, const std::string& field, const std::string& options = "",
+               const std::string& correlationId = "", const std::map<std::string, std::string>& credential = {})
       : exchange(exchange), instrument(instrument), field(field), correlationId(correlationId), credential(credential) {
     auto originalInstrumentSet = UtilString::splitToSet(instrument, ",");
     std::copy_if(originalInstrumentSet.begin(), originalInstrumentSet.end(), std::inserter(this->instrumentSet, this->instrumentSet.end()),

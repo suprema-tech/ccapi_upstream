@@ -807,7 +807,7 @@ class Session {
       this->onError(Event::Type::FIX_STATUS, Message::Type::FIX_FAILURE, "please enable exchange: " + exchange);
       return;
     }
-    std::shared_ptr<Service>& servicePtr = serviceByExchangeMap.at(exchange);
+    std::shared_ptr<Service> servicePtr = serviceByExchangeMap.at(exchange);
     auto now = UtilTime::now();
     servicePtr->sendRequestByFix(request, now);
     CCAPI_LOGGER_FUNCTION_EXIT;
@@ -819,29 +819,29 @@ class Session {
     }
   }
 
-  virtual void sendRequestByWebsocket(Request& request) {
+  virtual void sendRequestByWebsocket(const std::string& websocketOrderEntrySubscriptionCorrelationId, Request& request) {
     CCAPI_LOGGER_FUNCTION_ENTER;
-    auto serviceName = request.getServiceName();
+    const auto& serviceName = request.getServiceName();
     CCAPI_LOGGER_DEBUG("serviceName = " + serviceName);
     if (this->serviceByServiceNameExchangeMap.find(serviceName) == this->serviceByServiceNameExchangeMap.end()) {
       this->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE, "please enable service: " + serviceName + ", and the exchanges that you want");
       return;
     }
-    std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
-    auto exchange = request.getExchange();
+    const std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
+    const auto& exchange = request.getExchange();
     if (serviceByExchangeMap.find(exchange) == serviceByExchangeMap.end()) {
       this->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE, "please enable exchange: " + exchange);
       return;
     }
-    std::shared_ptr<Service>& servicePtr = serviceByExchangeMap.at(exchange);
-    auto now = UtilTime::now();
-    servicePtr->sendRequestByWebsocket(request, now);
+    std::shared_ptr<Service> servicePtr = serviceByExchangeMap.at(exchange);
+    const auto& now = UtilTime::now();
+    servicePtr->sendRequestByWebsocket(websocketOrderEntrySubscriptionCorrelationId, request, now);
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
 
-  virtual void sendRequestByWebsocket(std::vector<Request>& requestList) {
+  virtual void sendRequestByWebsocket(const std::string& websocketOrderEntrySubscriptionCorrelationId, std::vector<Request>& requestList) {
     for (auto& x : requestList) {
-      this->sendRequestByWebsocket(x);
+      this->sendRequestByWebsocket(websocketOrderEntrySubscriptionCorrelationId, x);
     }
   }
 
@@ -859,7 +859,7 @@ class Session {
     int i = 0;
     for (auto& request : requestList) {
       request.setIndex(i);
-      auto serviceName = request.getServiceName();
+      const auto& serviceName = request.getServiceName();
       CCAPI_LOGGER_DEBUG("serviceName = " + serviceName);
       if (this->serviceByServiceNameExchangeMap.find(serviceName) == this->serviceByServiceNameExchangeMap.end()) {
         this->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE,
@@ -867,18 +867,14 @@ class Session {
         return;
       }
       std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
-      auto exchange = request.getExchange();
+      const auto& exchange = request.getExchange();
       if (serviceByExchangeMap.find(exchange) == serviceByExchangeMap.end()) {
         this->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE, "please enable exchange: " + exchange, eventQueuePtr);
         return;
       }
-      std::shared_ptr<Service>& servicePtr = serviceByExchangeMap.at(exchange);
-      std::string key = serviceName + exchange;
-      // if (eventQueuePtr && serviceNameExchangeSet.find(key) == serviceNameExchangeSet.end()) {
-      //   // servicePtr->setEventHandler(std::bind(&Session::onEvent, this, std::placeholders::_1, eventQueuePtr));
-      //   serviceNameExchangeSet.insert(key);
-      // }
-      auto now = UtilTime::now();
+      std::shared_ptr<Service> servicePtr = serviceByExchangeMap.at(exchange);
+      const std::string& key = serviceName + exchange;
+      const auto& now = UtilTime::now();
       auto futurePtr = servicePtr->sendRequest(request, !!eventQueuePtr, now, delayMilliseconds, eventQueuePtr);
       if (eventQueuePtr) {
         futurePtrList.push_back(futurePtr);
