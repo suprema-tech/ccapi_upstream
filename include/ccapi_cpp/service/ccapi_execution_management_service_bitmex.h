@@ -465,7 +465,7 @@ class ExecutionManagementServiceBitmex : public ExecutionManagementService {
     event.setMessageList(messageList);
     return event;
   }
-};  // namespace ccapi
+};
 } /* namespace ccapi */
 #endif
 #endif

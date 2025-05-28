@@ -43,9 +43,9 @@ class Subscription {
         this->optionMap[optionKeyValue.at(0)] = optionKeyValue.at(1);
       }
     }
-    std::set<std::string> executionManagementSubscriptionFieldSet = {std::string(CCAPI_EM_ORDER_UPDATE), std::string(CCAPI_EM_PRIVATE_TRADE),
+    std::set<std::string> executionManagementSubscriptionFieldSet = {std::string(CCAPI_EM_ORDER_UPDATE),       std::string(CCAPI_EM_PRIVATE_TRADE),
                                                                      std::string(CCAPI_EM_PRIVATE_TRADE_LITE), std::string(CCAPI_EM_BALANCE_UPDATE),
-                                                                     std::string(CCAPI_EM_POSITION_UPDATE)};
+                                                                     std::string(CCAPI_EM_POSITION_UPDATE),    std::string(CCAPI_EM_WEBSOCKET_ORDER_ENTRY)};
     if (field == CCAPI_GENERIC_PUBLIC_SUBSCRIPTION) {
       this->serviceName = CCAPI_MARKET_DATA;
     } else if (field == CCAPI_FIX || field == CCAPI_FIX_MARKET_DATA || field == CCAPI_FIX_EXECUTION_MANAGEMENT) {

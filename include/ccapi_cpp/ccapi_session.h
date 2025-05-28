@@ -932,16 +932,20 @@ class Session {
         if (this->eventHandler) {
 #ifdef CCAPI_USE_SINGLE_THREAD
           if (ec) {
-            errorHandler(ec);
+            if (errorHandler) {
+              errorHandler(ec);
+            }
           } else {
-            successHandler();
+            if (successHandler) {
+              successHandler();
+            }
           }
 #else
           this->eventDispatcher->dispatch([ec, errorHandler, successHandler] {
             if (ec) {
-              errorHandler(ec);
+                if (errorHandler){errorHandler(ec);}
             } else {
-              successHandler();
+                if (successHandler) {successHandler();}
             }
           });
 #endif

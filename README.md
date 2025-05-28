@@ -56,6 +56,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+
 # ccapi
 * A header-only C++ library for streaming market data and executing trades directly from cryptocurrency exchanges (i.e. the connections are between your server and the exchange server without anything in-between).
 * Bindings for other languages such as Python, Java, C#, Go, and Javascript are provided.
@@ -224,7 +225,7 @@ Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
  public:
-  bool processEvent(const Event& event, Session* session) override {
+  bool processEvent(const Event& event, Session* sessionPtr) override {
     std::cout << "Received an event:\n" + event.toStringPretty(2, 2) << std::endl;
     return true;
   }
@@ -301,7 +302,7 @@ Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
  public:
-  bool processEvent(const Event& event, Session* session) override {
+  bool processEvent(const Event& event, Session* sessionPtr) override {
     if (event.getType() == Event::Type::SUBSCRIPTION_STATUS) {
       std::cout << "Received an event of type SUBSCRIPTION_STATUS:\n" + event.toStringPretty(2, 2) << std::endl;
     } else if (event.getType() == Event::Type::SUBSCRIPTION_DATA) {
@@ -390,13 +391,15 @@ Request request_1(Request::Operation::GET_RECENT_TRADES, "okx", "BTC-USDT", "coo
 request_1.appendParam(...);
 Request request_2(Request::Operation::GET_RECENT_TRADES, "binance", "ETH-USDT", "cool correlation id for ETH");
 request_2.appendParam(...);
-session.sendRequest({request_1, request_2});
+std::vector<ccapi::Request> requests = {request_1, request_2};
+session.sendRequest(requests);
 ```
 Subscribe a `std::vector<Subscription>`.
 ```
 Subscription subscription_1("okx", "BTC-USDT", "MARKET_DEPTH", "", "cool correlation id for okx BTC-USDT");
 Subscription subscription_2("binance", "ETH-USDT", "MARKET_DEPTH", "", "cool correlation id for binance ETH-USDT");
-session.subscribe({subscription_1, subscription_2});
+std::vector<ccapi::Subscription> subscriptions = {subscription_1, subscription_2};
+session.subscribe(subscriptions);
 ```
 
 #### Receive subscription events at periodic intervals
@@ -438,7 +441,7 @@ Subscription subscription("okx", "BTC-USDT", "TRADE", "CONFLATE_INTERVAL_MILLISE
 
 Instantiate `Subscription` with field `CANDLESTICK` and option `CANDLESTICK_INTERVAL_SECONDS` set to be the desired interval.
 ```
-Subscription subscription("okx", "BTC-USDTT", "CANDLESTICK", "CANDLESTICK_INTERVAL_SECONDS=60");
+Subscription subscription("okx", "BTC-USDT", "CANDLESTICK", "CANDLESTICK_INTERVAL_SECONDS=60");
 ```
 
 #### Send generic public requests
@@ -491,7 +494,7 @@ Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
  public:
-  bool processEvent(const Event& event, Session* session) override {
+  bool processEvent(const Event& event, Session* sessionPtr) override {
     std::cout << "Received an event:\n" + event.toStringPretty(2, 2) << std::endl;
     return true;
   }
@@ -589,7 +592,7 @@ Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
  public:
-  bool processEvent(const Event& event, Session* session) override {
+  bool processEvent(const Event& event, Session* sessionPtr) override {
     if (event.getType() == Event::Type::SUBSCRIPTION_STATUS) {
       std::cout << "Received an event of type SUBSCRIPTION_STATUS:\n" + event.toStringPretty(2, 2) << std::endl;
       auto message = event.getMessageList().at(0);
@@ -601,7 +604,7 @@ class MyEventHandler : public EventHandler {
             {"QUANTITY", "0.001"},
             {"CLIENT_ORDER_ID", "6d4eb0fb"},
         });
-        session->sendRequest(request);
+        sessionPtr->sendRequest(request);
       }
     } else if (event.getType() == Event::Type::SUBSCRIPTION_DATA) {
       std::cout << "Received an event of type SUBSCRIPTION_DATA:\n" + event.toStringPretty(2, 2) << std::endl;
@@ -716,7 +719,8 @@ Request request_1(Request::Operation::CREATE_ORDER, "okx", "BTC-USDT", "cool cor
 request_1.appendParam(...);
 Request request_2(Request::Operation::CREATE_ORDER, "okx", "ETH-USDT", "cool correlation id for ETH");
 request_2.appendParam(...);
-session.sendRequest({request_1, request_2});
+std::vector<ccapi::Request> requests = {request_1, request_2};
+session.sendRequest(requests);
 ```
 Subscribe one `Subscription` per exchange with a comma separated string of instruments.
 ```
@@ -778,12 +782,29 @@ request.appendParam({
 ```
 
 #### Send request by Websocket API
+For okx:
 ```
 std::string websocketOrderEntrySubscriptionCorrelationId("any");
-Subscription subscription("okx", "BTC-USDTT", "ORDER_UPDATE", "", websocketOrderEntrySubscriptionCorrelationId);
+Subscription subscription("okx", "", "ORDER_UPDATE", "", websocketOrderEntrySubscriptionCorrelationId);
 session.subscribe(subscription);
 ...
-Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDTT");
+Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDT");
+request.appendParam({
+    {"SIDE", "BUY"},
+    {"LIMIT_PRICE", "20000"},
+    {"QUANTITY", "0.001"},
+});
+session.sendRequestByWebsocket(websocketOrderEntrySubscriptionCorrelationId, request);
+```
+For bybit:
+```
+std::string websocketOrderEntrySubscriptionCorrelationId("any");
+Subscription subscription_1("bybit", "", "ORDER_UPDATE");
+Subscription subscription_2("bybit", "", "WEBSOCKET_ORDER_ENTRY", "", websocketOrderEntrySubscriptionCorrelationId);
+std::vector<ccapi::Subscription> subscriptions = {subscription_1, subscription_2};
+session.subscribe(subscriptions);
+...
+Request request(Request::Operation::CREATE_ORDER, "bybit", "BTCUSDT");
 request.appendParam({
     {"SIDE", "BUY"},
     {"LIMIT_PRICE", "20000"},
@@ -795,7 +816,7 @@ session.sendRequestByWebsocket(websocketOrderEntrySubscriptionCorrelationId, req
 #### Specify instrument type
 Some exchanges (i.e. bybit) might need instrument type for `Subscription`. Use `Subscription`'s `setInstrumentType` method.
 ```
-Subscription subscription("bybit", "BTCUSDTT", "MARKET_DEPTH");
+Subscription subscription("bybit", "BTCUSDT", "MARKET_DEPTH");
 subscription.setInstrumentType("spot");
 session.subscribe(subscription);
 ```
@@ -815,7 +836,7 @@ namespace ccapi {
 Logger* Logger::logger = nullptr;  // This line is needed.
 class MyEventHandler : public EventHandler {
  public:
-  bool processEvent(const Event& event, Session* session) override {
+  bool processEvent(const Event& event, Session* sessionPtr) override {
     if (event.getType() == Event::Type::AUTHORIZATION_STATUS) {
       std::cout << "Received an event of type AUTHORIZATION_STATUS:\n" + event.toStringPretty(2, 2) << std::endl;
       auto message = event.getMessageList().at(0);
@@ -831,7 +852,7 @@ class MyEventHandler : public EventHandler {
             {40, "2"},
             {59, "1"},
         });
-        session->sendRequestByFix(request);
+        sessionPtr->sendRequestByFix(request);
       }
     } else if (event.getType() == Event::Type::FIX) {
       std::cout << "Received an event of type FIX:\n" + event.toStringPretty(2, 2) << std::endl;
@@ -980,7 +1001,7 @@ Logger* Logger::logger = &myLogger;
 
 To perform an asynchronous wait, use the utility method `setTimer` in class `Session`. The handlers are invoked in the same threads as the `processEvent` method in the `EventHandler` class. The `id` of the timer should be unique. `delayMilliseconds` can be 0.
 ```
-session->setTimer(
+sessionPtr->setTimer(
     "id", 1000,
     [](const boost::system::error_code&) {
       std::cout << std::string("Timer error handler is triggered at ") + UtilTime::getISOTimestamp(UtilTime::now()) << std::endl;

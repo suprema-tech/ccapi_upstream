@@ -68,9 +68,16 @@ class ExecutionManagementService : public Service {
             that->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "create stream", {subscription.getCorrelationId()});
             return;
           }
-          std::shared_ptr<WsConnection> wsConnectionPtr(new WsConnection(that->baseUrlWs, "", {subscription}, credential, streamPtr));
-          CCAPI_LOGGER_WARN("about to subscribe with new wsConnectionPtr " + toString(*wsConnectionPtr));
-          that->prepareConnect(wsConnectionPtr);
+          const auto& fieldSet = subscription.getFieldSet();
+          if (fieldSet.find(CCAPI_EM_WEBSOCKET_ORDER_ENTRY) != fieldSet.end()) {
+            std::shared_ptr<WsConnection> wsConnectionPtr(new WsConnection(that->baseUrlWsOrderEntry, "", {subscription}, credential, streamPtr));
+            CCAPI_LOGGER_WARN("about to subscribe with new wsConnectionPtr " + toString(*wsConnectionPtr));
+            that->prepareConnect(wsConnectionPtr);
+          } else {
+            std::shared_ptr<WsConnection> wsConnectionPtr(new WsConnection(that->baseUrlWs, "", {subscription}, credential, streamPtr));
+            CCAPI_LOGGER_WARN("about to subscribe with new wsConnectionPtr " + toString(*wsConnectionPtr));
+            that->prepareConnect(wsConnectionPtr);
+          }
         });
       }
     }
@@ -190,7 +197,7 @@ class ExecutionManagementService : public Service {
   }
 
   virtual void convertRequestForWebsocketCustom(rj::Document& document, rj::Document::AllocatorType& allocator, const WsConnection& wsConnection,
-                                                const Request& request, int wsRequestId, const TimePoint& now, const std::string& symbolId,
+                                                const Request& request, unsigned long wsRequestId, const TimePoint& now, const std::string& symbolId,
                                                 const std::map<std::string, std::string>& credential) {
     auto errorMessage = "Websocket unimplemented operation " + Request::operationToString(request.getOperation()) + " for exchange " + request.getExchange();
     throw std::runtime_error(errorMessage);
@@ -200,6 +207,7 @@ class ExecutionManagementService : public Service {
     CCAPI_LOGGER_INFO("about to logon to exchange");
     CCAPI_LOGGER_INFO("exchange is " + this->exchangeName);
     WsConnection& wsConnection = *wsConnectionPtr;
+    CCAPI_LOGGER_FINE("wsConnection = " + toString(wsConnection));
     auto subscription = wsConnection.subscriptionList.at(0);
     std::vector<std::string> sendStringList = this->createSendStringListFromSubscription(wsConnection, subscription, now, credential);
     for (const auto& sendString : sendStringList) {
@@ -238,6 +246,7 @@ class ExecutionManagementService : public Service {
       this->correlationIdByConnectionIdMap.erase(wsConnection.id);
     }
     this->wsRequestIdByConnectionIdMap.erase(wsConnection.id);
+    this->requestCorrelationIdByWsRequestIdByConnectionIdMap.erase(wsConnection.id);
     Service::onClose(wsConnectionPtr, ec);
   }
 
@@ -334,7 +343,7 @@ class ExecutionManagementService : public Service {
                                      const std::string& symbolId, const std::map<std::string, std::string>& credential) {}
 
   virtual void convertRequestForWebsocket(rj::Document& document, rj::Document::AllocatorType& allocator, const WsConnection& wsConnection,
-                                          const Request& request, int wsRequestId, const TimePoint& now, const std::string& symbolId,
+                                          const Request& request, unsigned long wsRequestId, const TimePoint& now, const std::string& symbolId,
                                           const std::map<std::string, std::string>& credential) {}
 
   virtual void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
@@ -365,7 +374,8 @@ class ExecutionManagementService : public Service {
   std::map<std::string, std::shared_ptr<WsConnection>>
       wsConnectionByCorrelationIdMap;  // TODO(cryptochassis): for consistency, to be renamed to wsConnectionPtrByCorrelationIdMap
 
-  std::map<std::string, int> wsRequestIdByConnectionIdMap;
+  std::map<std::string, unsigned int> wsRequestIdByConnectionIdMap;
+  std::map<std::string, std::map<unsigned int, std::string>> requestCorrelationIdByWsRequestIdByConnectionIdMap;
 };
 } /* namespace ccapi */
 #endif

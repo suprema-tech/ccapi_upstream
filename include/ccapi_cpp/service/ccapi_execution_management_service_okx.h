@@ -12,9 +12,11 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
       : ExecutionManagementService(eventHandler, sessionOptions, sessionConfigs, serviceContextPtr) {
     this->exchangeName = CCAPI_EXCHANGE_NAME_OKX;
     this->baseUrlWs = sessionConfigs.getUrlWebsocketBase().at(this->exchangeName) + CCAPI_OKX_PRIVATE_WS_PATH;
+    this->baseUrlWsOrderEntry = sessionConfigs.getUrlWebsocketOrderEntryBase().at(this->exchangeName) + CCAPI_OKX_PRIVATE_WS_PATH;
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
     this->setHostWsFromUrlWs(this->baseUrlWs);
+    this->setHostWsFromUrlWsOrderEntry(this->baseUrlWsOrderEntry);
     this->apiKeyName = CCAPI_OKX_API_KEY;
     this->apiSecretName = CCAPI_OKX_API_SECRET;
     this->apiPassphraseName = CCAPI_OKX_API_PASSPHRASE;
@@ -225,10 +227,11 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
   }
 
   void convertRequestForWebsocket(rj::Document& document, rj::Document::AllocatorType& allocator, const WsConnection& wsConnection, const Request& request,
-                                  int wsRequestId, const TimePoint& now, const std::string& symbolId,
+                                  unsigned long wsRequestId, const TimePoint& now, const std::string& symbolId,
                                   const std::map<std::string, std::string>& credential) override {
     document.SetObject();
-    document.AddMember("id", rj::Value(request.getCorrelationId().c_str(), allocator).Move(), allocator);
+    document.AddMember("id", rj::Value(std::to_string(wsRequestId).c_str(), allocator).Move(), allocator);
+    this->requestCorrelationIdByWsRequestIdByConnectionIdMap[wsConnection.id][wsRequestId] = request.getCorrelationId();
     Request::Operation operation = request.getOperation();
     switch (operation) {
       case Request::Operation::CREATE_ORDER: {
@@ -385,6 +388,18 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
       auto it = document.FindMember("event");
       std::string eventStr = it != document.MemberEnd() ? it->value.GetString() : "";
       if (eventStr == "login") {
+        Event event;
+        event.setType(Event::Type::AUTHORIZATION_STATUS);
+        Message message;
+        message.setType(Message::Type::AUTHORIZATION_SUCCESS);
+        Element element;
+        element.insert(CCAPI_INFO_MESSAGE, textMessage);
+        message.setElementList({element});
+        std::vector<Message> messageList;
+        messageList.emplace_back(std::move(message));
+        event.setMessageList(messageList);
+        this->eventHandler(event, nullptr);
+
         rj::Document document;
         document.SetObject();
         auto& allocator = document.GetAllocator();
@@ -439,20 +454,22 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
           arg.AddMember("channel", rj::Value("balance_and_position").Move(), allocator);
           args.PushBack(arg, allocator);
         }
-        document.AddMember("args", args, allocator);
-        rj::StringBuffer stringBufferSubscribe;
-        rj::Writer<rj::StringBuffer> writerSubscribe(stringBufferSubscribe);
-        document.Accept(writerSubscribe);
-        std::string sendString = stringBufferSubscribe.GetString();
-        ErrorCode ec;
+        if (!args.Empty()) {
+          document.AddMember("args", args, allocator);
+          rj::StringBuffer stringBufferSubscribe;
+          rj::Writer<rj::StringBuffer> writerSubscribe(stringBufferSubscribe);
+          document.Accept(writerSubscribe);
+          std::string sendString = stringBufferSubscribe.GetString();
+          ErrorCode ec;
 
-        this->send(wsConnectionPtr, sendString, ec);
+          this->send(wsConnectionPtr, sendString, ec);
 
-        if (ec) {
-          this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "subscribe");
+          if (ec) {
+            this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "subscribe");
+          }
         }
       } else {
-        Event event = this->createEvent(subscription, textMessage, document, eventStr, timeReceived);
+        Event event = this->createEvent(wsConnectionPtr, subscription, textMessage, document, eventStr, timeReceived);
         if (!event.getMessageList().empty()) {
           this->eventHandler(event, nullptr);
         }
@@ -460,8 +477,8 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
     }
   }
 
-  Event createEvent(const Subscription& subscription, const std::string& textMessage, const rj::Document& document, const std::string& eventStr,
-                    const TimePoint& timeReceived) {
+  Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, const std::string& textMessage,
+                    const rj::Document& document, const std::string& eventStr, const TimePoint& timeReceived) {
     Event event;
     std::vector<Message> messageList;
     Message message;
@@ -472,6 +489,8 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
       auto it = document.FindMember("op");
       std::string op = it != document.MemberEnd() ? it->value.GetString() : "";
       if (op == "order" || op == "cancel-order") {
+        unsigned long wsRequestId = std::stoul(document["id"].GetString());
+        const auto& requestCorrelationId = this->requestCorrelationIdByWsRequestIdByConnectionIdMap.at(wsConnectionPtr->id).at(wsRequestId);
         event.setType(Event::Type::RESPONSE);
         std::string code = document["code"].GetString();
         if (code != "0") {
@@ -479,8 +498,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
           Element element;
           element.insert(CCAPI_ERROR_MESSAGE, textMessage);
           message.setElementList({element});
-          std::string id = document["id"].GetString();
-          message.setCorrelationIdList({id});
+          message.setCorrelationIdList({requestCorrelationId});
           messageList.emplace_back(std::move(message));
         } else {
           std::vector<Element> elementList;
@@ -491,10 +509,10 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
           }
           this->extractOrderInfoFromRequest(elementList, document);
           message.setElementList(elementList);
-          std::string id = document["id"].GetString();
-          message.setCorrelationIdList({id});
+          message.setCorrelationIdList({requestCorrelationId});
           messageList.emplace_back(std::move(message));
         }
+        this->requestCorrelationIdByWsRequestIdByConnectionIdMap.at(wsConnectionPtr->id).erase(wsRequestId);
       } else {
         message.setCorrelationIdList({correlationId});
         const rj::Value& arg = document["arg"];

@@ -891,6 +891,12 @@
 #ifndef CCAPI_BYBIT_URL_WS_BASE
 #define CCAPI_BYBIT_URL_WS_BASE "wss://stream.bybit.com"
 #endif
+#ifndef CCAPI_BYBIT_URL_WS_ORDER_ENTRY_BASE
+#define CCAPI_BYBIT_URL_WS_ORDER_ENTRY_BASE "wss://stream.bybit.com"
+#endif
+#ifndef CCAPI_BYBIT_WS_ORDER_ENTRY_PATH
+#define CCAPI_BYBIT_WS_ORDER_ENTRY_PATH "/v5/trade"
+#endif
 #ifndef CCAPI_ASCENDEX_URL_WS_BASE
 #define CCAPI_ASCENDEX_URL_WS_BASE "wss://ascendex.com"
 #endif

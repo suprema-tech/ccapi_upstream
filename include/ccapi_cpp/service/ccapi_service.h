@@ -306,6 +306,12 @@ class Service : public std::enable_shared_from_this<Service> {
     this->portWs = hostPort.second;
   }
 
+  void setHostWsFromUrlWsOrderEntry(std::string baseUrlWsOrderEntry) {
+    auto hostPort = this->extractHostFromUrl(baseUrlWs);
+    this->hostWsOrderEntry = hostPort.first;
+    this->portWsOrderEntry = hostPort.second;
+  }
+
   std::pair<std::string, std::string> extractHostFromUrl(std::string baseUrl) {
     std::string host;
     std::string port;
@@ -1526,6 +1532,7 @@ class Service : public std::enable_shared_from_this<Service> {
   std::string apiSecretName;
   std::string exchangeName;
   std::string baseUrlWs;
+  std::string baseUrlWsOrderEntry;
   std::string baseUrlRest;
   std::function<void(Event& event, Queue<Event>* eventQueue)> eventHandler;
   SessionOptions sessionOptions;
@@ -1536,6 +1543,8 @@ class Service : public std::enable_shared_from_this<Service> {
   std::string portRest;
   std::string hostWs;
   std::string portWs;
+  std::string hostWsOrderEntry;
+  std::string portWsOrderEntry;
   // tcp::resolver::results_type tcpResolverResultsRest, tcpResolverResultsWs;
   std::map<std::string, std::map<std::string, std::deque<std::shared_ptr<HttpConnection>>>> httpConnectionPool;
   std::map<std::string, std::string> credentialDefault;
