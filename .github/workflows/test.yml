@@ -25,7 +25,6 @@ jobs:
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
     strategy:
-      max-parallel: 1
       fail-fast: false
       matrix:
         config:
@@ -37,7 +36,8 @@ jobs:
         - {
             name: "macOS Latest Clang",
             os: macos-latest,
-            cc: "clang", cxx: "clang++"
+            cc: "clang", cxx: "clang++",
+            arch: "arm64"
           }
         # - {
         #     name: "Windows Latest MinGW",
