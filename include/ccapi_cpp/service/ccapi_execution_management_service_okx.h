@@ -469,7 +469,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
           }
         }
       } else {
-        Event event = this->createEvent(wsConnectionPtr, subscription, textMessage, document, eventStr, timeReceived);
+        Event event = this->createEvent(*wsConnectionPtr, subscription, textMessage, document, eventStr, timeReceived);
         if (!event.getMessageList().empty()) {
           this->eventHandler(event, nullptr);
         }
@@ -477,8 +477,8 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
     }
   }
 
-  Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, const std::string& textMessage,
-                    const rj::Document& document, const std::string& eventStr, const TimePoint& timeReceived) {
+  Event createEvent(const WsConnection& wsConnection, const Subscription& subscription, const std::string& textMessage, const rj::Document& document,
+                    const std::string& eventStr, const TimePoint& timeReceived) {
     Event event;
     std::vector<Message> messageList;
     Message message;
@@ -490,7 +490,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
       std::string op = it != document.MemberEnd() ? it->value.GetString() : "";
       if (op == "order" || op == "cancel-order") {
         unsigned long wsRequestId = std::stoul(document["id"].GetString());
-        const auto& requestCorrelationId = this->requestCorrelationIdByWsRequestIdByConnectionIdMap.at(wsConnectionPtr->id).at(wsRequestId);
+        const auto& requestCorrelationId = this->requestCorrelationIdByWsRequestIdByConnectionIdMap.at(wsConnection.id).at(wsRequestId);
         event.setType(Event::Type::RESPONSE);
         std::string code = document["code"].GetString();
         if (code != "0") {
@@ -512,7 +512,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
           message.setCorrelationIdList({requestCorrelationId});
           messageList.emplace_back(std::move(message));
         }
-        this->requestCorrelationIdByWsRequestIdByConnectionIdMap.at(wsConnectionPtr->id).erase(wsRequestId);
+        this->requestCorrelationIdByWsRequestIdByConnectionIdMap.at(wsConnection.id).erase(wsRequestId);
       } else {
         message.setCorrelationIdList({correlationId});
         const rj::Value& arg = document["arg"];

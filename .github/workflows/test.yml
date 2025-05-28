@@ -34,11 +34,11 @@ jobs:
             os: ubuntu-latest,
             cc: "gcc", cxx: "g++"
           }
-        # - {
-        #     name: "macOS Latest Clang",
-        #     os: macos-latest,
-        #     cc: "clang", cxx: "clang++"
-        #   }
+        - {
+            name: "macOS Latest Clang",
+            os: macos-latest,
+            cc: "clang", cxx: "clang++"
+          }
         # - {
         #     name: "Windows Latest MinGW",
         #     os: windows-latest,
@@ -126,7 +126,7 @@ jobs:
         message(STATUS "Using host CMake version: ${cmake_version}")
         if ("${{ runner.os }}" STREQUAL "macOS")
           execute_process(
-            COMMAND brew reinstall openssl@1.1
+            COMMAND brew reinstall openssl@3
           )
         elseif ("${{ runner.os }}" STREQUAL "Windows")
           execute_process(
@@ -240,7 +240,7 @@ jobs:
           execute_process(
             COMMAND ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake
               -DBUILD_PYTHON=ON
-              -DBUILD_JAVA=ON
+              # -DBUILD_JAVA=ON
               # -DBUILD_CSHARP=ON
               # -DBUILD_GO=ON
               # -DBUILD_JAVASCRIPT=ON
@@ -370,7 +370,7 @@ jobs:
 
         execute_process(
           COMMAND ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake
-            -DBUILD_TEST_BUILD=OFF
+            -DBUILD_TEST_BUILD=ON
             -DBUILD_TEST_UNIT=ON
             -S test
             -B test/build
