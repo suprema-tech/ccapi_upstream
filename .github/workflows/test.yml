@@ -15,8 +15,8 @@ on:
       - '**.example'
 
 env:
-  CMAKE_VERSION: 4.0.2
-  NINJA_VERSION: 1.12.1
+  CMAKE_VERSION: 3.17.5
+  NINJA_VERSION: 1.9.0
   # BUILD_TYPE: Release
   # CCACHE_VERSION: 3.7.7
 
@@ -25,6 +25,7 @@ jobs:
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
     strategy:
+      max-parallel: 1
       fail-fast: false
       matrix:
         config:
@@ -34,9 +35,8 @@ jobs:
             cc: "gcc", cxx: "g++"
           }
         - {
-            name: "macOS 14 ARM64 Clang",
-            os: macos-14,
-            arch: "arm64",
+            name: "macOS Latest Clang",
+            os: macos-latest,
             cc: "clang", cxx: "clang++"
           }
         # - {
@@ -78,22 +78,13 @@ jobs:
           set(cmake_dir "cmake-${cmake_version}-Darwin-x86_64/CMake.app/Contents/bin")
         endif()
 
-        set(ninja_url "https://github.com/ninja-build/ninja/releases/download/v${ninja_version}/ninja-${ninja_version}.zip")
-        file(DOWNLOAD "${ninja_url}" "${CMAKE_BINARY_DIR}/ninja.zip" SHOW_PROGRESS)
-        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf "${CMAKE_BINARY_DIR}/ninja.zip" WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
+        set(ninja_url "https://github.com/ninja-build/ninja/releases/download/v${ninja_version}/ninja-${ninja_suffix}")
+        file(DOWNLOAD "${ninja_url}" ./ninja.zip SHOW_PROGRESS)
+        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./ninja.zip)
 
-        # Construct URL and download path
         set(cmake_url "https://github.com/Kitware/CMake/releases/download/v${cmake_version}/cmake-${cmake_version}-${cmake_suffix}")
-        set(cmake_archive "${CMAKE_BINARY_DIR}/cmake-${cmake_version}-${cmake_suffix}")
-
-        # Download the archive to the build directory
-        file(DOWNLOAD "${cmake_url}" "${cmake_archive}" SHOW_PROGRESS)
-
-        # Extract the archive
-        execute_process(
-            COMMAND ${CMAKE_COMMAND} -E tar xvf "${cmake_archive}"
-            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-        )
+        file(DOWNLOAD "${cmake_url}" ./cmake.zip SHOW_PROGRESS)
+        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./cmake.zip)
 
         # Save the path for other steps
         file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/${cmake_dir}" cmake_dir)
