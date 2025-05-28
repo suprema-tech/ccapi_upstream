@@ -16,7 +16,7 @@ on:
 
 env:
   CMAKE_VERSION: 4.0.2
-  NINJA_VERSION: 1.12.0
+  NINJA_VERSION: 1.12.1
   # BUILD_TYPE: Release
   # CCACHE_VERSION: 3.7.7
 
@@ -78,13 +78,22 @@ jobs:
           set(cmake_dir "cmake-${cmake_version}-Darwin-x86_64/CMake.app/Contents/bin")
         endif()
 
-        set(ninja_url "https://github.com/ninja-build/ninja/releases/download/v${ninja_version}/ninja-${ninja_suffix}")
-        file(DOWNLOAD "${ninja_url}" ./ninja.zip SHOW_PROGRESS)
-        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./ninja.zip)
+        set(ninja_url "https://github.com/ninja-build/ninja/releases/download/v${ninja_version}/ninja-${ninja_version}.zip")
+        file(DOWNLOAD "${ninja_url}" "${CMAKE_BINARY_DIR}/ninja.zip" SHOW_PROGRESS)
+        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf "${CMAKE_BINARY_DIR}/ninja.zip" WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
 
+        # Construct URL and download path
         set(cmake_url "https://github.com/Kitware/CMake/releases/download/v${cmake_version}/cmake-${cmake_version}-${cmake_suffix}")
-        file(DOWNLOAD "${cmake_url}" ./cmake.zip SHOW_PROGRESS)
-        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./cmake.zip)
+        set(cmake_archive "${CMAKE_BINARY_DIR}/cmake-${cmake_version}-${cmake_suffix}")
+
+        # Download the archive to the build directory
+        file(DOWNLOAD "${cmake_url}" "${cmake_archive}" SHOW_PROGRESS)
+
+        # Extract the archive
+        execute_process(
+            COMMAND ${CMAKE_COMMAND} -E tar xvf "${cmake_archive}"
+            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+        )
 
         # Save the path for other steps
         file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/${cmake_dir}" cmake_dir)
