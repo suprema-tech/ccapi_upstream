@@ -22,7 +22,6 @@ class MarketDataServiceBinanceBase : public MarketDataService {
 
   void onOpen(std::shared_ptr<WsConnection> wsConnectionPtr) override {
     CCAPI_LOGGER_FUNCTION_ENTER;
-    auto now = UtilTime::now();
     Service::onOpen(wsConnectionPtr);
     this->startSubscribe(wsConnectionPtr);
   }
