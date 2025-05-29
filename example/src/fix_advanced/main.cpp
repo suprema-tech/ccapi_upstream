@@ -5,7 +5,7 @@ Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
  public:
-  bool processEvent(const Event& event, Session* session) override {
+  bool processEvent(const Event& event, Session* sessionPtr) override {
     if (event.getType() == Event::Type::AUTHORIZATION_STATUS) {
       std::cout << "Received an event of type AUTHORIZATION_STATUS:\n" + event.toStringPretty(2, 2) << std::endl;
       auto message = event.getMessageList().at(0);
@@ -21,7 +21,7 @@ class MyEventHandler : public EventHandler {
             {40, "2"},
             {59, "1"},
         });
-        session->sendRequestByFix(request);
+        sessionPtr->sendRequestByFix(request);
       }
     } else if (event.getType() == Event::Type::FIX) {
       std::cout << "Received an event of type FIX:\n" + event.toStringPretty(2, 2) << std::endl;

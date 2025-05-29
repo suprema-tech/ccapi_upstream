@@ -5,7 +5,7 @@ Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
  public:
-  bool processEvent(const Event& event, Session* session) override {
+  bool processEvent(const Event& event, Session* sessionPtr) override {
     if (event.getType() == Event::Type::SESSION_STATUS) {
       for (const auto& message : event.getMessageList()) {
         if (message.getType() == Message::Type::SESSION_CONNECTION_UP) {

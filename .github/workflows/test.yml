@@ -25,7 +25,6 @@ jobs:
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
     strategy:
-      max-parallel: 1
       fail-fast: false
       matrix:
         config:
@@ -34,11 +33,12 @@ jobs:
             os: ubuntu-latest,
             cc: "gcc", cxx: "g++"
           }
-        # - {
-        #     name: "macOS Latest Clang",
-        #     os: macos-latest,
-        #     cc: "clang", cxx: "clang++"
-        #   }
+        - {
+            name: "macOS Latest Clang",
+            os: macos-latest,
+            cc: "clang", cxx: "clang++",
+            arch: "arm64"
+          }
         # - {
         #     name: "Windows Latest MinGW",
         #     os: windows-latest,
@@ -126,7 +126,7 @@ jobs:
         message(STATUS "Using host CMake version: ${cmake_version}")
         if ("${{ runner.os }}" STREQUAL "macOS")
           execute_process(
-            COMMAND brew reinstall openssl@1.1
+            COMMAND brew reinstall openssl@3
           )
         elseif ("${{ runner.os }}" STREQUAL "Windows")
           execute_process(
@@ -206,6 +206,7 @@ jobs:
 
         execute_process(
           COMMAND ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake
+            -DCMAKE_OSX_ARCHITECTURES=arm64
             -DBUILD_TEST_BUILD=OFF
             -DBUILD_TEST_UNIT=OFF
             -S test
@@ -223,6 +224,7 @@ jobs:
 
         execute_process(
           COMMAND ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake
+            -DCMAKE_OSX_ARCHITECTURES=arm64
             -S example
             -B example/build
             -D CMAKE_BUILD_TYPE=$ENV{CMAKE_BUILD_TYPE}
@@ -239,8 +241,9 @@ jobs:
         if ("${{ runner.os }}" STREQUAL "macOS" OR "${{ runner.os }}" STREQUAL "Linux")
           execute_process(
             COMMAND ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake
+              -DCMAKE_OSX_ARCHITECTURES=arm64
               -DBUILD_PYTHON=ON
-              -DBUILD_JAVA=ON
+              # -DBUILD_JAVA=ON
               # -DBUILD_CSHARP=ON
               # -DBUILD_GO=ON
               # -DBUILD_JAVASCRIPT=ON
@@ -370,7 +373,8 @@ jobs:
 
         execute_process(
           COMMAND ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake
-            -DBUILD_TEST_BUILD=OFF
+            -DCMAKE_OSX_ARCHITECTURES=arm64
+            -DBUILD_TEST_BUILD=ON
             -DBUILD_TEST_UNIT=ON
             -S test
             -B test/build

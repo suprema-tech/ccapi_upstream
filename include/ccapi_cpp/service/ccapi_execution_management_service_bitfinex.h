@@ -196,7 +196,7 @@ class ExecutionManagementServiceBitfinex : public ExecutionManagementService {
   }
 
   void convertRequestForWebsocket(rj::Document& document, rj::Document::AllocatorType& allocator, const WsConnection& wsConnection, const Request& request,
-                                  int wsRequestId, const TimePoint& now, const std::string& symbolId,
+                                  unsigned long wsRequestId, const TimePoint& now, const std::string& symbolId,
                                   const std::map<std::string, std::string>& credential) override {
     switch (request.getOperation()) {
       case Request::Operation::CREATE_ORDER: {
@@ -475,7 +475,7 @@ class ExecutionManagementServiceBitfinex : public ExecutionManagementService {
     event.setMessageList(messageList);
     return event;
   }
-};  // namespace ccapi
+};
 } /* namespace ccapi */
 #endif
 #endif
