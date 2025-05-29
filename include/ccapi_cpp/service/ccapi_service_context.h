@@ -19,8 +19,10 @@ class ServiceContext {
 
   ServiceContext() {
     this->ioContextPtr = new boost::asio::io_context();
+    this->useInternalIoContextPtr = true;
     this->executorWorkGuardPtr = new ExecutorWorkGuard(this->ioContextPtr->get_executor());
     this->sslContextPtr = new SslContext(SslContext::tls_client);
+    this->useInternalSslContextPtr = true;
     // this->sslContextPtr->set_options(SslContext::default_workarounds | SslContext::no_sslv2 | SslContext::no_sslv3 | SslContext::single_dh_use);
     this->sslContextPtr->set_verify_mode(boost::asio::ssl::verify_none);
     // TODO(cryptochassis): verify ssl certificate to strengthen security
@@ -31,11 +33,13 @@ class ServiceContext {
     this->ioContextPtr = ioContextPtr;
     this->executorWorkGuardPtr = new ExecutorWorkGuard(this->ioContextPtr->get_executor());
     this->sslContextPtr = new SslContext(SslContext::tls_client);
+    this->useInternalSslContextPtr = true;
     this->sslContextPtr->set_verify_mode(boost::asio::ssl::verify_none);
   }
 
   ServiceContext(SslContextPtr sslContextPtr) {
     this->ioContextPtr = new boost::asio::io_context();
+    this->useInternalIoContextPtr = true;
     this->executorWorkGuardPtr = new ExecutorWorkGuard(this->ioContextPtr->get_executor());
     this->sslContextPtr = sslContextPtr;
     this->sslContextPtr->set_verify_mode(boost::asio::ssl::verify_none);
@@ -53,27 +57,39 @@ class ServiceContext {
 
   virtual ~ServiceContext() {
     delete this->executorWorkGuardPtr;
-    delete this->ioContextPtr;
-    delete this->sslContextPtr;
+    if (this->useInternalIoContextPtr) {
+      delete this->ioContextPtr;
+    }
+    if (this->useInternalSslContextPtr) {
+      delete this->sslContextPtr;
+    }
   }
 
   void start() {
-    CCAPI_LOGGER_INFO("about to start client asio io_context run loop");
-    this->ioContextPtr->run();
-    CCAPI_LOGGER_INFO("just exited client asio io_context run loop");
+    if (this->useInternalIoContextPtr) {
+      std::thread thread([this]() {
+        CCAPI_LOGGER_INFO("about to start asio io_context run loop");
+        this->ioContextPtr->run();
+        CCAPI_LOGGER_INFO("just exited asio io_context run loop");
+      });
+      this->thread = std::move(thread);
+    }
   }
 
   void stop() {
     this->executorWorkGuardPtr->reset();
-    this->ioContextPtr->stop();
+    if (this->useInternalIoContextPtr) {
+      this->ioContextPtr->stop();
+      this->thread.join();
+    }
   }
 
   IoContextPtr ioContextPtr{nullptr};
+  bool useInternalIoContextPtr{};
   ExecutorWorkGuardPtr executorWorkGuardPtr{nullptr};
   SslContextPtr sslContextPtr{nullptr};
-  // IoContextPtr ioContextPtr{new IoContext()};
-  // ExecutorWorkGuardPtr executorWorkGuardPtr{new ExecutorWorkGuard(ioContextPtr->get_executor())};
-  // SslContextPtr sslContextPtr{new SslContext(SslContext::tls_client)};
+  bool useInternalSslContextPtr{};
+  std::thread thread;
 };
 
 } /* namespace ccapi */

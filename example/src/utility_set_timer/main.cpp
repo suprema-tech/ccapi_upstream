@@ -5,15 +5,13 @@ Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
  public:
-  bool processEvent(const Event& event, Session* session) override {
+  bool processEvent(const Event& event, Session* sessionPtr) override {
     if (numEvent == 0) {
       std::cout << std::string("Timer is set at ") + UtilTime::getISOTimestamp(UtilTime::now()) << std::endl;
-      session->setTimer(
+      sessionPtr->setTimer(
           "id", 1000,
-          [](const boost::system::error_code&) {
-            std::cout << std::string("Timer error handler is triggered at ") + UtilTime::getISOTimestamp(UtilTime::now()) << std::endl;
-          },
-          []() { std::cout << std::string("Timer success handler is triggered at ") + UtilTime::getISOTimestamp(UtilTime::now()) << std::endl; });
+          [](const boost::system::error_code&) { std::cout << std::string("Timer is canceled at ") + UtilTime::getISOTimestamp(UtilTime::now()) << std::endl; },
+          []() { std::cout << std::string("Timer is triggered at ") + UtilTime::getISOTimestamp(UtilTime::now()) << std::endl; });
     }
     ++numEvent;
     return true;

@@ -239,8 +239,7 @@ class Message {
   std::string toString() const {
     std::string output = "Message [type = " + typeToString(type) + ", recapType = " + recapTypeToString(recapType) +
                          ", time = " + UtilTime::getISOTimestamp(time) + ", timeReceived = " + UtilTime::getISOTimestamp(timeReceived) +
-                         ", elementList = " + ccapi::firstNToString(elementList, 10) + ", correlationIdList = " + ccapi::toString(correlationIdList) +
-                         ", secondaryCorrelationIdMap = " + ccapi::toString(secondaryCorrelationIdMap) + "]";
+                         ", elementList = " + ccapi::firstNToString(elementList, 10) + ", correlationIdList = " + ccapi::toString(correlationIdList) + "]";
     return output;
   }
 
@@ -251,8 +250,7 @@ class Message {
                          "recapType = " + recapTypeToString(recapType) + ",\n" + ss + "time = " + UtilTime::getISOTimestamp(time) + ",\n" + ss +
                          "timeReceived = " + UtilTime::getISOTimestamp(timeReceived) + ",\n" + ss +
                          "elementList = " + ccapi::firstNToStringPretty(elementList, 10, space, space + leftToIndent, false) + ",\n" + ss +
-                         "correlationIdList = " + ccapi::toString(correlationIdList) + ",\n" + ss +
-                         "secondaryCorrelationIdMap = " + ccapi::toString(secondaryCorrelationIdMap) + "\n" + sl + "]";
+                         "correlationIdList = " + ccapi::toString(correlationIdList) + ",\n" + sl + "]";
     return output;
   }
 
@@ -264,13 +262,7 @@ class Message {
 
   const std::vector<std::string>& getCorrelationIdList() const { return correlationIdList; }
 
-  const std::map<std::string, std::string>& getSecondaryCorrelationIdMap() const { return secondaryCorrelationIdMap; }
-
   void setCorrelationIdList(const std::vector<std::string>& correlationIdList) { this->correlationIdList = correlationIdList; }
-
-  void setSecondaryCorrelationIdMap(const std::map<std::string, std::string>& secondaryCorrelationIdMap) {
-    this->secondaryCorrelationIdMap = secondaryCorrelationIdMap;
-  }
 
   // 'getTime' only works in C++. For other languages, please use 'getTimeISO'.
   TimePoint getTime() const { return time; }
@@ -309,7 +301,6 @@ class Message {
   TimePoint timeReceived{std::chrono::seconds{0}};
   std::vector<Element> elementList;
   std::vector<std::string> correlationIdList;
-  std::map<std::string, std::string> secondaryCorrelationIdMap;
   Type type{Type::UNKNOWN};
   RecapType recapType{RecapType::UNKNOWN};
 };

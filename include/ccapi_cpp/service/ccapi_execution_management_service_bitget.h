@@ -431,7 +431,7 @@ class ExecutionManagementServiceBitget : public ExecutionManagementServiceBitget
     event.setMessageList(messageList);
     return event;
   }
-};  // namespace ccapi
+};
 } /* namespace ccapi */
 #endif
 #endif

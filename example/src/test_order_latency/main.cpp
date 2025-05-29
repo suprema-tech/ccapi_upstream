@@ -8,14 +8,16 @@ Logger* Logger::logger = nullptr;  // This line is needed.
 class MyEventHandler : public EventHandler {
  public:
   MyEventHandler(const std::string& symbol, const std::string& side, const std::string& quantity, const std::string& price, int clientOrderIdLength,
-                 bool cancelByClientOrderId, int numOrders)
+                 bool cancelByClientOrderId, int numOrders, bool byWebsocket, const std::string& websocketOrderEntrySubscriptionCorrelationId)
       : symbol(symbol),
         side(side),
         quantity(quantity),
         price(price),
         clientOrderIdLength(clientOrderIdLength),
         cancelByClientOrderId(cancelByClientOrderId),
-        numOrders(numOrders) {}
+        numOrders(numOrders),
+        byWebsocket(byWebsocket),
+        websocketOrderEntrySubscriptionCorrelationId(websocketOrderEntrySubscriptionCorrelationId) {}
 
   bool processEvent(const Event& event, Session* sessionPtr) override {
     if (event.getType() == Event::Type::SUBSCRIPTION_STATUS) {
@@ -43,7 +45,11 @@ class MyEventHandler : public EventHandler {
                     {"CLIENT_ORDER_ID", clientOrderId},
                 });
                 this->orderCreateTimes.emplace(clientOrderId, UtilTime::now());
-                sessionPtr->sendRequest(request);
+                if (this->byWebsocket) {
+                  sessionPtr->sendRequestByWebsocket(this->websocketOrderEntrySubscriptionCorrelationId, request);
+                } else {
+                  sessionPtr->sendRequest(request);
+                }
               });
         }
       }
@@ -69,7 +75,11 @@ class MyEventHandler : public EventHandler {
             });
           }
           this->orderCancelTimes.emplace(clientOrderId, now);
-          sessionPtr->sendRequest(request);
+          if (this->byWebsocket) {
+            sessionPtr->sendRequestByWebsocket(this->websocketOrderEntrySubscriptionCorrelationId, request);
+          } else {
+            sessionPtr->sendRequest(request);
+          }
         } else if (status == "canceled") {
           this->orderCancelLatencies.push_back(now - this->orderCancelTimes.at(clientOrderId));
           this->orderCancelTimes.erase(clientOrderId);
@@ -90,6 +100,9 @@ class MyEventHandler : public EventHandler {
   int clientOrderIdLength{};
   bool cancelByClientOrderId{};
   int numOrders{};
+  bool byWebsocket{};
+
+  std::string websocketOrderEntrySubscriptionCorrelationId;
 
   std::map<std::string, TimePoint> orderCreateTimes;
   std::vector<std::chrono::nanoseconds> orderCreateLatencies;
@@ -129,11 +142,14 @@ int main(int argc, char** argv) {
   const auto& clientOrderIdLength = UtilSystem::getEnvAsInt("CLIENT_ORDER_ID_LENGTH", 4);
   const auto& cancelByClientOrderId = UtilSystem::getEnvAsBool("CANCEL_BY_CLIENT_ORDER_ID");
   const auto& numOrders = UtilSystem::getEnvAsInt("NUM_ORDERS", 10);
+  const auto& byWebsocket = UtilSystem::getEnvAsBool("BY_WEBSOCKET");
   SessionOptions sessionOptions;
   SessionConfigs sessionConfigs;
-  MyEventHandler eventHandler(symbol, side, quantity, price, clientOrderIdLength, cancelByClientOrderId, numOrders);
+  std::string websocketOrderEntrySubscriptionCorrelationId("any");
+  MyEventHandler eventHandler(symbol, side, quantity, price, clientOrderIdLength, cancelByClientOrderId, numOrders, byWebsocket,
+                              websocketOrderEntrySubscriptionCorrelationId);
   Session session(sessionOptions, sessionConfigs, &eventHandler);
-  Subscription subscription("okx", symbol, "ORDER_UPDATE");
+  Subscription subscription("okx", symbol, "ORDER_UPDATE", "", websocketOrderEntrySubscriptionCorrelationId);
   session.subscribe(subscription);
   while (!eventHandler.done) {
     std::this_thread::sleep_for(std::chrono::seconds(1));

@@ -16,8 +16,8 @@ class Subscription {
  public:
   Subscription() {}
 
-  Subscription(std::string exchange, std::string instrument, std::string field, std::string options = "", std::string correlationId = "",
-               std::map<std::string, std::string> credential = {})
+  Subscription(const std::string& exchange, const std::string& instrument, const std::string& field, const std::string& options = "",
+               const std::string& correlationId = "", const std::map<std::string, std::string>& credential = {})
       : exchange(exchange), instrument(instrument), field(field), correlationId(correlationId), credential(credential) {
     auto originalInstrumentSet = UtilString::splitToSet(instrument, ",");
     std::copy_if(originalInstrumentSet.begin(), originalInstrumentSet.end(), std::inserter(this->instrumentSet, this->instrumentSet.end()),
@@ -43,9 +43,9 @@ class Subscription {
         this->optionMap[optionKeyValue.at(0)] = optionKeyValue.at(1);
       }
     }
-    std::set<std::string> executionManagementSubscriptionFieldSet = {std::string(CCAPI_EM_ORDER_UPDATE), std::string(CCAPI_EM_PRIVATE_TRADE),
+    std::set<std::string> executionManagementSubscriptionFieldSet = {std::string(CCAPI_EM_ORDER_UPDATE),       std::string(CCAPI_EM_PRIVATE_TRADE),
                                                                      std::string(CCAPI_EM_PRIVATE_TRADE_LITE), std::string(CCAPI_EM_BALANCE_UPDATE),
-                                                                     std::string(CCAPI_EM_POSITION_UPDATE)};
+                                                                     std::string(CCAPI_EM_POSITION_UPDATE),    std::string(CCAPI_EM_WEBSOCKET_ORDER_ENTRY)};
     if (field == CCAPI_GENERIC_PUBLIC_SUBSCRIPTION) {
       this->serviceName = CCAPI_MARKET_DATA;
     } else if (field == CCAPI_FIX || field == CCAPI_FIX_MARKET_DATA || field == CCAPI_FIX_EXECUTION_MANAGEMENT) {

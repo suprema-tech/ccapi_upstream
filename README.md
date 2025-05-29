@@ -1,57 +1,62 @@
 # Some breaking changes introduced
-* Please update boost version to at least 1.87.0.
-* When a subscription fails due to the underlying websocket connection fails to open, the emitted message type is SUBSCRIPTION_FAILURE_DUE_TO_CONNECTION_FAILURE instead of SUBSCRIPTION_FAILURE.
-* Removed the spot market making application and the single order execution application.
+* We made a change on how to "Send request by Websocket API".
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [ccapi](#ccapi)
-  - [Branches](#branches)
-  - [Build](#build)
-    - [C++](#c)
-    - [non-C++](#non-c)
-  - [Constants](#constants)
-  - [Examples](#examples)
-  - [Documentations](#documentations)
-    - [Simple Market Data](#simple-market-data)
-    - [Advanced Market Data](#advanced-market-data)
-      - [Complex request parameters](#complex-request-parameters)
-      - [Specify subscription market depth](#specify-subscription-market-depth)
-      - [Specify correlation id](#specify-correlation-id)
-      - [Multiple exchanges and/or instruments](#multiple-exchanges-andor-instruments)
-      - [Receive subscription events at periodic intervals](#receive-subscription-events-at-periodic-intervals)
-      - [Receive subscription events at periodic intervals including when the market depth snapshot hasn't changed](#receive-subscription-events-at-periodic-intervals-including-when-the-market-depth-snapshot-hasnt-changed)
-      - [Receive subscription market depth updates](#receive-subscription-market-depth-updates)
-      - [Receive subscription trade events](#receive-subscription-trade-events)
-      - [Receive subscription calculated-candlestick events at periodic intervals](#receive-subscription-calculated-candlestick-events-at-periodic-intervals)
-      - [Receive subscription exchange-provided-candlestick events at periodic intervals](#receive-subscription-exchange-provided-candlestick-events-at-periodic-intervals)
-      - [Send generic public requests](#send-generic-public-requests)
-      - [Make generic public subscriptions](#make-generic-public-subscriptions)
-      - [Send generic private requests](#send-generic-private-requests)
-    - [Simple Execution Management](#simple-execution-management)
-    - [Advanced Execution Management](#advanced-execution-management)
-      - [Specify correlation id](#specify-correlation-id-1)
-      - [Multiple exchanges and/or instruments](#multiple-exchanges-andor-instruments-1)
-      - [Multiple subscription fields](#multiple-subscription-fields)
-      - [Make Session::sendRequest blocking](#make-sessionsendrequest-blocking)
-      - [Provide API credentials for an exchange](#provide-api-credentials-for-an-exchange)
-      - [Override exchange urls](#override-exchange-urls)
-      - [Complex request parameters](#complex-request-parameters-1)
-      - [Send request by Websocket API](#send-request-by-websocket-api)
-      - [Specify instrument type](#specify-instrument-type)
-    - [FIX API](#fix-api)
-    - [More Advanced Topics](#more-advanced-topics)
-      - [Handle events in "immediate" vs. "batching" mode](#handle-events-in-immediate-vs-batching-mode)
-      - [Thread safety](#thread-safety)
-      - [Enable library logging](#enable-library-logging)
-      - [Set timer](#set-timer)
-  - [Performance Tuning](#performance-tuning)
-  - [Known Issues and Workarounds](#known-issues-and-workarounds)
-  - [Contributing](#contributing)
+**Table of Contents**  *generated with [DocToc](https://github.com/ktechhub/doctoc)*
+
+<!---toc start-->
+
+* [Some breaking changes introduced](#some-breaking-changes-introduced)
+* [ccapi](#ccapi)
+  * [Branches](#branches)
+  * [Build](#build)
+    * [C++](#c)
+    * [non-C++](#non-c)
+  * [Constants](#constants)
+  * [Examples](#examples)
+  * [Documentations](#documentations)
+    * [Simple Market Data](#simple-market-data)
+    * [Advanced Market Data](#advanced-market-data)
+      * [Complex request parameters](#complex-request-parameters)
+      * [Specify subscription market depth](#specify-subscription-market-depth)
+      * [Specify correlation id](#specify-correlation-id)
+      * [Multiple exchanges and/or instruments](#multiple-exchanges-andor-instruments)
+      * [Receive subscription events at periodic intervals](#receive-subscription-events-at-periodic-intervals)
+      * [Receive subscription events at periodic intervals including when the market depth snapshot hasn't changed](#receive-subscription-events-at-periodic-intervals-including-when-the-market-depth-snapshot-hasnt-changed)
+      * [Receive subscription market depth updates](#receive-subscription-market-depth-updates)
+      * [Receive subscription trade events](#receive-subscription-trade-events)
+      * [Receive subscription calculated-candlestick events at periodic intervals](#receive-subscription-calculated-candlestick-events-at-periodic-intervals)
+      * [Receive subscription exchange-provided-candlestick events at periodic intervals](#receive-subscription-exchange-provided-candlestick-events-at-periodic-intervals)
+      * [Send generic public requests](#send-generic-public-requests)
+      * [Make generic public subscriptions](#make-generic-public-subscriptions)
+      * [Send generic private requests](#send-generic-private-requests)
+    * [Simple Execution Management](#simple-execution-management)
+    * [Advanced Execution Management](#advanced-execution-management)
+      * [Specify correlation id](#specify-correlation-id-1)
+      * [Multiple exchanges and/or instruments](#multiple-exchanges-andor-instruments-1)
+      * [Multiple subscription fields](#multiple-subscription-fields)
+      * [Make Session::sendRequest blocking](#make-sessionsendrequest-blocking)
+      * [Provide API credentials for an exchange](#provide-api-credentials-for-an-exchange)
+      * [Override exchange urls](#override-exchange-urls)
+      * [Complex request parameters](#complex-request-parameters-1)
+      * [Send request by Websocket API](#send-request-by-websocket-api)
+      * [Specify instrument type](#specify-instrument-type)
+    * [FIX API](#fix-api)
+    * [More Advanced Topics](#more-advanced-topics)
+      * [Handle events in "immediate" vs. "batching" mode](#handle-events-in-immediate-vs-batching-mode)
+      * [Thread safety](#thread-safety)
+      * [Enable library logging](#enable-library-logging)
+      * [Set timer](#set-timer)
+  * [Performance Tuning](#performance-tuning)
+  * [Known Issues and Workarounds](#known-issues-and-workarounds)
+  * [Contributing](#contributing)
+
+<!---toc end-->
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
 # ccapi
 * A header-only C++ library for streaming market data and executing trades directly from cryptocurrency exchanges (i.e. the connections are between your server and the exchange server without anything in-between).
 * Bindings for other languages such as Python, Java, C#, Go, and Javascript are provided.
@@ -220,7 +225,7 @@ Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
  public:
-  bool processEvent(const Event& event, Session* session) override {
+  bool processEvent(const Event& event, Session* sessionPtr) override {
     std::cout << "Received an event:\n" + event.toStringPretty(2, 2) << std::endl;
     return true;
   }
@@ -297,7 +302,7 @@ Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
  public:
-  bool processEvent(const Event& event, Session* session) override {
+  bool processEvent(const Event& event, Session* sessionPtr) override {
     if (event.getType() == Event::Type::SUBSCRIPTION_STATUS) {
       std::cout << "Received an event of type SUBSCRIPTION_STATUS:\n" + event.toStringPretty(2, 2) << std::endl;
     } else if (event.getType() == Event::Type::SUBSCRIPTION_DATA) {
@@ -386,13 +391,15 @@ Request request_1(Request::Operation::GET_RECENT_TRADES, "okx", "BTC-USDT", "coo
 request_1.appendParam(...);
 Request request_2(Request::Operation::GET_RECENT_TRADES, "binance", "ETH-USDT", "cool correlation id for ETH");
 request_2.appendParam(...);
-session.sendRequest({request_1, request_2});
+std::vector<ccapi::Request> requests = {request_1, request_2};
+session.sendRequest(requests);
 ```
 Subscribe a `std::vector<Subscription>`.
 ```
 Subscription subscription_1("okx", "BTC-USDT", "MARKET_DEPTH", "", "cool correlation id for okx BTC-USDT");
 Subscription subscription_2("binance", "ETH-USDT", "MARKET_DEPTH", "", "cool correlation id for binance ETH-USDT");
-session.subscribe({subscription_1, subscription_2});
+std::vector<ccapi::Subscription> subscriptions = {subscription_1, subscription_2};
+session.subscribe(subscriptions);
 ```
 
 #### Receive subscription events at periodic intervals
@@ -434,7 +441,7 @@ Subscription subscription("okx", "BTC-USDT", "TRADE", "CONFLATE_INTERVAL_MILLISE
 
 Instantiate `Subscription` with field `CANDLESTICK` and option `CANDLESTICK_INTERVAL_SECONDS` set to be the desired interval.
 ```
-Subscription subscription("okx", "BTC-USDTT", "CANDLESTICK", "CANDLESTICK_INTERVAL_SECONDS=60");
+Subscription subscription("okx", "BTC-USDT", "CANDLESTICK", "CANDLESTICK_INTERVAL_SECONDS=60");
 ```
 
 #### Send generic public requests
@@ -487,7 +494,7 @@ Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
  public:
-  bool processEvent(const Event& event, Session* session) override {
+  bool processEvent(const Event& event, Session* sessionPtr) override {
     std::cout << "Received an event:\n" + event.toStringPretty(2, 2) << std::endl;
     return true;
   }
@@ -585,7 +592,7 @@ Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
  public:
-  bool processEvent(const Event& event, Session* session) override {
+  bool processEvent(const Event& event, Session* sessionPtr) override {
     if (event.getType() == Event::Type::SUBSCRIPTION_STATUS) {
       std::cout << "Received an event of type SUBSCRIPTION_STATUS:\n" + event.toStringPretty(2, 2) << std::endl;
       auto message = event.getMessageList().at(0);
@@ -597,7 +604,7 @@ class MyEventHandler : public EventHandler {
             {"QUANTITY", "0.001"},
             {"CLIENT_ORDER_ID", "6d4eb0fb"},
         });
-        session->sendRequest(request);
+        sessionPtr->sendRequest(request);
       }
     } else if (event.getType() == Event::Type::SUBSCRIPTION_DATA) {
       std::cout << "Received an event of type SUBSCRIPTION_DATA:\n" + event.toStringPretty(2, 2) << std::endl;
@@ -712,7 +719,8 @@ Request request_1(Request::Operation::CREATE_ORDER, "okx", "BTC-USDT", "cool cor
 request_1.appendParam(...);
 Request request_2(Request::Operation::CREATE_ORDER, "okx", "ETH-USDT", "cool correlation id for ETH");
 request_2.appendParam(...);
-session.sendRequest({request_1, request_2});
+std::vector<ccapi::Request> requests = {request_1, request_2};
+session.sendRequest(requests);
 ```
 Subscribe one `Subscription` per exchange with a comma separated string of instruments.
 ```
@@ -774,23 +782,41 @@ request.appendParam({
 ```
 
 #### Send request by Websocket API
+For okx:
 ```
-Subscription subscription("okx", "BTC-USDTT", "ORDER_UPDATE", "", "same correlation id for subscription and request");
+std::string websocketOrderEntrySubscriptionCorrelationId("any");
+Subscription subscription("okx", "", "ORDER_UPDATE", "", websocketOrderEntrySubscriptionCorrelationId);
 session.subscribe(subscription);
 ...
-Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDTT", "same correlation id for subscription and request");
+Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDT");
 request.appendParam({
     {"SIDE", "BUY"},
     {"LIMIT_PRICE", "20000"},
     {"QUANTITY", "0.001"},
 });
-session.sendRequestByWebsocket(request);
+session.sendRequestByWebsocket(websocketOrderEntrySubscriptionCorrelationId, request);
+```
+For bybit:
+```
+std::string websocketOrderEntrySubscriptionCorrelationId("any");
+Subscription subscription_1("bybit", "", "ORDER_UPDATE");
+Subscription subscription_2("bybit", "", "WEBSOCKET_ORDER_ENTRY", "", websocketOrderEntrySubscriptionCorrelationId);
+std::vector<ccapi::Subscription> subscriptions = {subscription_1, subscription_2};
+session.subscribe(subscriptions);
+...
+Request request(Request::Operation::CREATE_ORDER, "bybit", "BTCUSDT");
+request.appendParam({
+    {"SIDE", "BUY"},
+    {"LIMIT_PRICE", "20000"},
+    {"QUANTITY", "0.001"},
+});
+session.sendRequestByWebsocket(websocketOrderEntrySubscriptionCorrelationId, request);
 ```
 
 #### Specify instrument type
 Some exchanges (i.e. bybit) might need instrument type for `Subscription`. Use `Subscription`'s `setInstrumentType` method.
 ```
-Subscription subscription("bybit", "BTCUSDTT", "MARKET_DEPTH");
+Subscription subscription("bybit", "BTCUSDT", "MARKET_DEPTH");
 subscription.setInstrumentType("spot");
 session.subscribe(subscription);
 ```
@@ -810,7 +836,7 @@ namespace ccapi {
 Logger* Logger::logger = nullptr;  // This line is needed.
 class MyEventHandler : public EventHandler {
  public:
-  bool processEvent(const Event& event, Session* session) override {
+  bool processEvent(const Event& event, Session* sessionPtr) override {
     if (event.getType() == Event::Type::AUTHORIZATION_STATUS) {
       std::cout << "Received an event of type AUTHORIZATION_STATUS:\n" + event.toStringPretty(2, 2) << std::endl;
       auto message = event.getMessageList().at(0);
@@ -826,7 +852,7 @@ class MyEventHandler : public EventHandler {
             {40, "2"},
             {59, "1"},
         });
-        session->sendRequestByFix(request);
+        sessionPtr->sendRequestByFix(request);
       }
     } else if (event.getType() == Event::Type::FIX) {
       std::cout << "Received an event of type FIX:\n" + event.toStringPretty(2, 2) << std::endl;
@@ -975,7 +1001,7 @@ Logger* Logger::logger = &myLogger;
 
 To perform an asynchronous wait, use the utility method `setTimer` in class `Session`. The handlers are invoked in the same threads as the `processEvent` method in the `EventHandler` class. The `id` of the timer should be unique. `delayMilliseconds` can be 0.
 ```
-session->setTimer(
+sessionPtr->setTimer(
     "id", 1000,
     [](const boost::system::error_code&) {
       std::cout << std::string("Timer error handler is triggered at ") + UtilTime::getISOTimestamp(UtilTime::now()) << std::endl;

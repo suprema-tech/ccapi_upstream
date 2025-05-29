@@ -28,6 +28,8 @@ class SessionConfigs {
 
   const std::map<std::string, std::string>& getUrlWebsocketBase() const { return urlWebsocketBase; }
 
+  const std::map<std::string, std::string>& getUrlWebsocketOrderEntryBase() const { return urlWebsocketOrderEntryBase; }
+
   const std::map<std::string, std::string>& getUrlRestBase() const { return urlRestBase; }
 
   const std::map<std::string, std::string>& getUrlFixBase() const { return urlFixBase; }
@@ -363,6 +365,10 @@ class SessionConfigs {
         {CCAPI_EXCHANGE_NAME_MEXC_FUTURES, CCAPI_MEXC_FUTURES_URL_WS_BASE},
         {CCAPI_EXCHANGE_NAME_WHITEBIT, CCAPI_WHITEBIT_URL_WS_BASE},
     };
+    this->urlWebsocketOrderEntryBase = {
+        {CCAPI_EXCHANGE_NAME_OKX, CCAPI_OKX_URL_WS_BASE},
+        {CCAPI_EXCHANGE_NAME_BYBIT, CCAPI_BYBIT_URL_WS_ORDER_ENTRY_BASE},
+    };
     this->initialSequenceByExchangeMap = {{CCAPI_EXCHANGE_NAME_GEMINI, 0}, {CCAPI_EXCHANGE_NAME_BITFINEX, 1}};
   }
 
@@ -416,6 +422,7 @@ class SessionConfigs {
   std::map<std::string, std::vector<std::string>> exchangeFieldMap;
   std::map<std::string, std::map<std::string, std::string>> exchangeFieldWebsocketChannelMap;
   std::map<std::string, std::string> urlWebsocketBase;
+  std::map<std::string, std::string> urlWebsocketOrderEntryBase;
   std::map<std::string, std::string> urlRestBase;
   std::map<std::string, std::string> urlFixBase;
   std::map<std::string, int> initialSequenceByExchangeMap;

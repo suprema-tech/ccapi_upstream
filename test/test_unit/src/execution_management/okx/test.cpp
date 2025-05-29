@@ -581,7 +581,7 @@ TEST_F(ExecutionManagementServiceOkxTest, createEventFilled) {
 )";
   rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
-  auto messageList = this->service->createEvent(subscription, textMessage, document, "", this->now).getMessageList();
+  auto messageList = this->service->createEvent(WsConnection(), subscription, textMessage, document, "", this->now).getMessageList();
   EXPECT_EQ(messageList.size(), 1);
   verifyCorrelationId(messageList, subscription.getCorrelationId());
   auto message = messageList.at(0);
@@ -658,7 +658,7 @@ TEST_F(ExecutionManagementServiceOkxTest, createEventLive) {
 )";
   rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
-  auto messageList = this->service->createEvent(subscription, textMessage, document, "", this->now).getMessageList();
+  auto messageList = this->service->createEvent(WsConnection(), subscription, textMessage, document, "", this->now).getMessageList();
   EXPECT_EQ(messageList.size(), 1);
   verifyCorrelationId(messageList, subscription.getCorrelationId());
   auto message = messageList.at(0);
@@ -696,9 +696,12 @@ TEST_F(ExecutionManagementServiceOkxTest, createEventWebsocketTradePlaceOrder) {
 )";
   rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
-  auto messageList = this->service->createEvent(subscription, textMessage, document, "", this->now).getMessageList();
+  WsConnection wsConnection;
+  std::string requestCorrelationId("123");
+  this->service->requestCorrelationIdByWsRequestIdByConnectionIdMap[wsConnection.id][1512] = requestCorrelationId;
+  auto messageList = this->service->createEvent(wsConnection, subscription, textMessage, document, "", this->now).getMessageList();
   EXPECT_EQ(messageList.size(), 1);
-  verifyCorrelationId(messageList, subscription.getCorrelationId());
+  verifyCorrelationId(messageList, requestCorrelationId);
   auto message = messageList.at(0);
   EXPECT_EQ(message.getType(), Message::Type::CREATE_ORDER);
   auto elementList = message.getElementList();
@@ -727,9 +730,12 @@ TEST_F(ExecutionManagementServiceOkxTest, createEventWebsocketTradeCancelOrder) 
 )";
   rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
-  auto messageList = this->service->createEvent(subscription, textMessage, document, "", this->now).getMessageList();
+  WsConnection wsConnection;
+  std::string requestCorrelationId("123");
+  this->service->requestCorrelationIdByWsRequestIdByConnectionIdMap[wsConnection.id][1] = requestCorrelationId;
+  auto messageList = this->service->createEvent(wsConnection, subscription, textMessage, document, "", this->now).getMessageList();
   EXPECT_EQ(messageList.size(), 1);
-  verifyCorrelationId(messageList, subscription.getCorrelationId());
+  verifyCorrelationId(messageList, requestCorrelationId);
   auto message = messageList.at(0);
   EXPECT_EQ(message.getType(), Message::Type::CANCEL_ORDER);
   auto elementList = message.getElementList();
