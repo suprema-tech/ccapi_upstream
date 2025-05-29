@@ -206,6 +206,7 @@ jobs:
 
         execute_process(
           COMMAND ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake
+            -DCMAKE_OSX_ARCHITECTURES=arm64
             -DBUILD_TEST_BUILD=OFF
             -DBUILD_TEST_UNIT=OFF
             -S test
@@ -223,6 +224,7 @@ jobs:
 
         execute_process(
           COMMAND ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake
+            -DCMAKE_OSX_ARCHITECTURES=arm64
             -S example
             -B example/build
             -D CMAKE_BUILD_TYPE=$ENV{CMAKE_BUILD_TYPE}
@@ -239,6 +241,7 @@ jobs:
         if ("${{ runner.os }}" STREQUAL "macOS" OR "${{ runner.os }}" STREQUAL "Linux")
           execute_process(
             COMMAND ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake
+              -DCMAKE_OSX_ARCHITECTURES=arm64
               -DBUILD_PYTHON=ON
               # -DBUILD_JAVA=ON
               # -DBUILD_CSHARP=ON
@@ -370,6 +373,7 @@ jobs:
 
         execute_process(
           COMMAND ${{ steps.cmake_and_ninja.outputs.cmake_dir }}/cmake
+            -DCMAKE_OSX_ARCHITECTURES=arm64
             -DBUILD_TEST_BUILD=ON
             -DBUILD_TEST_UNIT=ON
             -S test
