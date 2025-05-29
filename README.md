@@ -65,7 +65,7 @@
 * Supported exchanges:
   * Market Data: ascendex, binance, binanceds-futures, binance-coin-futures, binance, bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, bybit, okx, cryptocom, deribit, erisx (Cboe Digital), gateio, gateio-perpetual-futures, gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, mexc-futures, okx, whitebit.
   * Execution Management: ascendex, binance, binanceds-futures, binance-coin-futures, binance, bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, bybit, okx, cryptocom, deribit, erisx (Cboe Digital), gateio, gateio-perpetual-futures, gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, okx.
-  * FIX: okx, gemini.
+  * FIX: coinbase, gemini.
 * Join us on Discord https://discord.gg/b5EKcp9s8T and Medium https://cryptochassis.medium.com.
 
 ## Branches
