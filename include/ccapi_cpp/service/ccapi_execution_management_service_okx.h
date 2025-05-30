@@ -335,18 +335,18 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
   void extractOrderInfo(Element& element, const rj::Value& x, const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap,
                         const std::map<std::string, std::function<std::string(const std::string&)>> conversionMap = {}) override {
     ExecutionManagementService::extractOrderInfo(element, x, extractionFieldNameMap);
-    {
-      auto it1 = x.FindMember("accFillSz");
-      auto it2 = x.FindMember("avgPx");
-      if (it1 != x.MemberEnd() && it2 != x.MemberEnd()) {
-        auto it1Str = std::string(it1->value.GetString());
-        auto it2Str = std::string(it2->value.GetString());
-        if (!it1Str.empty() && !it2Str.empty()) {
-          element.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_PRICE_TIMES_QUANTITY,
-                         Decimal(UtilString::printDoubleScientific(std::stod(it1Str) * std::stod(it2Str))).toString());
-        }
-      }
-    }
+    // {
+    //   auto it1 = x.FindMember("accFillSz");
+    //   auto it2 = x.FindMember("avgPx");
+    //   if (it1 != x.MemberEnd() && it2 != x.MemberEnd()) {
+    //     auto it1Str = std::string(it1->value.GetString());
+    //     auto it2Str = std::string(it2->value.GetString());
+    //     if (!it1Str.empty() && !it2Str.empty()) {
+    //       element.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
+    //                      Decimal(UtilString::printDoubleScientific(std::stod(it1Str) * std::stod(it2Str))).toString());
+    //     }
+    //   }
+    // }
   }
 
   std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription, const TimePoint& now,

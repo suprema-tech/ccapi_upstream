@@ -1,5 +1,5 @@
 # Some breaking changes introduced
-* We made a change on how to "Send request by Websocket API".
+* Rename "PRICE_TIMES_QUANTITY_MIN" to "QUOTE_QUANTITY_MIN". Rename "CUMULATIVE_FILLED_PRICE_TIMES_QUANTITY" to "CUMULATIVE_FILLED_QUOTE_QUANTITY".
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 

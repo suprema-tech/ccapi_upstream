@@ -49,10 +49,16 @@ class MarketDataServiceBinanceDerivativesBase : public MarketDataServiceBinanceB
 
   void extractInstrumentInfo(Element& element, const rj::Value& x) {
     element.insert(CCAPI_INSTRUMENT, x["symbol"].GetString());
-    element.insert(CCAPI_INSTRUMENT_STATUS, x["status"].GetString());
+    if (x.HasMember("status")) {
+      element.insert(CCAPI_INSTRUMENT_STATUS, x["status"].GetString());
+    } else if (x.HasMember("contractStatus")) {
+      element.insert(CCAPI_INSTRUMENT_STATUS, x["contractStatus"].GetString());
+    }
+    if (x.HasMember("contractSize")) {
+      element.insert(CCAPI_CONTRACT_SIZE, x["contractSize"].GetString());
+    }
     element.insert(CCAPI_BASE_ASSET, x["baseAsset"].GetString());
     element.insert(CCAPI_QUOTE_ASSET, x["quoteAsset"].GetString());
-    element.insert(CCAPI_INSTRUMENT, x["symbol"].GetString());
     element.insert(CCAPI_MARGIN_ASSET, x["marginAsset"].GetString());
     element.insert(CCAPI_UNDERLYING_SYMBOL, x["pair"].GetString());
     for (const auto& y : x["filters"].GetArray()) {
@@ -64,7 +70,7 @@ class MarketDataServiceBinanceDerivativesBase : public MarketDataServiceBinanceB
         element.insert(CCAPI_ORDER_QUANTITY_MIN, y["minQty"].GetString());
         element.insert(CCAPI_ORDER_QUANTITY_MAX, y["maxQty"].GetString());
       } else if (filterType == "MIN_NOTIONAL") {
-        element.insert(CCAPI_ORDER_PRICE_TIMES_QUANTITY_MIN, y["notional"].GetString());
+        element.insert(CCAPI_ORDER_QUOTE_QUANTITY_MIN, y["notional"].GetString());
       }
     }
   }

@@ -339,11 +339,11 @@ class MarketDataServiceBybit : public MarketDataService {
     if (category == "spot") {
       element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, x["lotSizeFilter"]["basePrecision"].GetString());
       element.insert(CCAPI_ORDER_QUANTITY_MIN, x["lotSizeFilter"]["minOrderQty"].GetString());
-      element.insert(CCAPI_ORDER_PRICE_TIMES_QUANTITY_MIN, x["lotSizeFilter"]["minOrderAmt"].GetString());
+      element.insert(CCAPI_ORDER_QUOTE_QUANTITY_MIN, x["lotSizeFilter"]["minOrderAmt"].GetString());
     } else if (category == "linear" || category == "inverse") {
       element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, x["lotSizeFilter"]["qtyStep"].GetString());
       element.insert(CCAPI_ORDER_QUANTITY_MIN, x["lotSizeFilter"]["minOrderQty"].GetString());
-      element.insert(CCAPI_ORDER_PRICE_TIMES_QUANTITY_MIN, x["lotSizeFilter"]["minNotionalValue"].GetString());
+      element.insert(CCAPI_ORDER_QUOTE_QUANTITY_MIN, x["lotSizeFilter"]["minNotionalValue"].GetString());
     } else if (category == "option") {
       element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, x["lotSizeFilter"]["qtyStep"].GetString());
       element.insert(CCAPI_ORDER_QUANTITY_MIN, x["lotSizeFilter"]["minOrderQty"].GetString());
