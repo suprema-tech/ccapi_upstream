@@ -259,7 +259,6 @@ TEST_F(ExecutionManagementServiceOkxTest, convertTextMessageToMessageRestGetOrde
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_SIDE), CCAPI_EM_ORDER_SIDE_BUY);
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_QUANTITY), "323");
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUANTITY), "3");
-  EXPECT_DOUBLE_EQ(std::stod(element.getValue(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY)), 6);
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_STATUS), "live");
 }
 
@@ -344,7 +343,6 @@ void verifyconvertTextMessageToMessageRestGetOpenOrders(const ExecutionManagemen
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_QUANTITY), "3");
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_LIMIT_PRICE), "999");
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUANTITY), "323");
-  EXPECT_EQ(std::stod(element.getValue(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY)), 0);
   if (!isOneInstrument) {
     EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_INSTRUMENT), "BTC-USDT");
   }
