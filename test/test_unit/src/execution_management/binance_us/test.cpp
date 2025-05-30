@@ -215,7 +215,7 @@ TEST_F(ExecutionManagementServiceBinanceUsTest, convertTextMessageToMessageRestG
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_QUANTITY), "1.0");
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_LIMIT_PRICE), "0.1");
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUANTITY), "0.0");
-  EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_CUMULATIVE_FILLED_PRICE_TIMES_QUANTITY), "0.01");
+  EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY), "0.01");
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_STATUS), "NEW");
 }
 
@@ -286,7 +286,7 @@ void verifyconvertTextMessageToMessageRestGetOpenOrders(const ExecutionManagemen
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_QUANTITY), "1.0");
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_LIMIT_PRICE), "0.1");
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUANTITY), "0.0");
-  EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_CUMULATIVE_FILLED_PRICE_TIMES_QUANTITY), "0.01");
+  EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY), "0.01");
   if (!isOneInstrument) {
     EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_INSTRUMENT), "LTCBTC");
   }
@@ -441,7 +441,7 @@ TEST_F(ExecutionManagementServiceBinanceUsTest, createEventExecutionTypeNew) {
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUANTITY), "0.00000000");
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_STATUS), "NEW");
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_INSTRUMENT), "ETHBTC");
-  EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_CUMULATIVE_FILLED_PRICE_TIMES_QUANTITY), "0.00000000");
+  EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY), "0.00000000");
 }
 
 TEST_F(ExecutionManagementServiceBinanceUsTest, convertRequestGetAccountBalances) {
