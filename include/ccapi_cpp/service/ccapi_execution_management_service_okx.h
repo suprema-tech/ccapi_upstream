@@ -393,6 +393,8 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
         Message message;
         message.setType(Message::Type::AUTHORIZATION_SUCCESS);
         Element element;
+        element.insert(CCAPI_CONNECTION_ID, wsConnectionPtr->id);
+        element.insert(CCAPI_CONNECTION_URL, wsConnectionPtr->url);
         element.insert(CCAPI_INFO_MESSAGE, textMessage);
         message.setElementList({element});
         std::vector<Message> messageList;

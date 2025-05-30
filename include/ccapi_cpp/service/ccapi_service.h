@@ -1189,8 +1189,7 @@ class Service : public std::enable_shared_from_this<Service> {
       message.setType(Message::Type::SESSION_CONNECTION_DOWN);
       message.setCorrelationIdList(wsConnectionPtr->correlationIdList);
       Element element;
-      auto& connectionId = wsConnectionPtr->id;
-      element.insert(CCAPI_CONNECTION_ID, connectionId);
+      element.insert(CCAPI_CONNECTION_ID, wsConnectionPtr->id);
       element.insert(CCAPI_CONNECTION_URL, wsConnectionPtr->url);
       message.setElementList({element});
       event.setMessageList({message});
