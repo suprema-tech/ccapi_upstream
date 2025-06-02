@@ -171,7 +171,7 @@ class MarketDataServiceBybit : public MarketDataService {
       if (channelId.rfind(CCAPI_WEBSOCKET_BYBIT_CHANNEL_ORDERBOOK, 0) == 0) {
         MarketDataMessage marketDataMessage;
         marketDataMessage.exchangeSubscriptionId = exchangeSubscriptionId;
-        marketDataMessage.tp = TimePoint(std::chrono::milliseconds(std::stoll(document["ts"].GetString())));
+        marketDataMessage.tp = TimePoint(std::chrono::milliseconds(std::stoll(document["cts"].GetString())));
         marketDataMessage.type = MarketDataMessage::Type::MARKET_DATA_EVENTS_MARKET_DEPTH;
         std::string type = document["type"].GetString();
         marketDataMessage.recapType = type == "snapshot" ? MarketDataMessage::RecapType::SOLICITED : MarketDataMessage::RecapType::NONE;
@@ -308,6 +308,7 @@ class MarketDataServiceBybit : public MarketDataService {
         this->appendParam(queryString, param,
                           {
                               {CCAPI_INSTRUMENT_TYPE, "category"},
+                              {CCAPI_LIMIT, "limit"},
                           });
         req.target(target + "?" + queryString);
       } break;
