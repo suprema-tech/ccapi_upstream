@@ -4,9 +4,9 @@
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <stdint.h>
-#include <sstream>
 
 #include <iomanip>
+#include <sstream>
 
 namespace ccapi {
 class Hmac {

@@ -145,6 +145,20 @@ int main(int argc, char** argv) {
   const auto& byWebsocket = UtilSystem::getEnvAsBool("BY_WEBSOCKET");
   SessionOptions sessionOptions;
   SessionConfigs sessionConfigs;
+
+  const auto& okx_rest_fast_url = ccapi::UtilSystem::getEnvAsString("OKX_REST_FAST_URL");
+  const auto& okx_websocket_fast_url = ccapi::UtilSystem::getEnvAsString("OKX_WEBSOCKET_FAST_URL");
+  auto url_rest_base = sessionConfigs.getUrlRestBase();
+  if (!okx_rest_fast_url.empty()) {
+    url_rest_base.at("okx") = okx_rest_fast_url;
+  }
+  sessionConfigs.setUrlRestBase(url_rest_base);
+  std::map<std::string, std::string> url_websocket_base = sessionConfigs.getUrlWebsocketBase();
+  if (!okx_websocket_fast_url.empty()) {
+    url_websocket_base.at("okx") = okx_websocket_fast_url;
+  }
+  sessionConfigs.setUrlWebsocketBase(url_websocket_base);
+
   std::string websocketOrderEntrySubscriptionCorrelationId("any");
   MyEventHandler eventHandler(symbol, side, quantity, price, clientOrderIdLength, cancelByClientOrderId, numOrders, byWebsocket,
                               websocketOrderEntrySubscriptionCorrelationId);

@@ -365,13 +365,24 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
       if (document.HasMember("op")) {
         std::string op = document["op"].GetString();
         if (op == "auth") {
+          message.setCorrelationIdList({subscription.getCorrelationId()});
           std::string retCode = document["retCode"].GetString();
           if (retCode == "0") {
             event.setType(Event::Type::AUTHORIZATION_STATUS);
-            Message message;
             message.setType(Message::Type::AUTHORIZATION_SUCCESS);
             Element element;
+            element.insert(CCAPI_CONNECTION_ID, wsConnectionPtr->id);
+            element.insert(CCAPI_CONNECTION_URL, wsConnectionPtr->url);
             element.insert(CCAPI_INFO_MESSAGE, textMessage);
+            message.setElementList({element});
+            messageList.emplace_back(std::move(message));
+          } else {
+            event.setType(Event::Type::AUTHORIZATION_STATUS);
+            message.setType(Message::Type::AUTHORIZATION_FAILURE);
+            Element element;
+            element.insert(CCAPI_CONNECTION_ID, wsConnectionPtr->id);
+            element.insert(CCAPI_CONNECTION_URL, wsConnectionPtr->url);
+            element.insert(CCAPI_ERROR_MESSAGE, textMessage);
             message.setElementList({element});
             messageList.emplace_back(std::move(message));
           }
@@ -520,9 +531,10 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
           bool success = document["success"].GetBool();
           if (success) {
             event.setType(Event::Type::AUTHORIZATION_STATUS);
-            Message message;
             message.setType(Message::Type::AUTHORIZATION_SUCCESS);
             Element element;
+            element.insert(CCAPI_CONNECTION_ID, wsConnectionPtr->id);
+            element.insert(CCAPI_CONNECTION_URL, wsConnectionPtr->url);
             element.insert(CCAPI_INFO_MESSAGE, textMessage);
             message.setElementList({element});
             messageList.emplace_back(std::move(message));
@@ -555,6 +567,15 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
             if (ec) {
               this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "subscribe");
             }
+          } else {
+            event.setType(Event::Type::AUTHORIZATION_STATUS);
+            message.setType(Message::Type::AUTHORIZATION_FAILURE);
+            Element element;
+            element.insert(CCAPI_CONNECTION_ID, wsConnectionPtr->id);
+            element.insert(CCAPI_CONNECTION_URL, wsConnectionPtr->url);
+            element.insert(CCAPI_ERROR_MESSAGE, textMessage);
+            message.setElementList({element});
+            messageList.emplace_back(std::move(message));
           }
         } else if (op == "subscribe") {
           bool success = document["success"].GetBool();

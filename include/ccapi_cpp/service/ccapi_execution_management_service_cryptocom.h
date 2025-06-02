@@ -483,6 +483,8 @@ class ExecutionManagementServiceCryptocom : public ExecutionManagementService {
           event.setType(Event::Type::AUTHORIZATION_STATUS);
           message.setType(Message::Type::AUTHORIZATION_FAILURE);
           Element element;
+          element.insert(CCAPI_CONNECTION_ID, wsConnectionPtr->id);
+          element.insert(CCAPI_CONNECTION_URL, wsConnectionPtr->url);
           element.insert(CCAPI_ERROR_MESSAGE, textMessage);
           message.setElementList({element});
           messageList.emplace_back(std::move(message));
@@ -490,6 +492,8 @@ class ExecutionManagementServiceCryptocom : public ExecutionManagementService {
           event.setType(Event::Type::AUTHORIZATION_STATUS);
           message.setType(Message::Type::AUTHORIZATION_SUCCESS);
           Element element;
+          element.insert(CCAPI_CONNECTION_ID, wsConnectionPtr->id);
+          element.insert(CCAPI_CONNECTION_URL, wsConnectionPtr->url);
           element.insert(CCAPI_INFO_MESSAGE, textMessage);
           message.setElementList({element});
           messageList.emplace_back(std::move(message));
