@@ -705,6 +705,11 @@ class UtilAlgorithm {
     BIO* bio = BIO_new_mem_buf(keyPem.data(), static_cast<int>(keyPem.size()));
     if (!bio) return nullptr;
 
+    const EVP_PKEY_ASN1_METHOD* meth = EVP_PKEY_asn1_find_str(nullptr, "ED25519", -1);
+    if (!meth) {
+      throw std::runtime_error("ED25519 is NOT supported in this OpenSSL build.");
+    }
+
     EVP_PKEY* pkey = nullptr;
     if (password.empty()) {
       pkey = PEM_read_bio_PrivateKey(bio, nullptr, nullptr, nullptr);
@@ -746,32 +751,37 @@ class UtilAlgorithm {
     EVP_MD_CTX* ctx = EVP_MD_CTX_new();
     if (!ctx) throw std::runtime_error("Failed to create EVP_MD_CTX");
 
-    // NULL digest for Ed25519 — must be nullptr
-    if (EVP_DigestSignInit(ctx, nullptr, nullptr, nullptr, pkey) != 1) {
-      EVP_MD_CTX_free(ctx);
-      throw std::runtime_error("EVP_DigestSignInit failed");
-    }
+    const int key_type = EVP_PKEY_base_id(pkey);
+    const bool is_ed25519 = key_type == EVP_PKEY_ED25519;
 
-    if (EVP_DigestSignUpdate(ctx, payload.data(), payload.size()) != 1) {
-      EVP_MD_CTX_free(ctx);
-      throw std::runtime_error("EVP_DigestSignUpdate failed");
-    }
+    if (EVP_DigestSignInit(ctx, nullptr, is_ed25519 ? nullptr : EVP_sha256(), nullptr, pkey) != 1) throw std::runtime_error("EVP_DigestSignInit failed");
 
     size_t sigLen = 0;
-    if (EVP_DigestSignFinal(ctx, nullptr, &sigLen) != 1) {
-      EVP_MD_CTX_free(ctx);
-      throw std::runtime_error("EVP_DigestSignFinal (get length) failed");
-    }
 
-    std::vector<unsigned char> signature(sigLen);
-    if (EVP_DigestSignFinal(ctx, signature.data(), &sigLen) != 1) {
-      EVP_MD_CTX_free(ctx);
-      throw std::runtime_error("EVP_DigestSignFinal failed");
-    }
+    if (is_ed25519) {
+      // One-shot sign for Ed25519
+      if (EVP_DigestSign(ctx, nullptr, &sigLen, reinterpret_cast<const unsigned char*>(payload.data()), payload.size()) != 1)
+        throw std::runtime_error("EVP_DigestSign (get length) failed");
 
-    signature.resize(sigLen);
-    EVP_MD_CTX_free(ctx);
-    return base64Encode(signature);
+      std::vector<unsigned char> signature(sigLen);
+      if (EVP_DigestSign(ctx, signature.data(), &sigLen, reinterpret_cast<const unsigned char*>(payload.data()), payload.size()) != 1)
+        throw std::runtime_error("EVP_DigestSign failed");
+      signature.resize(sigLen);
+      EVP_MD_CTX_free(ctx);
+      return base64Encode(signature);
+    } else {
+      // Traditional sign (e.g., RSA)
+      if (EVP_DigestSignUpdate(ctx, payload.data(), payload.size()) != 1) throw std::runtime_error("EVP_DigestSignUpdate failed");
+
+      if (EVP_DigestSignFinal(ctx, nullptr, &sigLen) != 1) throw std::runtime_error("EVP_DigestSignFinal (get length) failed");
+
+      std::vector<unsigned char> signature(sigLen);
+      if (EVP_DigestSignFinal(ctx, signature.data(), &sigLen) != 1) throw std::runtime_error("EVP_DigestSignFinal failed");
+
+      signature.resize(sigLen);
+      EVP_MD_CTX_free(ctx);
+      return base64Encode(signature);
+    }
   }
 
   static const EVP_MD* getDigest(const ShaVersion version) {

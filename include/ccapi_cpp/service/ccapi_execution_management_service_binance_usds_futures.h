@@ -19,9 +19,11 @@ class ExecutionManagementServiceBinanceUsdsFutures : public ExecutionManagementS
     this->setHostWsFromUrlWsOrderEntry(this->baseUrlWsOrderEntry);
     this->apiKeyName = CCAPI_BINANCE_USDS_FUTURES_API_KEY;
     this->apiSecretName = CCAPI_BINANCE_USDS_FUTURES_API_SECRET;
-    this->apiPrivateKeyPathName = CCAPI_BINANCE_USDS_FUTURES_API_PRIVATE_KEY_PATH;
-    this->apiPrivateKeyPasswordName = CCAPI_BINANCE_USDS_FUTURES_API_PRIVATE_KEY_PASSWORD;
-    this->setupCredential({this->apiKeyName, this->apiSecretName, this->apiPrivateKeyPathName, this->apiPrivateKeyPasswordName});
+    this->websocketOrderEntryApiKeyName = CCAPI_BINANCE_USDS_FUTURES_WEBSOCKET_ORDER_ENTRY_API_KEY;
+    this->websocketOrderEntryApiPrivateKeyPathName = CCAPI_BINANCE_USDS_FUTURES_WEBSOCKET_ORDER_ENTRY_API_PRIVATE_KEY_PATH;
+    this->websocketOrderEntryApiPrivateKeyPasswordName = CCAPI_BINANCE_USDS_FUTURES_WEBSOCKET_ORDER_ENTRY_API_PRIVATE_KEY_PASSWORD;
+    this->setupCredential({this->apiKeyName, this->apiSecretName, this->websocketOrderEntryApiKeyName, this->websocketOrderEntryApiPrivateKeyPathName,
+                           this->websocketOrderEntryApiPrivateKeyPasswordName});
     this->createOrderTarget = CCAPI_BINANCE_USDS_FUTURES_CREATE_ORDER_PATH;
     this->cancelOrderTarget = "/fapi/v1/order";
     this->getOrderTarget = "/fapi/v1/order";
@@ -42,18 +44,18 @@ class ExecutionManagementServiceBinanceUsdsFutures : public ExecutionManagementS
   std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription, const TimePoint& now,
                                                                 const std::map<std::string, std::string>& credential) override {
     if (wsConnection.host == CCAPI_BINANCE_USDS_FUTURES_HOST_WS_ORDER_ENTRY) {
-      auto it = credential.find(this->apiPrivateKeyPathName);
+      auto it = credential.find(this->websocketOrderEntryApiPrivateKeyPathName);
       if (it == credential.end()) {
-        throw std::runtime_error("Missing credential: " + this->apiPrivateKeyPathName);
+        throw std::runtime_error("Missing credential: " + this->websocketOrderEntryApiPrivateKeyPathName);
       }
       rj::Document document;
       document.SetObject();
       rj::Document::AllocatorType& allocator = document.GetAllocator();
 
-      document.AddMember("id", "session.logon", allocator);
+      document.AddMember("id", rj::Value(this->websocketOrderEntrySessionLogonJsonId.c_str(), allocator).Move(), allocator);
       document.AddMember("method", "session.logon", allocator);
 
-      const auto& apiKey = credential.at(this->apiKeyName);
+      const auto& apiKey = credential.at(this->websocketOrderEntryApiKeyName);
       const auto& timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
 
       std::map<std::string, std::string> paramsMap{
@@ -81,10 +83,10 @@ class ExecutionManagementServiceBinanceUsdsFutures : public ExecutionManagementS
       }
 
       std::string password;
-      if (auto it = credential.find(this->apiPrivateKeyPasswordName); it != credential.end()) {
+      if (auto it = credential.find(this->websocketOrderEntryApiPrivateKeyPasswordName); it != credential.end()) {
         password = it->second;
       }
-      EVP_PKEY* pkey = UtilAlgorithm::loadPrivateKey(it->second, password);
+      EVP_PKEY* pkey = UtilAlgorithm::loadPrivateKey(UtilAlgorithm::readFile(it->second), password);
       std::string signature = UtilAlgorithm::signPayload(pkey, payload);
       params.AddMember("signature", rj::Value(signature.c_str(), allocator).Move(), allocator);
 
@@ -101,8 +103,10 @@ class ExecutionManagementServiceBinanceUsdsFutures : public ExecutionManagementS
     }
   }
 
-  std::string apiPrivateKeyPathName;
-  std::string apiPrivateKeyPasswordName;
+  std::string websocketOrderEntryApiKeyName;
+  std::string websocketOrderEntryApiPrivateKeyPathName;
+  std::string websocketOrderEntryApiPrivateKeyPasswordName;
+  std::string websocketOrderEntrySessionLogonJsonId{"session_logon"};
 };
 } /* namespace ccapi */
 #endif

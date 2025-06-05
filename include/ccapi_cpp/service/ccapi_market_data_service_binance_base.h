@@ -366,7 +366,7 @@ class MarketDataServiceBinanceBase : public MarketDataService {
         req.method(http::verb::get);
         auto target = this->getInstrumentTarget;
         if (!this->isDerivatives) {
-            target += "?showPermissionSets=false";
+          target += "?showPermissionSets=false";
         }
         req.target(target);
       } break;
