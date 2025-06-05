@@ -10,6 +10,7 @@
 #include <cmath>
 #include <cstdint>
 #include <ctime>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
@@ -28,6 +29,7 @@
 #include "ccapi_cpp/ccapi_macro.h"
 #include "ccapi_cpp/ccapi_util.h"
 #include "openssl/evp.h"
+#include "openssl/pem.h"
 
 namespace ccapi {
 /**
@@ -698,6 +700,90 @@ class UtilAlgorithm {
 
   template <typename InputIterator>
   static uint_fast32_t crc(InputIterator first, InputIterator last);
+
+  static EVP_PKEY* loadPrivateKey(const std::string& keyPem, const std::string& password = "") {
+    BIO* bio = BIO_new_mem_buf(keyPem.data(), static_cast<int>(keyPem.size()));
+    if (!bio) return nullptr;
+
+    EVP_PKEY* pkey = nullptr;
+    if (password.empty()) {
+      pkey = PEM_read_bio_PrivateKey(bio, nullptr, nullptr, nullptr);
+    } else {
+      pkey = PEM_read_bio_PrivateKey(bio, nullptr, nullptr, const_cast<char*>(password.c_str()));
+    }
+
+    BIO_free(bio);
+    return pkey;
+  }
+
+  static std::string readFile(const std::string& path) {
+    std::ifstream file(path, std::ios::binary);
+    if (!file.is_open()) {
+      throw std::runtime_error("Failed to open file: " + path);
+    }
+
+    std::ostringstream oss;
+    oss << file.rdbuf();
+    return oss.str();
+  }
+
+  static std::string base64Encode(const std::vector<unsigned char>& input) {
+    BIO *bio, *b64;
+    BUF_MEM* bufferPtr;
+    b64 = BIO_new(BIO_f_base64());
+    bio = BIO_new(BIO_s_mem());
+    b64 = BIO_push(b64, bio);
+    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+    BIO_write(b64, input.data(), static_cast<int>(input.size()));
+    BIO_flush(b64);
+    BIO_get_mem_ptr(b64, &bufferPtr);
+    std::string result(bufferPtr->data, bufferPtr->length);
+    BIO_free_all(b64);
+    return result;
+  }
+
+  static std::string signPayload(EVP_PKEY* pkey, const std::string& payload) {
+    EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+    if (!ctx) throw std::runtime_error("Failed to create EVP_MD_CTX");
+
+    // NULL digest for Ed25519 — must be nullptr
+    if (EVP_DigestSignInit(ctx, nullptr, nullptr, nullptr, pkey) != 1) {
+      EVP_MD_CTX_free(ctx);
+      throw std::runtime_error("EVP_DigestSignInit failed");
+    }
+
+    if (EVP_DigestSignUpdate(ctx, payload.data(), payload.size()) != 1) {
+      EVP_MD_CTX_free(ctx);
+      throw std::runtime_error("EVP_DigestSignUpdate failed");
+    }
+
+    size_t sigLen = 0;
+    if (EVP_DigestSignFinal(ctx, nullptr, &sigLen) != 1) {
+      EVP_MD_CTX_free(ctx);
+      throw std::runtime_error("EVP_DigestSignFinal (get length) failed");
+    }
+
+    std::vector<unsigned char> signature(sigLen);
+    if (EVP_DigestSignFinal(ctx, signature.data(), &sigLen) != 1) {
+      EVP_MD_CTX_free(ctx);
+      throw std::runtime_error("EVP_DigestSignFinal failed");
+    }
+
+    signature.resize(sigLen);
+    EVP_MD_CTX_free(ctx);
+    return base64Encode(signature);
+  }
+
+  static const EVP_MD* getDigest(const ShaVersion version) {
+    switch (version) {
+      case ShaVersion::SHA256:
+        return EVP_sha256();
+      case ShaVersion::SHA512:
+        return EVP_sha512();
+      default:
+        throw std::invalid_argument("Unsupported SHA version");
+    }
+  }
 };
 
 template <typename InputIterator>
@@ -1232,5 +1318,6 @@ V mapGetWithDefault(const C<K, V, Args...>& m, const K& key, const V defaultValu
   }
   return it->second;
 }
+
 } /* namespace ccapi */
 #endif  // INCLUDE_CCAPI_CPP_CCAPI_UTIL_PRIVATE_H_

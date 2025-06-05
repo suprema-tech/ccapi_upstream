@@ -796,7 +796,7 @@ request.appendParam({
 });
 session.sendRequestByWebsocket(websocketOrderEntrySubscriptionCorrelationId, request);
 ```
-For bybit:
+For bybit, binance, binance-usds-futures, binance-coin-futures:
 ```
 std::string websocketOrderEntrySubscriptionCorrelationId("any");
 Subscription subscription_1("bybit", "", "ORDER_UPDATE");

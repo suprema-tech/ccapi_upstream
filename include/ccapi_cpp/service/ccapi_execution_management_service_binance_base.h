@@ -565,6 +565,82 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
     return event;
   }
 
+  void convertRequestForWebsocket(rj::Document& document, rj::Document::AllocatorType& allocator, const WsConnection& wsConnection, const Request& request,
+                                  unsigned long wsRequestId, const TimePoint& now, const std::string& symbolId,
+                                  const std::map<std::string, std::string>& credential) override {
+    document.SetObject();
+    document.AddMember("id", rj::Value(std::to_string(wsRequestId).c_str(), allocator).Move(), allocator);
+    this->requestCorrelationIdByWsRequestIdByConnectionIdMap[wsConnection.id][wsRequestId] = request.getCorrelationId();
+    Request::Operation operation = request.getOperation();
+    switch (operation) {
+      case Request::Operation::CREATE_ORDER: {
+        document.AddMember("method", rj::Value("order.place").Move(), allocator);
+        const std::map<std::string, std::string> param = request.getFirstParamWithDefault();
+        rj::Value params(rj::kObjectType);
+        this->appendParam(params, allocator, param);
+        if (!symbolId.empty()) {
+          ExecutionManagementService::appendSymbolId(params, allocator, symbolId, "symbol");
+        }
+        if (param.find("type") == param.end()) {
+          params.AddMember("type", "LIMIT", allocator);
+          if (param.find("timeInForce") == param.end()) {
+            params.AddMember("timeInForce", "GTC", allocator);
+          }
+        }
+        if (param.find("newClientOrderId") == param.end() && param.find(CCAPI_EM_CLIENT_ORDER_ID) == param.end()) {
+          std::string nonce = std::to_string(this->generateNonce(now, request.getIndex()));
+          params.AddMember("newClientOrderId",
+                           rj::Value((std::string("newClientOrderId=x-") +
+                                      (this->isDerivatives ? CCAPI_BINANCE_USDS_FUTURES_API_LINK_ID : CCAPI_BINANCE_API_LINK_ID) + "-" + nonce)
+                                         .c_str(),
+                                     allocator)
+                               .Move(),
+                           allocator);
+        }
+        if (param.find("timestamp") == param.end()) {
+          params.AddMember("timestamp", rj::Value(std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count()).Move(), allocator);
+        }
+        document.AddMember("params", params, allocator);
+      } break;
+      case Request::Operation::CANCEL_ORDER: {
+        document.AddMember("op", rj::Value("order.cancel").Move(), allocator);
+        rj::Value args(rj::kArrayType);
+        const std::map<std::string, std::string> param = request.getFirstParamWithDefault();
+        rj::Value params(rj::kObjectType);
+        this->appendParam(params, allocator, param);
+        if (!symbolId.empty()) {
+          ExecutionManagementService::appendSymbolId(params, allocator, symbolId, "symbol");
+        }
+        if (param.find("timestamp") == param.end()) {
+          params.AddMember("timestamp", rj::Value(std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count()).Move(), allocator);
+        }
+        document.AddMember("params", params, allocator);
+      } break;
+      default:
+        this->convertRequestForWebsocketCustom(document, allocator, wsConnection, request, wsRequestId, now, symbolId, credential);
+    }
+  }
+
+  void appendParam(rj::Value& rjValue, rj::Document::AllocatorType& allocator, const std::map<std::string, std::string>& param,
+                   const std::map<std::string, std::string> standardizationMap = {
+                       {CCAPI_EM_ORDER_SIDE, "side"},
+                       {CCAPI_EM_ORDER_QUANTITY, "quantity"},
+                       {CCAPI_EM_ORDER_LIMIT_PRICE, "price"},
+                       {CCAPI_EM_CLIENT_ORDER_ID, "newClientOrderId"},
+                       {CCAPI_EM_ORDER_ID, "orderId"},
+                   }) {
+    for (const auto& kv : param) {
+      auto key = standardizationMap.find(kv.first) != standardizationMap.end() ? standardizationMap.at(kv.first) : kv.first;
+      auto value = kv.second;
+      if (key == "side") {
+        value = value == CCAPI_EM_ORDER_SIDE_BUY ? "BUY" : "SELL";
+      }
+      if (value != "null") {
+        rjValue.AddMember(rj::Value(key.c_str(), allocator).Move(), rj::Value(value.c_str(), allocator).Move(), allocator);
+      }
+    }
+  }
+
   bool isDerivatives{};
   std::string listenKeyTarget;
   int pingListenKeyIntervalSeconds;
