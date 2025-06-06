@@ -1,5 +1,5 @@
 # Some breaking changes introduced
-* We made a change on how to "Send request by Websocket API".
+* Rename "PRICE_TIMES_QUANTITY_MIN" to "QUOTE_QUANTITY_MIN". Rename "CUMULATIVE_FILLED_PRICE_TIMES_QUANTITY" to "CUMULATIVE_FILLED_QUOTE_QUANTITY".
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -63,8 +63,8 @@
 * Code closely follows Bloomberg's API: https://www.bloomberg.com/professional/support/api-library/.
 * It is ultra fast thanks to very careful optimizations: move semantics, regex optimization, locality of reference, lock contention minimization, etc.
 * Supported exchanges:
-  * Market Data: ascendex, binance, binanceds-futures, binance-coin-futures, binance, bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, bybit, okx, cryptocom, deribit, erisx (Cboe Digital), gateio, gateio-perpetual-futures, gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, mexc-futures, okx, whitebit.
-  * Execution Management: ascendex, binance, binanceds-futures, binance-coin-futures, binance, bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, bybit, okx, cryptocom, deribit, erisx (Cboe Digital), gateio, gateio-perpetual-futures, gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, okx.
+  * Market Data: ascendex, binance, binance-usds-futures, binance-coin-futures, bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, bybit, coinbase, cryptocom, deribit, erisx (Cboe Digital), gateio, gateio-perpetual-futures, gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, mexc-futures, okx, whitebit.
+  * Execution Management: ascendex, binance, binance-usds-futures, binance-coin-futures, bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, bybit, coinbase, cryptocom, deribit, erisx (Cboe Digital), gateio, gateio-perpetual-futures, gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, okx.
   * FIX: coinbase, gemini.
 * Join us on Discord https://discord.gg/b5EKcp9s8T and Medium https://cryptochassis.medium.com.
 
@@ -746,7 +746,7 @@ std::vector<Event> eventList = eventQueue.purge();
 
 #### Provide API credentials for an exchange
 There are 3 ways to provide API credentials (listed with increasing priority).
-* Set the relevent environment variables. Some exchanges might need additional credentials other than API keys and secrets: e.g. `OKX_API_PASSPHRASE`, `KUCOIN_API_PASSPHRASE`. See section "exchange API credentials" in [`include/ccapi_cpp/ccapi_macro.h`](include/ccapi_cpp/ccapi_macro.h).
+* Set the relevent environment variables. Some exchanges might need additional credentials other than API keys and secrets: e.g. `OKX_API_PASSPHRASE`, `KUCOIN_API_PASSPHRASE`, `BINANCE_USDS_FUTURES_WEBSOCKET_ORDER_ENTRY_API_KEY`, `BINANCE_USDS_FUTURES_WEBSOCKET_ORDER_ENTRY_API_PRIVATE_KEY_PATH`, `BINANCE_COIN_FUTURES_WEBSOCKET_ORDER_ENTRY_API_KEY`, `BINANCE_COIN_FUTURES_WEBSOCKET_ORDER_ENTRY_API_PRIVATE_KEY_PATH`, `BINANCE_WEBSOCKET_ORDER_ENTRY_API_KEY`, `BINANCE_WEBSOCKET_ORDER_ENTRY_API_PRIVATE_KEY_PATH`. See section "exchange API credentials" in [`include/ccapi_cpp/ccapi_macro.h`](include/ccapi_cpp/ccapi_macro.h).
 * Provide credentials to `SessionConfigs`.
 ```
 sessionConfigs.setCredential({
@@ -796,7 +796,7 @@ request.appendParam({
 });
 session.sendRequestByWebsocket(websocketOrderEntrySubscriptionCorrelationId, request);
 ```
-For bybit:
+For bybit, binance, binance-usds-futures, binance-coin-futures:
 ```
 std::string websocketOrderEntrySubscriptionCorrelationId("any");
 Subscription subscription_1("bybit", "", "ORDER_UPDATE");

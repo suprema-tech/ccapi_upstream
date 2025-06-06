@@ -235,8 +235,7 @@ class MarketDataServiceBitmart : public MarketDataService {
     }
     element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, UtilString::normalizeDecimalString(x["quote_increment"].GetString()));
     element.insert(CCAPI_ORDER_QUANTITY_MIN, UtilString::normalizeDecimalString(x["base_min_size"].GetString()));
-    element.insert(CCAPI_ORDER_PRICE_TIMES_QUANTITY_MIN,
-                   std::max(Decimal(x["min_buy_amount"].GetString()), Decimal(x["min_sell_amount"].GetString())).toString());
+    element.insert(CCAPI_ORDER_QUOTE_QUANTITY_MIN, std::max(Decimal(x["min_buy_amount"].GetString()), Decimal(x["min_sell_amount"].GetString())).toString());
   }
 
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,

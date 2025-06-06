@@ -9,7 +9,9 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <ctime>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
@@ -28,6 +30,7 @@
 #include "ccapi_cpp/ccapi_macro.h"
 #include "ccapi_cpp/ccapi_util.h"
 #include "openssl/evp.h"
+#include "openssl/pem.h"
 
 namespace ccapi {
 /**
@@ -35,6 +38,10 @@ namespace ccapi {
  */
 class UtilString {
  public:
+  static bool startsWith(const std::string& str, const std::string& prefix) {
+    return str.size() >= prefix.size() && std::memcmp(str.data(), prefix.data(), prefix.size()) == 0;
+  }
+
   static std::string roundInputBySignificantFigure(double input, int numSignificantFigure, int roundDirection) {
     const auto& splitted = UtilString::split(UtilString::printDoubleScientific(input), 'e');
     double a = std::stod(splitted.at(0)) * std::pow(10, numSignificantFigure - 1);
@@ -698,6 +705,100 @@ class UtilAlgorithm {
 
   template <typename InputIterator>
   static uint_fast32_t crc(InputIterator first, InputIterator last);
+
+  static EVP_PKEY* loadPrivateKey(const std::string& keyPem, const std::string& password = "") {
+    BIO* bio = BIO_new_mem_buf(keyPem.data(), static_cast<int>(keyPem.size()));
+    if (!bio) return nullptr;
+
+    const EVP_PKEY_ASN1_METHOD* meth = EVP_PKEY_asn1_find_str(nullptr, "ED25519", -1);
+    if (!meth) {
+      throw std::runtime_error("ED25519 is NOT supported in this OpenSSL build.");
+    }
+
+    EVP_PKEY* pkey = nullptr;
+    if (password.empty()) {
+      pkey = PEM_read_bio_PrivateKey(bio, nullptr, nullptr, nullptr);
+    } else {
+      pkey = PEM_read_bio_PrivateKey(bio, nullptr, nullptr, const_cast<char*>(password.c_str()));
+    }
+
+    BIO_free(bio);
+    return pkey;
+  }
+
+  static std::string readFile(const std::string& path) {
+    std::ifstream file(path, std::ios::binary);
+    if (!file.is_open()) {
+      throw std::runtime_error("Failed to open file: " + path);
+    }
+
+    std::ostringstream oss;
+    oss << file.rdbuf();
+    return oss.str();
+  }
+
+  static std::string base64Encode(const std::vector<unsigned char>& input) {
+    BIO *bio, *b64;
+    BUF_MEM* bufferPtr;
+    b64 = BIO_new(BIO_f_base64());
+    bio = BIO_new(BIO_s_mem());
+    b64 = BIO_push(b64, bio);
+    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+    BIO_write(b64, input.data(), static_cast<int>(input.size()));
+    BIO_flush(b64);
+    BIO_get_mem_ptr(b64, &bufferPtr);
+    std::string result(bufferPtr->data, bufferPtr->length);
+    BIO_free_all(b64);
+    return result;
+  }
+
+  static std::string signPayload(EVP_PKEY* pkey, const std::string& payload) {
+    EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+    if (!ctx) throw std::runtime_error("Failed to create EVP_MD_CTX");
+
+    const int key_type = EVP_PKEY_base_id(pkey);
+    const bool is_ed25519 = key_type == EVP_PKEY_ED25519;
+
+    if (EVP_DigestSignInit(ctx, nullptr, is_ed25519 ? nullptr : EVP_sha256(), nullptr, pkey) != 1) throw std::runtime_error("EVP_DigestSignInit failed");
+
+    size_t sigLen = 0;
+
+    if (is_ed25519) {
+      // One-shot sign for Ed25519
+      if (EVP_DigestSign(ctx, nullptr, &sigLen, reinterpret_cast<const unsigned char*>(payload.data()), payload.size()) != 1)
+        throw std::runtime_error("EVP_DigestSign (get length) failed");
+
+      std::vector<unsigned char> signature(sigLen);
+      if (EVP_DigestSign(ctx, signature.data(), &sigLen, reinterpret_cast<const unsigned char*>(payload.data()), payload.size()) != 1)
+        throw std::runtime_error("EVP_DigestSign failed");
+      signature.resize(sigLen);
+      EVP_MD_CTX_free(ctx);
+      return base64Encode(signature);
+    } else {
+      // Traditional sign (e.g., RSA)
+      if (EVP_DigestSignUpdate(ctx, payload.data(), payload.size()) != 1) throw std::runtime_error("EVP_DigestSignUpdate failed");
+
+      if (EVP_DigestSignFinal(ctx, nullptr, &sigLen) != 1) throw std::runtime_error("EVP_DigestSignFinal (get length) failed");
+
+      std::vector<unsigned char> signature(sigLen);
+      if (EVP_DigestSignFinal(ctx, signature.data(), &sigLen) != 1) throw std::runtime_error("EVP_DigestSignFinal failed");
+
+      signature.resize(sigLen);
+      EVP_MD_CTX_free(ctx);
+      return base64Encode(signature);
+    }
+  }
+
+  static const EVP_MD* getDigest(const ShaVersion version) {
+    switch (version) {
+      case ShaVersion::SHA256:
+        return EVP_sha256();
+      case ShaVersion::SHA512:
+        return EVP_sha512();
+      default:
+        throw std::invalid_argument("Unsupported SHA version");
+    }
+  }
 };
 
 template <typename InputIterator>
@@ -1232,5 +1333,6 @@ V mapGetWithDefault(const C<K, V, Args...>& m, const K& key, const V defaultValu
   }
   return it->second;
 }
+
 } /* namespace ccapi */
 #endif  // INCLUDE_CCAPI_CPP_CCAPI_UTIL_PRIVATE_H_

@@ -213,7 +213,7 @@ class MarketDataServiceBitstamp : public MarketDataService {
     auto splittedMinimumOrder = UtilString::split(x["minimum_order"].GetString(), ' ');
     if (splittedMinimumOrder.size() == 2) {
       if (splittedMinimumOrder.at(1) == quoteAsset) {
-        element.insert(CCAPI_ORDER_PRICE_TIMES_QUANTITY_MIN, splittedMinimumOrder.at(0));
+        element.insert(CCAPI_ORDER_QUOTE_QUANTITY_MIN, splittedMinimumOrder.at(0));
       } else if (splittedMinimumOrder.at(1) == baseAsset) {
         element.insert(CCAPI_ORDER_QUANTITY_MIN, splittedMinimumOrder.at(0));
       }

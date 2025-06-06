@@ -171,7 +171,7 @@ class MarketDataServiceBybit : public MarketDataService {
       if (channelId.rfind(CCAPI_WEBSOCKET_BYBIT_CHANNEL_ORDERBOOK, 0) == 0) {
         MarketDataMessage marketDataMessage;
         marketDataMessage.exchangeSubscriptionId = exchangeSubscriptionId;
-        marketDataMessage.tp = TimePoint(std::chrono::milliseconds(std::stoll(document["ts"].GetString())));
+        marketDataMessage.tp = TimePoint(std::chrono::milliseconds(std::stoll(document["cts"].GetString())));
         marketDataMessage.type = MarketDataMessage::Type::MARKET_DATA_EVENTS_MARKET_DEPTH;
         std::string type = document["type"].GetString();
         marketDataMessage.recapType = type == "snapshot" ? MarketDataMessage::RecapType::SOLICITED : MarketDataMessage::RecapType::NONE;
@@ -308,6 +308,7 @@ class MarketDataServiceBybit : public MarketDataService {
         this->appendParam(queryString, param,
                           {
                               {CCAPI_INSTRUMENT_TYPE, "category"},
+                              {CCAPI_LIMIT, "limit"},
                           });
         req.target(target + "?" + queryString);
       } break;
@@ -339,14 +340,17 @@ class MarketDataServiceBybit : public MarketDataService {
     if (category == "spot") {
       element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, x["lotSizeFilter"]["basePrecision"].GetString());
       element.insert(CCAPI_ORDER_QUANTITY_MIN, x["lotSizeFilter"]["minOrderQty"].GetString());
-      element.insert(CCAPI_ORDER_PRICE_TIMES_QUANTITY_MIN, x["lotSizeFilter"]["minOrderAmt"].GetString());
+      element.insert(CCAPI_ORDER_QUOTE_QUANTITY_MIN, x["lotSizeFilter"]["minOrderAmt"].GetString());
+      element.insert(CCAPI_ORDER_QUOTE_QUANTITY_MAX, x["lotSizeFilter"]["maxOrderAmt"].GetString());
     } else if (category == "linear" || category == "inverse") {
       element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, x["lotSizeFilter"]["qtyStep"].GetString());
       element.insert(CCAPI_ORDER_QUANTITY_MIN, x["lotSizeFilter"]["minOrderQty"].GetString());
-      element.insert(CCAPI_ORDER_PRICE_TIMES_QUANTITY_MIN, x["lotSizeFilter"]["minNotionalValue"].GetString());
+      element.insert(CCAPI_ORDER_QUANTITY_MAX, x["lotSizeFilter"]["maxOrderQty"].GetString());
+      element.insert(CCAPI_ORDER_QUOTE_QUANTITY_MIN, x["lotSizeFilter"]["minNotionalValue"].GetString());
     } else if (category == "option") {
       element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, x["lotSizeFilter"]["qtyStep"].GetString());
       element.insert(CCAPI_ORDER_QUANTITY_MIN, x["lotSizeFilter"]["minOrderQty"].GetString());
+      element.insert(CCAPI_ORDER_QUANTITY_MAX, x["lotSizeFilter"]["maxOrderQty"].GetString());
     }
   }
 

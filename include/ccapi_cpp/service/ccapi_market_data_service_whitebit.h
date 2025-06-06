@@ -271,7 +271,7 @@ class MarketDataServiceWhitebit : public MarketDataService {
       element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, "1" + std::string(-stockPrec, '0'));
     }
     element.insert(CCAPI_ORDER_QUANTITY_MIN, x["minAmount"].GetString());
-    element.insert(CCAPI_ORDER_PRICE_TIMES_QUANTITY_MIN, x["minTotal"].GetString());
+    element.insert(CCAPI_ORDER_QUOTE_QUANTITY_MIN, x["minTotal"].GetString());
   }
 
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,

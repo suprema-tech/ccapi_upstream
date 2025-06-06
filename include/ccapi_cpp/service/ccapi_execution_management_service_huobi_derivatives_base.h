@@ -216,7 +216,7 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
       auto it2 = x.FindMember("trade_avg_price");
       if (it1 != x.MemberEnd() && it2 != x.MemberEnd()) {
         element.insert(
-            CCAPI_EM_ORDER_CUMULATIVE_FILLED_PRICE_TIMES_QUANTITY,
+            CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
             Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) * (it2->value.IsNull() ? 0 : std::stod(it2->value.GetString()))))
                 .toString());
       }
@@ -355,7 +355,7 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
             auto it1 = document.FindMember("trade_volume");
             auto it2 = document.FindMember("trade_avg_price");
             if (it1 != document.MemberEnd() && it2 != document.MemberEnd()) {
-              info.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_PRICE_TIMES_QUANTITY,
+              info.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
                           Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) * std::stod(it2->value.GetString()))).toString());
             }
           }
