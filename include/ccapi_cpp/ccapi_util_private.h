@@ -37,6 +37,10 @@ namespace ccapi {
  */
 class UtilString {
  public:
+  static bool startsWith(const std::string& str, const std::string& prefix) {
+    return str.size() >= prefix.size() && std::memcmp(str.data(), prefix.data(), prefix.size()) == 0;
+  }
+
   static std::string roundInputBySignificantFigure(double input, int numSignificantFigure, int roundDirection) {
     const auto& splitted = UtilString::split(UtilString::printDoubleScientific(input), 'e');
     double a = std::stod(splitted.at(0)) * std::pow(10, numSignificantFigure - 1);
