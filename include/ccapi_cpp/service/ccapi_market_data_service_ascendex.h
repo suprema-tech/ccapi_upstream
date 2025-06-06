@@ -269,7 +269,7 @@ class MarketDataServiceAscendex : public MarketDataService {
     element.insert(CCAPI_QUOTE_ASSET, x["quoteAsset"].GetString());
     element.insert(CCAPI_ORDER_PRICE_INCREMENT, x["tickSize"].GetString());
     element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, x["lotSize"].GetString());
-    element.insert(CCAPI_ORDER_PRICE_TIMES_QUANTITY_MIN, x["minNotional"].GetString());
+    element.insert(CCAPI_ORDER_QUOTE_QUANTITY_MIN, x["minNotional"].GetString());
   }
 
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,

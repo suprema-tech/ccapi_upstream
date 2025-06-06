@@ -236,7 +236,7 @@ TEST_F(ExecutionManagementServiceKrakenTest, convertTextMessageToMessageRestGetO
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_LIMIT_PRICE), "37500.0");
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_QUANTITY), "1.25000000");
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUANTITY), "1.25000000");
-  EXPECT_DOUBLE_EQ(std::stod(element.getValue(CCAPI_EM_ORDER_CUMULATIVE_FILLED_PRICE_TIMES_QUANTITY)), 30021.0 * 1.25000000);
+  EXPECT_DOUBLE_EQ(std::stod(element.getValue(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY)), 30021.0 * 1.25000000);
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_STATUS), "closed");
 }
 
@@ -414,7 +414,7 @@ TEST_F(ExecutionManagementServiceKrakenTest, verifyconvertTextMessageToMessageRe
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_QUANTITY), "1.25000000");
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_LIMIT_PRICE), "30010.0");
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUANTITY), "0.37500000");
-  EXPECT_DOUBLE_EQ(std::stod(element.getValue(CCAPI_EM_ORDER_CUMULATIVE_FILLED_PRICE_TIMES_QUANTITY)), 0.37500000 * 30010.0);
+  EXPECT_DOUBLE_EQ(std::stod(element.getValue(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY)), 0.37500000 * 30010.0);
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_INSTRUMENT), "XBTUSD");
 }
 
@@ -688,7 +688,7 @@ TEST_F(ExecutionManagementServiceKrakenTest, createEventOwnTrades) {
 #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
   auto messageList = this->service->createEvent(WsConnection(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now).getMessageList();
 #else
-  auto messageList = this->service->createEvent(std::shared_ptr<WsConnection>(), subscription, textMessage, document, this->now).getMessageList();
+  auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), subscription, textMessage, document, this->now).getMessageList();
 #endif
   EXPECT_EQ(messageList.size(), 3);
   verifyCorrelationId(messageList, subscription.getCorrelationId());
@@ -837,7 +837,7 @@ TEST_F(ExecutionManagementServiceKrakenTest, createEventOpenOrders) {
 #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
   auto messageList = this->service->createEvent(WsConnection(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now).getMessageList();
 #else
-  auto messageList = this->service->createEvent(std::shared_ptr<WsConnection>(), subscription, textMessage, document, this->now).getMessageList();
+  auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), subscription, textMessage, document, this->now).getMessageList();
 #endif
   EXPECT_EQ(messageList.size(), 1);
   verifyCorrelationId(messageList, subscription.getCorrelationId());

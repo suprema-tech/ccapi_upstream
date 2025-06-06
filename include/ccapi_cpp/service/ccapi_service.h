@@ -1,5 +1,10 @@
 #ifndef INCLUDE_CCAPI_CPP_SERVICE_CCAPI_SERVICE_H_
 #define INCLUDE_CCAPI_CPP_SERVICE_CCAPI_SERVICE_H_
+
+#ifndef CCAPI_HTTP_RESPONSE_PARSER_BODY_LIMIT
+#define CCAPI_HTTP_RESPONSE_PARSER_BODY_LIMIT (64 * 1024 * 1024)
+#endif
+
 #include "ccapi_cpp/ccapi_logger.h"
 #ifndef RAPIDJSON_HAS_CXX11_NOEXCEPT
 #define RAPIDJSON_HAS_CXX11_NOEXCEPT 0
@@ -464,20 +469,22 @@ class Service : public std::enable_shared_from_this<Service> {
     }
     CCAPI_LOGGER_TRACE("written");
     std::shared_ptr<beast::flat_buffer> bufferPtr(new beast::flat_buffer());
-    std::shared_ptr<http::response<http::string_body>> resPtr(new http::response<http::string_body>());
+    std::shared_ptr<http::response_parser<http::string_body>> resParserPtr(new http::response_parser<http::string_body>());
+    resParserPtr->body_limit(CCAPI_HTTP_RESPONSE_PARSER_BODY_LIMIT);
     beast::ssl_stream<beast::tcp_stream>& stream = *httpConnectionPtr->streamPtr;
     CCAPI_LOGGER_TRACE("before async_read");
     http::async_read(
-        stream, *bufferPtr, *resPtr,
-        beast::bind_front_handler(&Service::onRead, shared_from_this(), httpConnectionPtr, reqPtr, errorHandler, responseHandler, bufferPtr, resPtr));
+        stream, *bufferPtr, *resParserPtr,
+        beast::bind_front_handler(&Service::onRead, shared_from_this(), httpConnectionPtr, reqPtr, errorHandler, responseHandler, bufferPtr, resParserPtr));
     CCAPI_LOGGER_TRACE("after async_read");
   }
 
   void onRead(std::shared_ptr<HttpConnection> httpConnectionPtr, std::shared_ptr<http::request<http::string_body>> reqPtr,
               std::function<void(const beast::error_code&)> errorHandler, std::function<void(const http::response<http::string_body>&)> responseHandler,
-              std::shared_ptr<beast::flat_buffer> bufferPtr, std::shared_ptr<http::response<http::string_body>> resPtr, beast::error_code ec,
+              std::shared_ptr<beast::flat_buffer> bufferPtr, std::shared_ptr<http::response_parser<http::string_body>> resParserPtr, beast::error_code ec,
               std::size_t bytes_transferred) {
     CCAPI_LOGGER_TRACE("async_read callback start");
+    auto resPtr = &resParserPtr->get();
     boost::ignore_unused(bytes_transferred);
     if (ec) {
       CCAPI_LOGGER_TRACE("fail");
@@ -687,20 +694,22 @@ class Service : public std::enable_shared_from_this<Service> {
     }
     CCAPI_LOGGER_TRACE("written");
     std::shared_ptr<beast::flat_buffer> bufferPtr(new beast::flat_buffer());
-    std::shared_ptr<http::response<http::string_body>> resPtr(new http::response<http::string_body>());
+    std::shared_ptr<http::response_parser<http::string_body>> resParserPtr(new http::response_parser<http::string_body>());
+    resParserPtr->body_limit(CCAPI_HTTP_RESPONSE_PARSER_BODY_LIMIT);
     beast::ssl_stream<beast::tcp_stream>& stream = *httpConnectionPtr->streamPtr;
     CCAPI_LOGGER_TRACE("before async_read");
     http::async_read(
-        stream, *bufferPtr, *resPtr,
-        beast::bind_front_handler(&Service::onRead_2, shared_from_this(), httpConnectionPtr, request, reqPtr, retry, bufferPtr, resPtr, eventQueuePtr));
+        stream, *bufferPtr, *resParserPtr,
+        beast::bind_front_handler(&Service::onRead_2, shared_from_this(), httpConnectionPtr, request, reqPtr, retry, bufferPtr, resParserPtr, eventQueuePtr));
     CCAPI_LOGGER_TRACE("after async_read");
   }
 
   void onRead_2(std::shared_ptr<HttpConnection> httpConnectionPtr, Request request, std::shared_ptr<http::request<http::string_body>> reqPtr, HttpRetry retry,
-                std::shared_ptr<beast::flat_buffer> bufferPtr, std::shared_ptr<http::response<http::string_body>> resPtr, Queue<Event>* eventQueuePtr,
-                beast::error_code ec, std::size_t bytes_transferred) {
+                std::shared_ptr<beast::flat_buffer> bufferPtr, std::shared_ptr<http::response_parser<http::string_body>> resParserPtr,
+                Queue<Event>* eventQueuePtr, beast::error_code ec, std::size_t bytes_transferred) {
     CCAPI_LOGGER_TRACE("async_read callback start");
     CCAPI_LOGGER_TRACE("local endpoint has address " + beast::get_lowest_layer(*httpConnectionPtr->streamPtr).socket().local_endpoint().address().to_string());
+    auto resPtr = &resParserPtr->get();
     auto now = UtilTime::now();
     boost::ignore_unused(bytes_transferred);
     if (ec) {

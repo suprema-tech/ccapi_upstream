@@ -263,7 +263,7 @@ class MarketDataServiceMexc : public MarketDataService {
     }
     element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, x["baseSizePrecision"].GetString());
     element.insert(CCAPI_ORDER_QUANTITY_MIN, x["baseSizePrecision"].GetString());
-    element.insert(CCAPI_ORDER_PRICE_TIMES_QUANTITY_MIN, x["quoteAmountPrecision"].GetString());
+    element.insert(CCAPI_ORDER_QUOTE_QUANTITY_MIN, x["quoteAmountPrecision"].GetString());
   }
 
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
