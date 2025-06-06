@@ -160,7 +160,8 @@ class ExecutionManagementServiceCryptocom : public ExecutionManagementService {
         ExecutionManagementService::convertRequestForRestGenericPrivateRequest(req, request, now, symbolId, credential);
       } break;
       case Request::Operation::CREATE_ORDER: {
-        const std::map<std::string, std::string> param = request.getFirstParamWithDefault();
+        std::map<std::string, std::string> param = request.getFirstParamWithDefault();
+        param.emplace("broker_id", CCAPI_CRYPTOCOM_BROKER_CODE);
         this->prepareReq(req, param, now, symbolId, credential, this->createOrderMethod,
                          {
                              {CCAPI_EM_CLIENT_ORDER_ID, "client_oid"},
@@ -208,7 +209,8 @@ class ExecutionManagementServiceCryptocom : public ExecutionManagementService {
                                   const std::map<std::string, std::string>& credential) override {
     switch (request.getOperation()) {
       case Request::Operation::CREATE_ORDER: {
-        const std::map<std::string, std::string> param = request.getFirstParamWithDefault();
+        std::map<std::string, std::string> param = request.getFirstParamWithDefault();
+        param.emplace("broker_id", CCAPI_CRYPTOCOM_BROKER_CODE);
         document.SetObject();
         rj::Document::AllocatorType& allocator = document.GetAllocator();
         std::map<std::string, std::string> paramCopy;

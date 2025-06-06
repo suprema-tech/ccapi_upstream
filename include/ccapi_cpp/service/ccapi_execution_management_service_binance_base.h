@@ -448,7 +448,6 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
 
     Event event;
     std::vector<Message> messageList;
-
     if (wsConnectionPtr->host == this->websocketOrderEntryHost) {
       Message message;
       message.setTimeReceived(timeReceived);
