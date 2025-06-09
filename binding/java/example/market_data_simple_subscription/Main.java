@@ -25,8 +25,7 @@ public class Main {
           }
         }
       }
-      return true;
-    }
+          }
   }
   public static void main(String[] args) {
     System.loadLibrary("ccapi_binding_java");

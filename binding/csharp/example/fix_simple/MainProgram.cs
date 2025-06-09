@@ -21,8 +21,7 @@ class MainProgram {
       } else if (event_.GetType_() == ccapi.Event.Type.FIX) {
         System.Console.WriteLine(string.Format("Received an event of type FIX:\n{0}", event_.ToStringPretty(2, 2)));
       }
-      return true;
-    }
+          }
   }
   static void Main(string[] args) {
     if (System.Environment.GetEnvironmentVariable("COINBASE_API_KEY") is null) {

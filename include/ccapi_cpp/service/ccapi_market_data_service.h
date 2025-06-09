@@ -1179,8 +1179,7 @@ class MarketDataService : public Service {
         CCAPI_LOGGER_DEBUG("receivedOrderBookChecksumStr = " + receivedOrderBookChecksumStr);
       }
     }
-    return true;
-  }
+      }
 
   virtual bool checkOrderBookCrossed(const std::map<Decimal, std::string>& snapshotBid, const std::map<Decimal, std::string>& snapshotAsk,
                                      bool& shouldProcessRemainingMessage) {
@@ -1198,8 +1197,7 @@ class MarketDataService : public Service {
         }
       }
     }
-    return true;
-  }
+      }
 
   int calculateMarketDepthAllowedByExchange(int depthWanted, std::vector<int> availableMarketDepth) {
     int i = ceilSearch(availableMarketDepth, 0, availableMarketDepth.size(), depthWanted);

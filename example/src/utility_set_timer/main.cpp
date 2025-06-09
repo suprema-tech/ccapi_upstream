@@ -14,8 +14,7 @@ class MyEventHandler : public EventHandler {
           []() { std::cout << std::string("Timer is triggered at ") + UtilTime::getISOTimestamp(UtilTime::now()) << std::endl; });
     }
     ++numEvent;
-    return true;
-  }
+      }
 
   int numEvent{};
 };

@@ -8,7 +8,6 @@ class MyEventHandler(EventHandler):
 
     def processEvent(self, event: Event, session: Session) -> bool:
         print(f"Received an event:\n{event.toStringPretty(2, 2)}")
-        return True  # This line is needed.
 
 
 if __name__ == "__main__":

@@ -22,8 +22,7 @@ class MyEventHandler : public EventHandler {
     } else if (event.getType() == Event::Type::SUBSCRIPTION_DATA) {
       std::cout << "Received an event of type SUBSCRIPTION_DATA:\n" + event.toStringPretty(2, 2) << std::endl;
     }
-    return true;
-  }
+      }
 };
 } /* namespace ccapi */
 

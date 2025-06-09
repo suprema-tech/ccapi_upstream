@@ -7,8 +7,7 @@ class MainProgram {
         System.Console.WriteLine(e.ToString());
         System.Environment.Exit(1);
       }
-      return true;
-    }
+          }
   }
   static void Main(string[] args) {
     var eventHandler = new MyEventHandler();

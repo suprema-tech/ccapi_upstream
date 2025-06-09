@@ -16,8 +16,7 @@ public class Main {
         e.printStackTrace();
         System.exit(1);
       }
-      return true;
-    }
+          }
   }
   public static void main(String[] args) {
     System.loadLibrary("ccapi_binding_java");

@@ -14,7 +14,6 @@ class MyEventHandler(EventHandler):
         except Exception:
             print(traceback.format_exc())
             sys.exit(1)
-        return True  # This line is needed.
 
 
 if __name__ == "__main__":

@@ -11,8 +11,7 @@ type MyEventHandler struct {
 }
 
 func (*MyEventHandler) ProcessEvent(event ccapi.Event, session ccapi.Session) bool {
-	return true
-}
+	}
 
 func main() {
 	option := ccapi.NewSessionOptions()

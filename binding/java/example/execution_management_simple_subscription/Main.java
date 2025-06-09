@@ -28,8 +28,7 @@ public class Main {
       } else if (event.getType() == Event.Type.SUBSCRIPTION_DATA) {
         System.out.println(String.format("Received an event of type SUBSCRIPTION_DATA:\n%s", event.toStringPretty(2, 2)));
       }
-      return true;
-    }
+          }
   }
   public static void main(String[] args) {
     if (System.getenv("OKX_API_KEY") == null) {

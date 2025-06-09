@@ -276,10 +276,8 @@ class Session {
       this->useInternalServiceContextPtr = true;
     }
     CCAPI_LOGGER_FUNCTION_ENTER;
-    if (!this->eventHandler) {
-      if (this->eventDispatcher) {
+    if (!this->eventHandler && this->eventDispatcher) {
         throw std::runtime_error("eventHandler is needed when eventDispatcher is provided");
-      }
     }
     this->start();
     CCAPI_LOGGER_FUNCTION_EXIT;
@@ -972,6 +970,7 @@ if (!this->eventDispatcher){
   SessionOptions sessionOptions;
   SessionConfigs sessionConfigs;
   EventHandler* eventHandler{nullptr};
+  EventDispatcher* eventDispatcher{nullptr};
   std::map<std::string, std::map<std::string, std::shared_ptr<Service>>> serviceByServiceNameExchangeMap;
   Queue<Event> eventQueue;
   ServiceContext* serviceContextPtr{nullptr};

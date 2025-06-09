@@ -12,8 +12,7 @@ type MyEventHandler struct {
 
 func (*MyEventHandler) ProcessEvent(event ccapi.Event, session ccapi.Session) bool {
 	fmt.Printf("Received an event:\n%s\n", event.ToStringPretty(2, 2))
-	return true
-}
+	}
 
 func main() {
 	option := ccapi.NewSessionOptions()

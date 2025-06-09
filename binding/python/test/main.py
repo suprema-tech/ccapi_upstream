@@ -7,7 +7,6 @@ class MyEventHandler(EventHandler):
         super().__init__()
 
     def processEvent(self, event: Event, session: Session) -> bool:
-        return True  # This line is needed.
 
 
 if __name__ == "__main__":

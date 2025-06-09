@@ -59,12 +59,10 @@ class MarketDataServiceBitfinex : public MarketDataService {
         return false;
       }
       this->sequenceByConnectionIdMap.insert(std::pair<std::string, int>(wsConnectionPtr->id, sequence));
-      return true;
-    } else {
+          } else {
       if (sequence - this->sequenceByConnectionIdMap[wsConnectionPtr->id] == 1) {
         this->sequenceByConnectionIdMap[wsConnectionPtr->id] = sequence;
-        return true;
-      } else {
+              } else {
         return false;
       }
     }

@@ -24,7 +24,6 @@ class MyEventHandler(EventHandler):
                 session.sendRequest(request)
         elif event.getType() == Event.Type_SUBSCRIPTION_DATA:
             print(f"Received an event of type SUBSCRIPTION_DATA:\n{event.toStringPretty(2, 2)}")
-        return True  # This line is needed.
 
 
 if __name__ == "__main__":

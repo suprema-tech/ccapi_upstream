@@ -34,8 +34,7 @@ public class Main {
       } else if (event.getType() == Event.Type.FIX) {
         System.out.println(String.format("Received an event of type FIX:\n%s", event.toStringPretty(2, 2)));
       }
-      return true;
-    }
+          }
   }
   public static void main(String[] args) {
     if (System.getenv("COINBASE_API_KEY") == null) {

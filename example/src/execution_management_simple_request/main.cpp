@@ -7,8 +7,7 @@ class MyEventHandler : public EventHandler {
  public:
   void processEvent(const Event& event, Session* sessionPtr) override {
     std::cout << "Received an event:\n" + event.toStringPretty(2, 2) << std::endl;
-    return true;
-  }
+      }
 };
 } /* namespace ccapi */
 

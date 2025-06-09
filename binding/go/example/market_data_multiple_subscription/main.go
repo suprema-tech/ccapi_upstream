@@ -36,8 +36,7 @@ func (*MyEventHandler) ProcessEvent(event ccapi.Event, session ccapi.Session) bo
 			}
 		}
 	}
-	return true
-}
+	}
 
 func main() {
 	option := ccapi.NewSessionOptions()

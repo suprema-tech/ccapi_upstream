@@ -15,7 +15,6 @@ class MyEventHandler(EventHandler):
                     elementNameValueMap = element.getNameValueMap()
                     for name, value in elementNameValueMap.items():
                         print(f"  {name} = {value}")
-        return True  # This line is needed.
 
 
 if __name__ == "__main__":

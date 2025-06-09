@@ -16,8 +16,7 @@ class MainProgram {
           }
         }
       }
-      return true;
-    }
+          }
   }
   static void Main(string[] args) {
     var eventHandler = new MyEventHandler();

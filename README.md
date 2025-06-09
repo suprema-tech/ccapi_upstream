@@ -58,6 +58,7 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 
+
 # ccapi
 * A header-only C++ library for streaming market data and executing trades directly from cryptocurrency exchanges (i.e. the connections are between your server and the exchange server without anything in-between).
 * Bindings for other languages such as Python, Java, C#, Go, and Javascript are provided.
@@ -228,7 +229,6 @@ class MyEventHandler : public EventHandler {
  public:
   void processEvent(const Event& event, Session* sessionPtr) override {
     std::cout << "Received an event:\n" + event.toStringPretty(2, 2) << std::endl;
-    return true;
   }
 };
 } /* namespace ccapi */
@@ -315,7 +315,6 @@ class MyEventHandler : public EventHandler {
         }
       }
     }
-    return true;
   }
 };
 } /* namespace ccapi */
@@ -497,7 +496,6 @@ class MyEventHandler : public EventHandler {
  public:
   void processEvent(const Event& event, Session* sessionPtr) override {
     std::cout << "Received an event:\n" + event.toStringPretty(2, 2) << std::endl;
-    return true;
   }
 };
 } /* namespace ccapi */
@@ -610,7 +608,6 @@ class MyEventHandler : public EventHandler {
     } else if (event.getType() == Event::Type::SUBSCRIPTION_DATA) {
       std::cout << "Received an event of type SUBSCRIPTION_DATA:\n" + event.toStringPretty(2, 2) << std::endl;
     }
-    return true;
   }
 };
 } /* namespace ccapi */
@@ -858,7 +855,6 @@ class MyEventHandler : public EventHandler {
     } else if (event.getType() == Event::Type::FIX) {
       std::cout << "Received an event of type FIX:\n" + event.toStringPretty(2, 2) << std::endl;
     }
-    return true;
   }
 };
 } /* namespace ccapi */

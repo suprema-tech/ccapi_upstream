@@ -29,8 +29,7 @@ func (*MyEventHandler) ProcessEvent(event ccapi.Event, session ccapi.Session) bo
 	} else if event.GetType() == ccapi.EventType_SUBSCRIPTION_DATA {
 		fmt.Printf("Received an event of type SUBSCRIPTION_DATA:\n%s\n", event.ToStringPretty(2, 2))
 	}
-	return true
-}
+	}
 
 func main() {
 	if len(os.Getenv("OKX_API_KEY")) == 0 {

@@ -7,8 +7,7 @@ class MyEventHandler : public EventHandler {
  public:
   void processEvent(const Event& event, Session* sessionPtr) override {
     std::cout << toString(event) + "\n" << std::endl;
-    return true;
-  }
+      }
 };
 } /* namespace ccapi */
 

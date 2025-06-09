@@ -11,8 +11,7 @@ public class Main {
     @Override
     public void processEvent(Event event, Session session) {
       System.out.println(String.format("Received an event:\n%s", event.toStringPretty(2, 2)));
-      return true;
-    }
+          }
   }
   public static void main(String[] args) {
     if (System.getenv("OKX_API_KEY") == null) {

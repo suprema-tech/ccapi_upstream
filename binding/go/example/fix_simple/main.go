@@ -46,8 +46,7 @@ func (*MyEventHandler) ProcessEvent(event ccapi.Event, session ccapi.Session) bo
 	} else if event.GetType() == ccapi.EventType_FIX {
 		fmt.Printf("Received an event of type FIX:\n%s\n", event.ToStringPretty(2, 2))
 	}
-	return true
-}
+	}
 
 func main() {
 	if len(os.Getenv("COINBASE_API_KEY")) == 0 {

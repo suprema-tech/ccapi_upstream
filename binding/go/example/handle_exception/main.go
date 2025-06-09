@@ -20,8 +20,7 @@ func (*MyEventHandler) ProcessEvent(event ccapi.Event, session ccapi.Session) bo
 		}
 	}()
 	panic("oops")
-	return true
-}
+	}
 
 func main() {
 	option := ccapi.NewSessionOptions()

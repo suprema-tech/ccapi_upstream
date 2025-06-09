@@ -2,8 +2,7 @@ class MainProgram {
   class MyEventHandler : ccapi.EventHandler {
     public override bool ProcessEvent(ccapi.Event event_, ccapi.Session session) {
       System.Console.WriteLine(string.Format("Received an event:\n{0}", event_.ToStringPretty(2, 2)));
-      return true;
-    }
+          }
   }
   static void Main(string[] args) {
     var eventHandler = new MyEventHandler();

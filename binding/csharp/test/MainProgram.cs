@@ -1,8 +1,7 @@
 class MainProgram {
   class MyEventHandler : ccapi.EventHandler {
     public override bool ProcessEvent(ccapi.Event event_, ccapi.Session session) {
-      return true;
-    }
+          }
   }
   static void Main(string[] args) {
     var eventHandler = new MyEventHandler();
