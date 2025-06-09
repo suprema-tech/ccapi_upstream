@@ -11,7 +11,7 @@ type MyEventHandler struct {
 	ccapi.EventHandler
 }
 
-func (*MyEventHandler) ProcessEvent(event ccapi.Event, session ccapi.Session) bool {
+func (*MyEventHandler) ProcessEvent(event ccapi.Event, session ccapi.Session)  {
 	if event.GetType() == ccapi.EventType_AUTHORIZATION_STATUS {
 		fmt.Printf("Received an event of type AUTHORIZATION_STATUS:\n%s\n", event.ToStringPretty(2, 2))
 		message := event.GetMessageList().Get(0)

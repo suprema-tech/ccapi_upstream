@@ -83,7 +83,8 @@ class UtilString {
 
   static bool endsWith(const std::string& mainStr, const std::string& toMatch) {
     if (mainStr.size() >= toMatch.size() && mainStr.compare(mainStr.size() - toMatch.size(), toMatch.size(), toMatch) == 0) {
-          } else {
+      return true;
+    } else {
       return false;
     }
   }
@@ -884,7 +885,8 @@ class UtilSystem {
   static bool checkEnvExist(const std::string& variableName) {
     const char* env_p = std::getenv(variableName.c_str());
     if (env_p) {
-          } else {
+      return true;
+    } else {
       return false;
     }
   }
@@ -948,7 +950,8 @@ bool firstNSame(const std::map<K, V>& c1, const std::map<K, V>& c2, size_t n) {
   size_t i = 0;
   for (auto i1 = c1.begin(), i2 = c2.begin(); i1 != c1.end() && i2 != c2.end(); ++i1, ++i2) {
     if (i >= n) {
-          }
+      return true;
+    }
     if (i1 == c1.end() || i2 == c2.end()) {
       return false;
     }
@@ -957,7 +960,8 @@ bool firstNSame(const std::map<K, V>& c1, const std::map<K, V>& c2, size_t n) {
     }
     ++i;
   }
-  }
+  return true;
+}
 
 template <typename K, typename V>
 bool lastNSame(const std::map<K, V>& c1, const std::map<K, V>& c2, size_t n) {
@@ -967,7 +971,8 @@ bool lastNSame(const std::map<K, V>& c1, const std::map<K, V>& c2, size_t n) {
   size_t i = 0;
   for (auto i1 = c1.rbegin(), i2 = c2.rbegin(); i1 != c1.rend() || i2 != c2.rend(); ++i1, ++i2) {
     if (i >= n) {
-          }
+      return true;
+    }
     if (i1 == c1.rend() || i2 == c2.rend()) {
       return false;
     }
@@ -976,7 +981,8 @@ bool lastNSame(const std::map<K, V>& c1, const std::map<K, V>& c2, size_t n) {
     }
     ++i;
   }
-  }
+  return true;
+}
 
 template <typename K, typename V>
 void keepFirstN(std::map<K, V>& c, size_t n) {

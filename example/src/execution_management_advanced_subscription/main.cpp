@@ -23,7 +23,7 @@ class MyEventHandler : public EventHandler {
       });
       willSendRequest = true;
     }
-      }
+  }
 
  private:
   std::string websocketOrderEntrySubscriptionCorrelationId;

@@ -84,10 +84,10 @@ class MarketDataServiceGemini : public MarketDataService {
         return false;
       }
       this->sequenceByConnectionIdMap.insert(std::pair<std::string, int>(wsConnectionPtr->id, sequence));
-          } else {
+    } else {
       if (sequence - this->sequenceByConnectionIdMap[wsConnectionPtr->id] == 1) {
         this->sequenceByConnectionIdMap[wsConnectionPtr->id] = sequence;
-              } else {
+      } else {
         return false;
       }
     }

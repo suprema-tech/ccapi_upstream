@@ -13,7 +13,7 @@ class EventHandler {
  public:
   virtual ~EventHandler() {}
 
-  virtual void processEvent(const Event& event, Session* sessionPtr) {  }
+  virtual void processEvent(const Event& event, Session* sessionPtr) {}
 
   // An implementation of processEvent should process the specified
   // 'event' which originates from the specified 'session'.

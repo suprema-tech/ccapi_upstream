@@ -10,7 +10,7 @@ type MyEventHandler struct {
 	ccapi.EventHandler
 }
 
-func (*MyEventHandler) ProcessEvent(event ccapi.Event, session ccapi.Session) bool {
+func (*MyEventHandler) ProcessEvent(event ccapi.Event, session ccapi.Session)  {
 	}
 
 func main() {

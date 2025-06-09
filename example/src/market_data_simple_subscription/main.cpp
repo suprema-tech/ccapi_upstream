@@ -17,7 +17,7 @@ class MyEventHandler : public EventHandler {
         }
       }
     }
-      }
+  }
 };
 } /* namespace ccapi */
 

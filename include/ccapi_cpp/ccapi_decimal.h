@@ -105,7 +105,8 @@ class Decimal {
   friend bool operator<(const Decimal& l, const Decimal& r) {
     if (l.sign && r.sign) {
       if (l.before < r.before) {
-              } else if (l.before > r.before) {
+        return true;
+      } else if (l.before > r.before) {
         return false;
       } else {
         return l.frac < r.frac;
@@ -116,7 +117,8 @@ class Decimal {
       if (l.before == 0 && l.frac.empty() && r.before == 0 && r.frac.empty()) {
         return false;
       } else {
-              }
+        return true;
+      }
     } else {
       Decimal nl = l;
       nl.sign = true;

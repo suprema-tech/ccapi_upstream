@@ -79,7 +79,7 @@ class Queue {
 #ifndef CCAPI_EXPOSE_INTERNAL
 
  private:
- #endif
+#endif
   std::vector<T> queue;
   mutable std::mutex m;
   size_t maxSize{};

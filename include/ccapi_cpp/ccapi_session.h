@@ -277,7 +277,7 @@ class Session {
     }
     CCAPI_LOGGER_FUNCTION_ENTER;
     if (!this->eventHandler && this->eventDispatcher) {
-        throw std::runtime_error("eventHandler is needed when eventDispatcher is provided");
+      throw std::runtime_error("eventHandler is needed when eventDispatcher is provided");
     }
     this->start();
     CCAPI_LOGGER_FUNCTION_EXIT;
@@ -744,21 +744,21 @@ class Session {
     } else {
       if (this->eventHandler) {
         CCAPI_LOGGER_TRACE("handle event in immediate mode");
-if (!this->eventDispatcher){
-        try {
-          this->eventHandler->processEvent(event, this);
-        } catch (const std::runtime_error& e) {
-          CCAPI_LOGGER_ERROR(e.what());
-        }
-} else {
-        this->eventDispatcher->dispatch([that = this, event = std::move(event)] {
+        if (!this->eventDispatcher) {
           try {
-            that->eventHandler->processEvent(event, that);
+            this->eventHandler->processEvent(event, this);
           } catch (const std::runtime_error& e) {
             CCAPI_LOGGER_ERROR(e.what());
           }
-        });
-}
+        } else {
+          this->eventDispatcher->dispatch([that = this, event = std::move(event)] {
+            try {
+              that->eventHandler->processEvent(event, that);
+            } catch (const std::runtime_error& e) {
+              CCAPI_LOGGER_ERROR(e.what());
+            }
+          });
+        }
       } else {
         CCAPI_LOGGER_TRACE("handle event in batching mode");
         this->eventQueue.pushBack(std::move(event));
@@ -886,13 +886,11 @@ if (!this->eventDispatcher){
   virtual void setImmediate(std::function<void()> successHandler) {
     boost::asio::post(*this->serviceContextPtr->ioContextPtr, [this, successHandler]() {
       if (this->eventHandler) {
-if (!this->eventDispatcher){
-        successHandler();
-}else{
-          this->eventDispatcher->dispatch([successHandler] {
-            successHandler();
-          });
-}
+        if (!this->eventDispatcher) {
+          successHandler();
+        } else {
+          this->eventDispatcher->dispatch([successHandler] { successHandler(); });
+        }
       }
     });
   }
@@ -904,25 +902,29 @@ if (!this->eventDispatcher){
           new boost::asio::steady_timer(*this->serviceContextPtr->ioContextPtr, boost::asio::chrono::milliseconds(delayMilliseconds)));
       timerPtr->async_wait([this, id, errorHandler, successHandler](const boost::system::error_code& ec) {
         if (this->eventHandler) {
-if (!this->eventDispatcher){
-          if (ec) {
-            if (errorHandler) {
-              errorHandler(ec);
+          if (!this->eventDispatcher) {
+            if (ec) {
+              if (errorHandler) {
+                errorHandler(ec);
+              }
+            } else {
+              if (successHandler) {
+                successHandler();
+              }
             }
           } else {
-            if (successHandler) {
-              successHandler();
-            }
+            this->eventDispatcher->dispatch([ec, errorHandler, successHandler] {
+              if (ec) {
+                if (errorHandler) {
+                  errorHandler(ec);
+                }
+              } else {
+                if (successHandler) {
+                  successHandler();
+                }
+              }
+            });
           }
-}else{
-          this->eventDispatcher->dispatch([ec, errorHandler, successHandler] {
-            if (ec) {
-                if (errorHandler){errorHandler(ec);}
-            } else {
-                if (successHandler) {successHandler();}
-            }
-          });
-}
         }
         this->delayTimerByIdMap.erase(id);
       });

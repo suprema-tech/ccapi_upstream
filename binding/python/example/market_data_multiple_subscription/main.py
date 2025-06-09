@@ -6,7 +6,7 @@ class MyEventHandler(EventHandler):
     def __init__(self):
         super().__init__()
 
-    def processEvent(self, event: Event, session: Session) -> bool:
+    def processEvent(self, event: Event, session: Session) -> None:
         if event.getType() == Event.Type_SUBSCRIPTION_DATA:
             for message in event.getMessageList():
                 correlationId = message.getCorrelationIdList()[0]

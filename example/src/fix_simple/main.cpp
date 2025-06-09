@@ -26,7 +26,7 @@ class MyEventHandler : public EventHandler {
     } else if (event.getType() == Event::Type::FIX) {
       std::cout << "Received an event of type FIX:\n" + event.toStringPretty(2, 2) << std::endl;
     }
-      }
+  }
 };
 } /* namespace ccapi */
 

@@ -8,7 +8,7 @@ class MyEventHandler(EventHandler):
     def __init__(self):
         super().__init__()
 
-    def processEvent(self, event: Event, session: Session) -> bool:
+    def processEvent(self, event: Event, session: Session) -> None:
         try:
             raise Exception("oops")
         except Exception:

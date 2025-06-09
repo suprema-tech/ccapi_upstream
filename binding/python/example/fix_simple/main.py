@@ -8,7 +8,7 @@ class MyEventHandler(EventHandler):
     def __init__(self):
         super().__init__()
 
-    def processEvent(self, event: Event, session: Session) -> bool:
+    def processEvent(self, event: Event, session: Session) -> None:
         if event.getType() == Event.Type_AUTHORIZATION_STATUS:
             print(f"Received an event of type AUTHORIZATION_STATUS:\n{event.toStringPretty(2, 2)}")
             message = event.getMessageList()[0]

@@ -90,7 +90,7 @@ class MyEventHandler : public EventHandler {
         }
       }
     }
-      }
+  }
 
   std::string symbol;
   std::string side;
