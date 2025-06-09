@@ -19,7 +19,7 @@ class MyEventHandler : public EventHandler {
         byWebsocket(byWebsocket),
         websocketOrderEntrySubscriptionCorrelationId(websocketOrderEntrySubscriptionCorrelationId) {}
 
-  bool processEvent(const Event& event, Session* sessionPtr) override {
+  void processEvent(const Event& event, Session* sessionPtr) override {
     if (event.getType() == Event::Type::SUBSCRIPTION_STATUS) {
       const auto& message = event.getMessageList().at(0);
       if (message.getType() == Message::Type::SUBSCRIPTION_STARTED) {

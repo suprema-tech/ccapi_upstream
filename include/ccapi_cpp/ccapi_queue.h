@@ -1,7 +1,6 @@
 #ifndef INCLUDE_CCAPI_CPP_CCAPI_QUEUE_H_
 #define INCLUDE_CCAPI_CPP_CCAPI_QUEUE_H_
 #include <mutex>
-#include <queue>
 #include <vector>
 
 #include "ccapi_cpp/ccapi_logger.h"
@@ -10,7 +9,14 @@ namespace ccapi {
 /**
  * This class represents a generic FIFO queue.
  */
-template <class T>
+
+struct NullMutex {
+  void lock() {}
+
+  void unlock() {}
+};
+
+template <typename T, typename MutexType = std::mutex>
 class Queue {
  public:
   std::string EXCEPTION_QUEUE_FULL = "queue is full";
@@ -19,9 +25,7 @@ class Queue {
   explicit Queue(const size_t maxSize = 0) : maxSize(maxSize) {}
 
   void pushBack(const T& t) {
-#ifndef CCAPI_USE_SINGLE_THREAD
-    std::lock_guard<std::mutex> lock(this->m);
-#endif
+    std::lock_guard<MutexType> lock(this->m);
     if (this->maxSize <= 0 || this->queue.size() < this->maxSize) {
       CCAPI_LOGGER_TRACE("this->queue.size() = " + size_tToString(this->queue.size()));
       this->queue.push_back(t);
@@ -31,9 +35,7 @@ class Queue {
   }
 
   void pushBack(T&& t) {
-#ifndef CCAPI_USE_SINGLE_THREAD
-    std::lock_guard<std::mutex> lock(this->m);
-#endif
+    std::lock_guard<MutexType> lock(this->m);
     if (this->maxSize <= 0 || this->queue.size() < this->maxSize) {
       CCAPI_LOGGER_TRACE("this->queue.size() = " + size_tToString(this->queue.size()));
       this->queue.push_back(t);
@@ -43,9 +45,7 @@ class Queue {
   }
 
   T popBack() {
-#ifndef CCAPI_USE_SINGLE_THREAD
-    std::lock_guard<std::mutex> lock(this->m);
-#endif
+    std::lock_guard<MutexType> lock(this->m);
     if (this->queue.empty()) {
       throw std::runtime_error(EXCEPTION_QUEUE_EMPTY);
     } else {
@@ -56,18 +56,14 @@ class Queue {
   }
 
   std::vector<T> purge() {
-#ifndef CCAPI_USE_SINGLE_THREAD
-    std::lock_guard<std::mutex> lock(this->m);
-#endif
+    std::lock_guard<MutexType> lock(this->m);
     std::vector<T> p;
     std::swap(p, this->queue);
     return p;
   }
 
   void removeAll(std::vector<T>& c) {
-#ifndef CCAPI_USE_SINGLE_THREAD
-    std::lock_guard<std::mutex> lock(this->m);
-#endif
+    std::lock_guard<MutexType> lock(this->m);
     if (c.empty()) {
       c = std::move(this->queue);
     } else {
@@ -78,26 +74,19 @@ class Queue {
   }
 
   size_t size() const {
-#ifndef CCAPI_USE_SINGLE_THREAD
-    std::lock_guard<std::mutex> lock(this->m);
-#endif
+    std::lock_guard<MutexType> lock(this->m);
     return this->queue.size();
   }
 
   bool empty() const {
-#ifndef CCAPI_USE_SINGLE_THREAD
-    std::lock_guard<std::mutex> lock(this->m);
-#endif
+    std::lock_guard<MutexType> lock(this->m);
     return this->queue.empty();
   }
 #ifndef CCAPI_EXPOSE_INTERNAL
 
  private:
-#endif
   std::vector<T> queue;
-#ifndef CCAPI_USE_SINGLE_THREAD
-  mutable std::mutex m;
-#endif
+  mutable MutexType m;
   size_t maxSize{};
 };
 } /* namespace ccapi */
