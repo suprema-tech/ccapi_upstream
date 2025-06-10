@@ -595,11 +595,14 @@ class Session {
   }
 
   virtual void stop() {
-    for (const auto& x : this->serviceByServiceNameExchangeMap) {
-      for (const auto& y : x.second) {
-        y.second->stop();
+    boost::asio::post(*this->serviceContextPtr->ioContextPtr, [this]() {
+      for (const auto& x : this->serviceByServiceNameExchangeMap) {
+        for (const auto& y : x.second) {
+          y.second->stop();
+        }
       }
-    }
+    });
+
     if (this->useInternalServiceContextPtr) {
       this->serviceContextPtr->stop();
     }

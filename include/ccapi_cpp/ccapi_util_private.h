@@ -541,6 +541,23 @@ class UtilAlgorithm {
   };
 
  public:
+  static std::string toBase62(size_t value) {
+    static constexpr char base62Chars[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+    std::string result;
+    do {
+      result += base62Chars[value % 62];
+      value /= 62;
+    } while (value);
+    std::reverse(result.begin(), result.end());
+    return result;
+  }
+
+  static std::string shortBase62Hash(const std::string& input) {
+    std::hash<std::string> hasher;
+    return toBase62(hasher(input));
+  }
+
   static std::string computeHash(const ShaVersion shaVersion, const std::string& unhashed, bool returnHex = false) {
     EVP_MD_CTX* context = EVP_MD_CTX_new();
     switch (shaVersion) {

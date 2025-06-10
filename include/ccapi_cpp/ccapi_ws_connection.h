@@ -19,7 +19,8 @@ class WsConnection {
     for (const auto& x : credential) {
       shortCredential.insert(std::make_pair(x.first, UtilString::firstNCharacter(x.second, CCAPI_CREDENTIAL_DISPLAY_LENGTH)));
     }
-    this->id = this->url + "||" + this->group + "||" + ccapi::toString(this->subscriptionList) + "||" + ccapi::toString(shortCredential);
+    this->longId = this->url + "||" + this->group + "||" + ccapi::toString(this->subscriptionList) + "||" + ccapi::toString(shortCredential);
+    this->id = UtilAlgorithm::shortBase62Hash(this->longId);
     this->correlationIdList.reserve(subscriptionList.size());
     std::transform(subscriptionList.cbegin(), subscriptionList.cend(), std::back_inserter(this->correlationIdList),
                    [](Subscription subscription) { return subscription.getCorrelationId(); });
@@ -35,10 +36,10 @@ class WsConnection {
     }
     std::ostringstream oss;
     oss << streamPtr;
-    std::string output = "WsConnection [id = " + id + ", url = " + url + ", group = " + group + ", subscriptionList = " + ccapi::toString(subscriptionList) +
-                         ", credential = " + ccapi::toString(shortCredential) + ", status = " + statusToString(status) +
-                         ", headers = " + ccapi::toString(headers) + ", streamPtr = " + oss.str() + ", remoteCloseCode = " + std::to_string(remoteCloseCode) +
-                         ", remoteCloseReason = " + std::string(remoteCloseReason.reason.c_str()) +
+    std::string output = "WsConnection [longId = " + longId + ", id = " + id + ", url = " + url + ", group = " + group +
+                         ", subscriptionList = " + ccapi::toString(subscriptionList) + ", credential = " + ccapi::toString(shortCredential) +
+                         ", status = " + statusToString(status) + ", headers = " + ccapi::toString(headers) + ", streamPtr = " + oss.str() +
+                         ", remoteCloseCode = " + std::to_string(remoteCloseCode) + ", remoteCloseReason = " + std::string(remoteCloseReason.reason.c_str()) +
                          ", hostHttpHeaderValue = " + ccapi::toString(hostHttpHeaderValue) + ", path = " + ccapi::toString(path) +
                          ", host = " + ccapi::toString(host) + ", port = " + ccapi::toString(port) + "]";
     return output;
@@ -119,6 +120,7 @@ class WsConnection {
     this->setUrlParts();
   }
 
+  std::string longId;
   std::string id;
   std::string url;
   std::string group;
