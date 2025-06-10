@@ -59,6 +59,7 @@
 
 
 
+
 # ccapi
 * A header-only C++ library for streaming market data and executing trades directly from cryptocurrency exchanges (i.e. the connections are between your server and the exchange server without anything in-between).
 * Bindings for other languages such as Python, Java, C#, Go, and Javascript are provided.
@@ -952,7 +953,8 @@ Bye
 #### Handle events in "immediate" vs. "batching" mode
 
 In general there are 2 ways to handle events.
-* When a `Session` is instantiated with an `eventHandler` argument, it will handle events in immediate mode. The `processEvent` method in the `eventHandler` will be invoked immediately when an `Event` is available, and the invocation will run on the thread where `boost::asio::io_context` runs. When a `Session` is instantiated with an `eventHandler` and an `eventDispatcher` argument, it will also handle events in immediate mode. The `processEvent` method in the `eventHandler` will also be invoked immediately when an `Event` is available, but the invocation will run in the thread(s) provided by the `eventDispatcher` therefore not blocking the thread where `boost::asio::io_context` runs.
+* When a `Session` is instantiated with an `eventHandler` argument, it will handle events in immediate mode. The `processEvent` method in the `eventHandler` will be invoked immediately when an `Event` is available, and the invocation will run on the thread where `boost::asio::io_context` runs. When a `Session` is instantiated with an `eventHandler` and an `eventDispatcher` argument, it will also handle events in immediate mode. The `processEvent` method in the `eventHandler` will also be invoked immediately when an `Event` is available, but the invocation will run in the thread(s) provided by the `eventDispatcher` therefore not blocking the thread where `boost::asio::io_context` runs. `EventHandler`s and/or `EventDispatcher`s can be shared among different sessions. Otherwise, different sessions are independent from each other.
+An example can be found [here](example/src/market_data_advanced_subscription/main.cpp).
 * When a `Session` is instantiated without an `eventHandler` argument, it will handle events in batching mode. The events will be batched into an internal `Queue<Event>` and can be retrieved by
 ```
 std::vector<Event> eventList = session.getEventQueue().purge();
@@ -961,12 +963,6 @@ An example can be found [here](example/src/market_data_advanced_subscription/mai
 
 #### Thread safety
 * The following methods are implemented to be thread-safe: `Session::sendRequest`, `Session::subscribe`, `Session::sendRequestByFix`, `Session::subscribeByFix`, `Session::setTimer`, all public methods in `Queue`.
-* The `processEvent` method in the `eventHandler` is invoked on one of the internal threads in the `eventDispatcher`. A default `EventDispatcher` with 1 internal thread will be created if no `eventDispatcher` argument is provided in `Session` instantiation. To dispatch events to multiple threads, instantiate `EventDispatcher` with `numDispatcherThreads` set to be the desired number. `EventHandler`s and/or `EventDispatcher`s can be shared among different sessions. Otherwise, different sessions are independent from each other.
-```
-EventDispatcher eventDispatcher(2);
-Session session(sessionOptions, sessionConfigs, &eventHandler, &eventDispatcher);
-```
-An example can be found [here](example/src/market_data_advanced_subscription/main.cpp).
 
 #### Enable library logging
 
