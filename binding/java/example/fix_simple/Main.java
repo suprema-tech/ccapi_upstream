@@ -13,7 +13,7 @@ import com.cryptochassis.ccapi.VectorPairIntString;
 public class Main {
   static class MyEventHandler extends EventHandler {
     @Override
-    public boolean processEvent(Event event, Session session) {
+    public void processEvent(Event event, Session session) {
       if (event.getType() == Event.Type.AUTHORIZATION_STATUS) {
         System.out.println(String.format("Received an event of type AUTHORIZATION_STATUS:\n%s", event.toStringPretty(2, 2)));
         var message = event.getMessageList().get(0);
@@ -34,8 +34,7 @@ public class Main {
       } else if (event.getType() == Event.Type.FIX) {
         System.out.println(String.format("Received an event of type FIX:\n%s", event.toStringPretty(2, 2)));
       }
-      return true;
-    }
+          }
   }
   public static void main(String[] args) {
     if (System.getenv("COINBASE_API_KEY") == null) {

@@ -264,9 +264,7 @@ class Session {
       : sessionOptions(sessionOptions),
         sessionConfigs(sessionConfigs),
         eventHandler(eventHandler),
-#ifndef CCAPI_USE_SINGLE_THREAD
         eventDispatcher(eventDispatcher),
-#endif
         eventQueue(sessionOptions.maxEventQueueSize)
 #ifndef SWIG
         ,
@@ -278,29 +276,15 @@ class Session {
       this->useInternalServiceContextPtr = true;
     }
     CCAPI_LOGGER_FUNCTION_ENTER;
-#ifndef CCAPI_USE_SINGLE_THREAD
-    if (this->eventHandler) {
-      if (!this->eventDispatcher) {
-        this->eventDispatcher = new EventDispatcher();
-        this->useInternalEventDispatcher = true;
-      }
-    } else {
-      if (this->eventDispatcher) {
-        throw std::runtime_error("undefined behavior");
-      }
+    if (!this->eventHandler && this->eventDispatcher) {
+      throw std::runtime_error("eventHandler is needed when eventDispatcher is provided");
     }
-#endif
     this->start();
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
 
   virtual ~Session() {
     CCAPI_LOGGER_FUNCTION_ENTER;
-#ifndef CCAPI_USE_SINGLE_THREAD
-    if (this->useInternalEventDispatcher) {
-      delete this->eventDispatcher;
-    }
-#endif
     if (this->useInternalServiceContextPtr) {
       delete this->serviceContextPtr;
     }
@@ -611,16 +595,14 @@ class Session {
   }
 
   virtual void stop() {
-#ifndef CCAPI_USE_SINGLE_THREAD
-    if (this->useInternalEventDispatcher) {
-      this->eventDispatcher->stop();
-    }
-#endif
-    for (const auto& x : this->serviceByServiceNameExchangeMap) {
-      for (const auto& y : x.second) {
-        y.second->stop();
+    boost::asio::post(*this->serviceContextPtr->ioContextPtr, [this]() {
+      for (const auto& x : this->serviceByServiceNameExchangeMap) {
+        for (const auto& y : x.second) {
+          y.second->stop();
+        }
       }
-    }
+    });
+
     if (this->useInternalServiceContextPtr) {
       this->serviceContextPtr->stop();
     }
@@ -765,26 +747,21 @@ class Session {
     } else {
       if (this->eventHandler) {
         CCAPI_LOGGER_TRACE("handle event in immediate mode");
-#ifdef CCAPI_USE_SINGLE_THREAD
-        try {
-          this->eventHandler->processEvent(event, this);
-        } catch (const std::runtime_error& e) {
-          CCAPI_LOGGER_ERROR(e.what());
-        }
-#else
-        this->eventDispatcher->dispatch([that = this, event = std::move(event)] {
-          bool shouldContinue = true;
+        if (!this->eventDispatcher) {
           try {
-            shouldContinue = that->eventHandler->processEvent(event, that);
+            this->eventHandler->processEvent(event, this);
           } catch (const std::runtime_error& e) {
             CCAPI_LOGGER_ERROR(e.what());
           }
-          if (!shouldContinue) {
-            CCAPI_LOGGER_DEBUG("about to pause the event dispatcher");
-            that->eventDispatcher->pause();
-          }
-        });
-#endif
+        } else {
+          this->eventDispatcher->dispatch([that = this, event = std::move(event)] {
+            try {
+              that->eventHandler->processEvent(event, that);
+            } catch (const std::runtime_error& e) {
+              CCAPI_LOGGER_ERROR(e.what());
+            }
+          });
+        }
       } else {
         CCAPI_LOGGER_TRACE("handle event in batching mode");
         this->eventQueue.pushBack(std::move(event));
@@ -912,13 +889,11 @@ class Session {
   virtual void setImmediate(std::function<void()> successHandler) {
     boost::asio::post(*this->serviceContextPtr->ioContextPtr, [this, successHandler]() {
       if (this->eventHandler) {
-#ifdef CCAPI_USE_SINGLE_THREAD
-        successHandler();
-#else
-          this->eventDispatcher->dispatch([successHandler] {
-            successHandler();
-          });
-#endif
+        if (!this->eventDispatcher) {
+          successHandler();
+        } else {
+          this->eventDispatcher->dispatch([successHandler] { successHandler(); });
+        }
       }
     });
   }
@@ -930,25 +905,29 @@ class Session {
           new boost::asio::steady_timer(*this->serviceContextPtr->ioContextPtr, boost::asio::chrono::milliseconds(delayMilliseconds)));
       timerPtr->async_wait([this, id, errorHandler, successHandler](const boost::system::error_code& ec) {
         if (this->eventHandler) {
-#ifdef CCAPI_USE_SINGLE_THREAD
-          if (ec) {
-            if (errorHandler) {
-              errorHandler(ec);
+          if (!this->eventDispatcher) {
+            if (ec) {
+              if (errorHandler) {
+                errorHandler(ec);
+              }
+            } else {
+              if (successHandler) {
+                successHandler();
+              }
             }
           } else {
-            if (successHandler) {
-              successHandler();
-            }
+            this->eventDispatcher->dispatch([ec, errorHandler, successHandler] {
+              if (ec) {
+                if (errorHandler) {
+                  errorHandler(ec);
+                }
+              } else {
+                if (successHandler) {
+                  successHandler();
+                }
+              }
+            });
           }
-#else
-          this->eventDispatcher->dispatch([ec, errorHandler, successHandler] {
-            if (ec) {
-                if (errorHandler){errorHandler(ec);}
-            } else {
-                if (successHandler) {successHandler();}
-            }
-          });
-#endif
         }
         this->delayTimerByIdMap.erase(id);
       });
@@ -996,10 +975,7 @@ class Session {
   SessionOptions sessionOptions;
   SessionConfigs sessionConfigs;
   EventHandler* eventHandler{nullptr};
-#ifndef CCAPI_USE_SINGLE_THREAD
   EventDispatcher* eventDispatcher{nullptr};
-  bool useInternalEventDispatcher{};
-#endif
   std::map<std::string, std::map<std::string, std::shared_ptr<Service>>> serviceByServiceNameExchangeMap;
   Queue<Event> eventQueue;
   ServiceContext* serviceContextPtr{nullptr};

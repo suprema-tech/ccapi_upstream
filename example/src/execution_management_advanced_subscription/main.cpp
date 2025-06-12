@@ -8,7 +8,7 @@ class MyEventHandler : public EventHandler {
   MyEventHandler(const std::string& websocketOrderEntrySubscriptionCorrelationId)
       : websocketOrderEntrySubscriptionCorrelationId(websocketOrderEntrySubscriptionCorrelationId) {}
 
-  bool processEvent(const Event& event, Session* sessionPtr) override {
+  void processEvent(const Event& event, Session* sessionPtr) override {
     std::cout << "Received an event:\n" + event.toStringPretty(2, 2) << std::endl;
     if (!willSendRequest) {
       sessionPtr->setTimer("id", 1000, nullptr, [this, sessionPtr]() {
@@ -23,7 +23,6 @@ class MyEventHandler : public EventHandler {
       });
       willSendRequest = true;
     }
-    return true;
   }
 
  private:
