@@ -12,6 +12,7 @@
 #include "ccapi_cpp/service/ccapi_service.h"
 
 namespace ccapi {
+
 /**
  * The MarketDataService class inherits from the Service class and provides implemenations more specific to market data such as order book, trades, etc..
  */
@@ -1756,6 +1757,7 @@ class MarketDataService : public Service {
   std::map<std::string, std::map<std::string, int64_t>> orderbookVersionIdByConnectionIdExchangeSubscriptionIdMap;
   std::map<std::string, std::map<std::string, TimerPtr>> fetchMarketDepthInitialSnapshotTimerByConnectionIdExchangeSubscriptionIdMap;
 };
+
 } /* namespace ccapi */
 #endif
 #endif  // INCLUDE_CCAPI_CPP_SERVICE_CCAPI_MARKET_DATA_SERVICE_H_

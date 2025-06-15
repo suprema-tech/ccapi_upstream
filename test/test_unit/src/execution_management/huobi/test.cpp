@@ -7,6 +7,7 @@
 
 // clang-format on
 namespace ccapi {
+
 class ExecutionManagementServiceHuobiTest : public ::testing::Test {
  public:
   typedef Service::ServiceContextPtr ServiceContextPtr;
@@ -670,6 +671,7 @@ TEST_F(ExecutionManagementServiceHuobiTest, createEventOrderUpdatesCancellation)
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUANTITY), "2");
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_REMAINING_QUANTITY), "2.000000000000000000");
 }
+
 } /* namespace ccapi */
 #endif
 #endif

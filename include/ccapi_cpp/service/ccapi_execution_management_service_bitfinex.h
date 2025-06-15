@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceBitfinex : public ExecutionManagementService {
  public:
   ExecutionManagementServiceBitfinex(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -476,6 +477,7 @@ class ExecutionManagementServiceBitfinex : public ExecutionManagementService {
     return event;
   }
 };
+
 } /* namespace ccapi */
 #endif
 #endif

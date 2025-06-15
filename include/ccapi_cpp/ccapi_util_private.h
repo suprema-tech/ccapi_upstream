@@ -33,6 +33,7 @@
 #include "openssl/pem.h"
 
 namespace ccapi {
+
 /**
  * Utilities.
  */

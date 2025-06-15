@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
 
 namespace ccapi {
+
 class MarketDataServiceHuobiBase : public MarketDataService {
  public:
   MarketDataServiceHuobiBase(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -399,6 +400,7 @@ class MarketDataServiceHuobiBase : public MarketDataService {
   bool isDerivatives{};
   std::map<int, std::string> exchangeSubscriptionIdByExchangeJsonPayloadIdMap;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

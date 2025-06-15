@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_market_data_service_bitget_base.h"
 
 namespace ccapi {
+
 class MarketDataServiceBitgetFutures : public MarketDataServiceBitgetBase {
  public:
   MarketDataServiceBitgetFutures(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -28,6 +29,7 @@ class MarketDataServiceBitgetFutures : public MarketDataServiceBitgetBase {
 
   virtual ~MarketDataServiceBitgetFutures() {}
 };
+
 } /* namespace ccapi */
 #endif
 #endif

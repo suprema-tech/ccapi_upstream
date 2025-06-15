@@ -243,6 +243,7 @@
 using steady_timer = boost::asio::steady_timer;
 
 namespace ccapi {
+
 /**
  * This class provides a consumer session for making requests and subscriptions for services. Sessions manage access to services either by requests and
  * responses or subscriptions. A Session can dispatch events and replies in either an immediate or batching mode. The mode of a Session is determined when it is
@@ -983,5 +984,6 @@ class Session {
   std::function<void(Event& event, Queue<Event>* eventQueue)> onEventFunc;
   std::map<std::string, std::shared_ptr<steady_timer>> delayTimerByIdMap;
 };
+
 } /* namespace ccapi */
 #endif  // INCLUDE_CCAPI_CPP_CCAPI_SESSION_H_

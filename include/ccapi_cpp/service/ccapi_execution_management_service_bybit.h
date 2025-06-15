@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceBybit : public ExecutionManagementService {
  public:
   ExecutionManagementServiceBybit(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -645,6 +646,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
     }
   }
 };
+
 } /* namespace ccapi */
 #endif
 #endif

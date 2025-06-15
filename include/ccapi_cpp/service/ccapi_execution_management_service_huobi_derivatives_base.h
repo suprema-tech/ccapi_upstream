@@ -6,6 +6,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_huobi_base.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagementServiceHuobiBase {
  public:
   ExecutionManagementServiceHuobiDerivativesBase(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions,
@@ -432,6 +433,7 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
   std::string orderDataTopic;
   std::string matchOrderDataTopic;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

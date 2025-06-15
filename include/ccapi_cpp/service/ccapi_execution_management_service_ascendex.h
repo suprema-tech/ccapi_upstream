@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceAscendex : public ExecutionManagementService {
  public:
   ExecutionManagementServiceAscendex(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -521,6 +522,7 @@ class ExecutionManagementServiceAscendex : public ExecutionManagementService {
 
   std::string apiAccountGroupName;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

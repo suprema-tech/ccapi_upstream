@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
 
 namespace ccapi {
+
 class MarketDataServiceMexc : public MarketDataService {
  public:
   MarketDataServiceMexc(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -341,6 +342,7 @@ class MarketDataServiceMexc : public MarketDataService {
 
   std::string getRecentAggTradesTarget;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

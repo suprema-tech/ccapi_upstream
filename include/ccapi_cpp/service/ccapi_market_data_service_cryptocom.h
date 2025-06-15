@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
 
 namespace ccapi {
+
 class MarketDataServiceCryptocom : public MarketDataService {
  public:
   MarketDataServiceCryptocom(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -334,6 +335,7 @@ class MarketDataServiceCryptocom : public MarketDataService {
     }
   }
 };
+
 } /* namespace ccapi */
 #endif
 #endif

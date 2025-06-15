@@ -7,6 +7,7 @@
 
 // clang-format on
 namespace ccapi {
+
 class ExecutionManagementServiceGateioTest : public ::testing::Test {
  public:
   typedef Service::ServiceContextPtr ServiceContextPtr;
@@ -535,6 +536,7 @@ TEST_F(ExecutionManagementServiceGateioTest, createEventOrders) {
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_REMAINING_QUANTITY), "1");
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_INSTRUMENT), "BTC_USDT");
 }
+
 } /* namespace ccapi */
 #endif
 #endif

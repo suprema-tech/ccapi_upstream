@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_bitget_base.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceBitget : public ExecutionManagementServiceBitgetBase {
  public:
   ExecutionManagementServiceBitget(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -432,6 +433,7 @@ class ExecutionManagementServiceBitget : public ExecutionManagementServiceBitget
     return event;
   }
 };
+
 } /* namespace ccapi */
 #endif
 #endif

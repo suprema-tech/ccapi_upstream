@@ -7,6 +7,7 @@
 
 // clang-format on
 namespace ccapi {
+
 class ExecutionManagementServiceKucoinTest : public ::testing::Test {
  public:
   typedef Service::ServiceContextPtr ServiceContextPtr;

@@ -62,6 +62,7 @@ using tcp = net::ip::tcp;
 namespace rj = rapidjson;
 
 namespace ccapi {
+
 /**
  * Defines a service which provides access to exchange API and normalizes them. This is a base class that implements generic functionalities for dealing with
  * exchange REST and Websocket APIs. The Session object is responsible for routing requests and subscriptions to the desired concrete service.
@@ -1590,5 +1591,6 @@ class Service : public std::enable_shared_from_this<Service> {
 
 #endif
 };
+
 } /* namespace ccapi */
 #endif  // INCLUDE_CCAPI_CPP_SERVICE_CCAPI_SERVICE_H_

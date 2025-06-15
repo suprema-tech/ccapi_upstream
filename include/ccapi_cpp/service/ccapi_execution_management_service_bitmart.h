@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceBitmart : public ExecutionManagementService {
  public:
   ExecutionManagementServiceBitmart(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -457,6 +458,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
   std::string apiMemoName;
   // std::map<std::string, std::map<std::string, bool>> subscriptionFailedByConnectionIdCorrelationIdMap;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

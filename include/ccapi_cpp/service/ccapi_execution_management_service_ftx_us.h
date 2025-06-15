@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_ftx_base.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceFtxUs : public ExecutionManagementServiceFtxBase {
  public:
   ExecutionManagementServiceFtxUs(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -36,6 +37,7 @@ class ExecutionManagementServiceFtxUs : public ExecutionManagementServiceFtxBase
 
   virtual ~ExecutionManagementServiceFtxUs() {}
 };
+
 } /* namespace ccapi */
 #endif
 #endif

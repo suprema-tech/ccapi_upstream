@@ -7,6 +7,7 @@
 #include "ccapi_cpp/ccapi_subscription.h"
 
 namespace ccapi {
+
 /**
  * This class represents a TCP socket connection for the websocket API.
  */
@@ -140,6 +141,7 @@ class WsConnection {
  private:
 #endif
 };
+
 } /* namespace ccapi */
 
 #endif  // INCLUDE_CCAPI_CPP_CCAPI_WS_CONNECTION_H_

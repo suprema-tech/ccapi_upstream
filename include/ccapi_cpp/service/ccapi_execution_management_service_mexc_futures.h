@@ -4,6 +4,7 @@
 #ifdef CCAPI_ENABLE_EXCHANGE_MEXC_FUTURES
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
 namespace ccapi {
+
 class ExecutionManagementServiceMexcFutures : public ExecutionManagementService {
  public:
   ExecutionManagementServiceMexcFutures(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -541,6 +542,7 @@ this->send(wsConnectionPtr, sendString, ec);
 
   std::string cancelOrderWithExternalOidTarget, getOrderWithExternalOidTarget;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

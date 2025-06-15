@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_bitget_base.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServiceBitgetBase {
  public:
   ExecutionManagementServiceBitgetFutures(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -520,6 +521,7 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
 
   std::string getAllOpenOrdersTarget, getAccountAllPositionsTarget;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

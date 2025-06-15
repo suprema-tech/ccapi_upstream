@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
 
 namespace ccapi {
+
 class MarketDataServiceDeribit : public MarketDataService {
  public:
   MarketDataServiceDeribit(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -478,6 +479,7 @@ class MarketDataServiceDeribit : public MarketDataService {
   std::map<std::string, std::set<int64_t>> subscriptionJsonrpcIdSetByConnectionIdMap;
   std::string restTarget;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceCoinbase : public ExecutionManagementService {
  public:
   ExecutionManagementServiceCoinbase(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -402,6 +403,7 @@ class ExecutionManagementServiceCoinbase : public ExecutionManagementService {
   std::string apiPassphraseName;
   std::set<std::string> websocketFullChannelTypeSet{"received", "open", "done", "match", "change", "activate"};
 };
+
 } /* namespace ccapi */
 #endif
 #endif

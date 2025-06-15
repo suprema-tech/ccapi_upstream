@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceDeribit : public ExecutionManagementService {
  public:
   ExecutionManagementServiceDeribit(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -534,6 +535,7 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
   std::string createOrderBuyTarget;
   std::string createOrderSellTarget;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

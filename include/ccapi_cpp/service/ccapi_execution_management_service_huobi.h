@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_huobi_base.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBase {
  public:
   ExecutionManagementServiceHuobi(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -431,6 +432,7 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
   std::string cancelOrderByClientOrderIdTarget;
   std::string getOrderByClientOrderIdTarget;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

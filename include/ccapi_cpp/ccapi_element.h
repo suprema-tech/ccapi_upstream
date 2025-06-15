@@ -6,6 +6,7 @@
 #include "ccapi_cpp/ccapi_util_private.h"
 
 namespace ccapi {
+
 /**
  * Element represents an item in a message. The value(s) in an Element can be queried in a number of ways. Use the getValue() functions to retrieve a single
  * value. Use the getNameValueMap() function (or getTagValueMap() function for FIX API) to retrieve all the values.
@@ -63,5 +64,6 @@ class Element {
   std::map<std::string, std::string> nameValueMap;
   std::map<int, std::string> tagValueMap;
 };
+
 } /* namespace ccapi */
 #endif  // INCLUDE_CCAPI_CPP_CCAPI_ELEMENT_H_

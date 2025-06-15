@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_gateio_base.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceGateioPerpetualFutures : public ExecutionManagementServiceGateioBase {
  public:
   ExecutionManagementServiceGateioPerpetualFutures(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions,
@@ -117,6 +118,7 @@ class ExecutionManagementServiceGateioPerpetualFutures : public ExecutionManagem
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
 };
+
 } /* namespace ccapi */
 #endif
 #endif

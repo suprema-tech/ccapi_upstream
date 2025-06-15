@@ -16,6 +16,7 @@
 #include "ccapi_cpp/service/ccapi_service.h"
 
 namespace ccapi {
+
 /**
  * The ExecutionManagementService class inherits from the Service class and provides implemenations more specific to execution management such as order
  * submission, order cancellation, etc..
@@ -377,6 +378,7 @@ class ExecutionManagementService : public Service {
   std::map<std::string, unsigned int> wsRequestIdByConnectionIdMap;
   std::map<std::string, std::map<unsigned int, std::string>> requestCorrelationIdByWsRequestIdByConnectionIdMap;
 };
+
 } /* namespace ccapi */
 #endif
 #endif  // INCLUDE_CCAPI_CPP_SERVICE_CCAPI_EXECUTION_MANAGEMENT_SERVICE_H_

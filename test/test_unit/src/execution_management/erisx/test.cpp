@@ -7,6 +7,7 @@
 
 // clang-format on
 namespace ccapi {
+
 class ExecutionManagementServiceErisxTest : public ::testing::Test {
  public:
   typedef Service::ServiceContextPtr ServiceContextPtr;
@@ -471,6 +472,7 @@ TEST_F(ExecutionManagementServiceErisxTest, convertTextMessageToMessageRestCance
   auto message = messageList.at(0);
   EXPECT_EQ(message.getType(), Message::Type::CANCEL_OPEN_ORDERS);
 }
+
 } /* namespace ccapi */
 #endif
 #endif

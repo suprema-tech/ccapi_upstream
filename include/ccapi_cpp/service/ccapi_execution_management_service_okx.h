@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceOkx : public ExecutionManagementService {
  public:
   ExecutionManagementServiceOkx(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -664,6 +665,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
   std::string apiPassphraseName;
   std::string apiXSimulatedTradingName;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

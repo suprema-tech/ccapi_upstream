@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
 
 namespace ccapi {
+
 class MarketDataServiceBybit : public MarketDataService {
  public:
   MarketDataServiceBybit(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -472,6 +473,7 @@ class MarketDataServiceBybit : public MarketDataService {
     }
   }
 };
+
 } /* namespace ccapi */
 #endif
 #endif

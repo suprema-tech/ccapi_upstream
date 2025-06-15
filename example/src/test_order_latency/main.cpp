@@ -3,6 +3,7 @@
 #include "ccapi_cpp/ccapi_session.h"
 
 namespace ccapi {
+
 Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
@@ -111,6 +112,7 @@ class MyEventHandler : public EventHandler {
   int numCanceledOrders{};
   std::atomic<bool> done{};
 };
+
 } /* namespace ccapi */
 
 using ::ccapi::MyEventHandler;

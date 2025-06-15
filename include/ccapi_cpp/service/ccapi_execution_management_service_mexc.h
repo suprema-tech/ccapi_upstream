@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceMexc : public ExecutionManagementService {
  public:
   ExecutionManagementServiceMexc(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -445,6 +446,7 @@ class ExecutionManagementServiceMexc : public ExecutionManagementService {
   int pingListenKeyIntervalSeconds;
   std::map<std::string, TimerPtr> pingListenKeyTimerMapByConnectionIdMap;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

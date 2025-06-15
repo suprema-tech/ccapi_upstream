@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
 
 namespace ccapi {
+
 class MarketDataServiceBitgetBase : public MarketDataService {
  public:
   MarketDataServiceBitgetBase(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -517,6 +518,7 @@ class MarketDataServiceBitgetBase : public MarketDataService {
   bool isDerivatives{};
   std::string instrumentType{"SPOT"};
 };
+
 } /* namespace ccapi */
 #endif
 #endif

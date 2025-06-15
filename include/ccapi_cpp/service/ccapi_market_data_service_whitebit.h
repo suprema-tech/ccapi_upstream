@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
 
 namespace ccapi {
+
 class MarketDataServiceWhitebit : public MarketDataService {
  public:
   MarketDataServiceWhitebit(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -332,6 +333,7 @@ class MarketDataServiceWhitebit : public MarketDataService {
 
   std::string methodDepthSubscribe, methodDepthUpdate, methodTradesSubscribe, methodTradesUpdate;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

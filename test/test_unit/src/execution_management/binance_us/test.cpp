@@ -7,6 +7,7 @@
 
 // clang-format on
 namespace ccapi {
+
 class ExecutionManagementServiceBinanceUsTest : public ::testing::Test {
  public:
   typedef Service::ServiceContextPtr ServiceContextPtr;
@@ -498,6 +499,7 @@ TEST_F(ExecutionManagementServiceBinanceUsTest, convertTextMessageToMessageRestG
   EXPECT_EQ(element.getValue(CCAPI_EM_ASSET), "BTC");
   EXPECT_EQ(element.getValue(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING), "4723846.89208129");
 }
+
 } /* namespace ccapi */
 #endif
 #endif

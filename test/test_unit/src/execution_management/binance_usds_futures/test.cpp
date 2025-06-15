@@ -7,6 +7,7 @@
 
 // clang-format on
 namespace ccapi {
+
 class ExecutionManagementServiceBinanceUsdsFuturesTest : public ::testing::Test {
  public:
   typedef Service::ServiceContextPtr ServiceContextPtr;
@@ -459,6 +460,7 @@ TEST_F(ExecutionManagementServiceBinanceUsdsFuturesTest, convertTextMessageToMes
   EXPECT_DOUBLE_EQ(std::stod(element.getValue(CCAPI_EM_POSITION_ENTRY_PRICE)), 0);
   EXPECT_EQ(element.getValue(CCAPI_EM_POSITION_LEVERAGE), "100");
 }
+
 } /* namespace ccapi */
 #endif
 #endif

@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceBitmex : public ExecutionManagementService {
  public:
   ExecutionManagementServiceBitmex(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -466,6 +467,7 @@ class ExecutionManagementServiceBitmex : public ExecutionManagementService {
     return event;
   }
 };
+
 } /* namespace ccapi */
 #endif
 #endif

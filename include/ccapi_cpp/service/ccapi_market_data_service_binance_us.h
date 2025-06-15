@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_market_data_service_binance_base.h"
 
 namespace ccapi {
+
 class MarketDataServiceBinanceUs : public MarketDataServiceBinanceBase {
  public:
   MarketDataServiceBinanceUs(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -32,6 +33,7 @@ class MarketDataServiceBinanceUs : public MarketDataServiceBinanceBase {
 
   virtual ~MarketDataServiceBinanceUs() {}
 };
+
 } /* namespace ccapi */
 #endif
 #endif

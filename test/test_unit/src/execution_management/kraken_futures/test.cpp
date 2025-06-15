@@ -7,6 +7,7 @@
 
 // clang-format on
 namespace ccapi {
+
 class ExecutionManagementServiceKrakenFuturesTest : public ::testing::Test {
  public:
   typedef Service::ServiceContextPtr ServiceContextPtr;
@@ -507,6 +508,7 @@ TEST_F(ExecutionManagementServiceKrakenFuturesTest, createEventOpenOrders) {
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_INSTRUMENT), "PI_XBTUSD");
   EXPECT_EQ(element.getValue("is_cancel"), "0");
 }
+
 } /* namespace ccapi */
 #endif
 #endif

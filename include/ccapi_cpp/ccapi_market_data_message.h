@@ -5,6 +5,7 @@
 
 // #include "ccapi_message.h"
 namespace ccapi {
+
 class MarketDataMessage {
   /**
    * A handle to a single market data message. Each MarketDataMessage is associated with one 'exchangeSubscriptionId' value. The MarketDataMessage contents are
@@ -213,5 +214,6 @@ class MarketDataMessage {
   std::string exchangeSubscriptionId;
   TypeForData data;
 };
+
 } /* namespace ccapi */
 #endif  // INCLUDE_CCAPI_CPP_CCAPI_MARKET_DATA_MESSAGE_H_

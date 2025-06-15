@@ -7,6 +7,7 @@
 
 // clang-format on
 namespace ccapi {
+
 class ExecutionManagementServiceOkxTest : public ::testing::Test {
  public:
   typedef Service::ServiceContextPtr ServiceContextPtr;
@@ -741,6 +742,7 @@ TEST_F(ExecutionManagementServiceOkxTest, createEventWebsocketTradeCancelOrder) 
   Element element = elementList.at(0);
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_ID), "325631903554482176");
 }
+
 } /* namespace ccapi */
 #endif
 #endif

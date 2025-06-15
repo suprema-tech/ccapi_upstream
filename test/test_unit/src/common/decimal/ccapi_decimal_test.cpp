@@ -3,6 +3,7 @@
 #include "gtest/gtest.h"
 
 namespace ccapi {
+
 TEST(DecimalTest, compareScientificNotation) {
   Decimal bid_1("1.51e-6");
   Decimal ask_1("1.5113e-6");
@@ -122,4 +123,5 @@ TEST(DecimalTest, subtract_52) { EXPECT_EQ(Decimal("42839").subtract(Decimal("0.
 TEST(DecimalTest, subtract_61) { EXPECT_EQ(Decimal("0.0135436").subtract(Decimal("0.0135436")).toString(), "0"); }
 
 TEST(DecimalTest, subtract_62) { EXPECT_EQ(Decimal("1").subtract(Decimal("1")).toString(), "0"); }
+
 } /* namespace ccapi */

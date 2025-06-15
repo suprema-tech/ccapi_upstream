@@ -12,6 +12,7 @@
 namespace hff = hffix;
 
 namespace ccapi {
+
 /**
  * Defines a service which provides access to exchange API and normalizes them. This is a base class that implements generic functionalities for dealing with
  * exchange FIX APIs. The Session object is responsible for routing requests and subscriptions to the desired concrete service.
@@ -639,6 +640,7 @@ inline void FixService<beast::tcp_stream>::onConnect_3(std::shared_ptr<FixConnec
   beast::tcp_stream& stream = *fixConnectionPtr->streamPtr;
   this->start(fixConnectionPtr, now);
 }
+
 } /* namespace ccapi */
 #endif
 #endif  // INCLUDE_CCAPI_CPP_SERVICE_CCAPI_FIX_SERVICE_H_

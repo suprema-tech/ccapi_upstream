@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
 
 namespace ccapi {
+
 class MarketDataServiceGateioBase : public MarketDataService {
  public:
   MarketDataServiceGateioBase(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -375,6 +376,7 @@ class MarketDataServiceGateioBase : public MarketDataService {
   std::string websocketChannelOrderBook;
   std::string websocketChannelCandlesticks;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

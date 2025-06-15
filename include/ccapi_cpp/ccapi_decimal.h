@@ -6,6 +6,7 @@
 #include "ccapi_cpp/ccapi_util_private.h"
 
 namespace ccapi {
+
 /**
  * This class provides a numeric type for representing an arbitrary precision decimal number. It is minimalistic for the purpose of high performance.
  * Furthermore, unlike double, it is suitable for being used as the key of a map.
@@ -243,5 +244,6 @@ class Decimal {
   // false means negative sign needed
   bool sign{true};
 };
+
 } /* namespace ccapi */
 #endif  // INCLUDE_CCAPI_CPP_CCAPI_DECIMAL_H_

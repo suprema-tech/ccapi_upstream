@@ -7,6 +7,7 @@
 #include "ccapi_cpp/ccapi_logger.h"
 
 namespace ccapi {
+
 /**
  * A handle to a single message. Message objects are obtained from the getMessageList() function of the Event object. Each Message is associated with one or
  * more correlation id values. The Message contents are represented as Elements and can be accessed via the getElementList() function. Each Message object
@@ -304,5 +305,6 @@ class Message {
   Type type{Type::UNKNOWN};
   RecapType recapType{RecapType::UNKNOWN};
 };
+
 } /* namespace ccapi */
 #endif  // INCLUDE_CCAPI_CPP_CCAPI_MESSAGE_H_

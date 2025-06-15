@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceBitgetBase : public ExecutionManagementService {
  public:
   ExecutionManagementServiceBitgetBase(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -78,6 +79,7 @@ class ExecutionManagementServiceBitgetBase : public ExecutionManagementService {
 
   std::string apiPassphraseName;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

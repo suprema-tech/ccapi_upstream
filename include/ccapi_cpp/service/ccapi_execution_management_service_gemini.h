@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceGemini : public ExecutionManagementService {
  public:
   ExecutionManagementServiceGemini(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -416,6 +417,7 @@ class ExecutionManagementServiceGemini : public ExecutionManagementService {
 
   std::set<std::string> websocketOrderUpdateTypeSet{"accepted", "rejected", "booked", "fill", "cancelled", "cancel_rejected", "closed"};
 };
+
 } /* namespace ccapi */
 #endif
 #endif

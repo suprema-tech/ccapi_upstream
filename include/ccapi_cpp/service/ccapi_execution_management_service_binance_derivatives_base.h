@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_binance_base.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceBinanceDerivativesBase : public ExecutionManagementServiceBinanceBase {
  public:
   ExecutionManagementServiceBinanceDerivativesBase(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions,
@@ -63,6 +64,7 @@ class ExecutionManagementServiceBinanceDerivativesBase : public ExecutionManagem
     }
   }
 };
+
 } /* namespace ccapi */
 #endif
 #endif

@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
 
 namespace ccapi {
+
 class MarketDataServiceBitmex : public MarketDataService {
  public:
   MarketDataServiceBitmex(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -336,6 +337,7 @@ class MarketDataServiceBitmex : public MarketDataService {
 
   std::map<std::string, std::map<std::string, std::map<std::string, std::map<std::string, std::string>>>> priceByConnectionIdChannelIdSymbolIdPriceIdMap;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

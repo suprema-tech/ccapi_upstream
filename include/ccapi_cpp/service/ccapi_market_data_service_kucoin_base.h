@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
 
 namespace ccapi {
+
 class MarketDataServiceKucoinBase : public MarketDataService {
  public:
   MarketDataServiceKucoinBase(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -647,6 +648,7 @@ class MarketDataServiceKucoinBase : public MarketDataService {
   std::string level2Subject;
   std::string apiPassphraseName;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

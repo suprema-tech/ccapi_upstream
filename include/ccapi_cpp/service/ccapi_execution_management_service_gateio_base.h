@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
  public:
   ExecutionManagementServiceGateioBase(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -462,6 +463,7 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
   std::string websocketChannelOrders;
   std::string amountName;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

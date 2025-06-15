@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_market_data_service_gateio_base.h"
 
 namespace ccapi {
+
 class MarketDataServiceGateioPerpetualFutures : public MarketDataServiceGateioBase {
  public:
   MarketDataServiceGateioPerpetualFutures(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -215,6 +216,7 @@ class MarketDataServiceGateioPerpetualFutures : public MarketDataServiceGateioBa
     }
   }
 };
+
 } /* namespace ccapi */
 #endif
 #endif

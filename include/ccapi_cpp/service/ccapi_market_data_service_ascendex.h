@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
 
 namespace ccapi {
+
 class MarketDataServiceAscendex : public MarketDataService {
  public:
   MarketDataServiceAscendex(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -325,6 +326,7 @@ class MarketDataServiceAscendex : public MarketDataService {
     }
   }
 };
+
 } /* namespace ccapi */
 #endif
 #endif

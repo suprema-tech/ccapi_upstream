@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
  public:
   ExecutionManagementServiceBitstamp(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -450,6 +451,7 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
 
   std::string getWebSocketsTokenTarget;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

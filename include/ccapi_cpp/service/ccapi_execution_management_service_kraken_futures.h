@@ -6,6 +6,7 @@
 #include "openssl/evp.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceKrakenFutures : public ExecutionManagementService {
  public:
   ExecutionManagementServiceKrakenFutures(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -433,6 +434,7 @@ class ExecutionManagementServiceKrakenFutures : public ExecutionManagementServic
   std::string getAccountsPath;
   std::string getAccountPositionsPath;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

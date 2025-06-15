@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
 
 namespace ccapi {
+
 class MarketDataServiceBitmart : public MarketDataService {
  public:
   MarketDataServiceBitmart(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -322,6 +323,7 @@ class MarketDataServiceBitmart : public MarketDataService {
   std::string apiMemo;
   std::map<std::string, std::map<std::string, std::map<std::string, bool>>> subscriptionStartedByConnectionIdChannelIdSymbolIdMap;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

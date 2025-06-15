@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
  public:
   ExecutionManagementServiceKucoinBase(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -490,6 +491,7 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
   std::string createOrderMarginTarget;
   std::string getOrderByClientOrderIdTarget;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

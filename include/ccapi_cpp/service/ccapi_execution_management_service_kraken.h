@@ -6,6 +6,7 @@
 #include "openssl/evp.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceKraken : public ExecutionManagementService {
  public:
   ExecutionManagementServiceKraken(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -472,6 +473,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
 
   std::string getWebSocketsTokenTarget;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

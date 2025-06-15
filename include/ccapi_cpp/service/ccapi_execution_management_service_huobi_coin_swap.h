@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_huobi_derivatives_base.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceHuobiCoinSwap : public ExecutionManagementServiceHuobiDerivativesBase {
  public:
   ExecutionManagementServiceHuobiCoinSwap(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -31,6 +32,7 @@ class ExecutionManagementServiceHuobiCoinSwap : public ExecutionManagementServic
 
   virtual ~ExecutionManagementServiceHuobiCoinSwap() {}
 };
+
 } /* namespace ccapi */
 #endif
 #endif

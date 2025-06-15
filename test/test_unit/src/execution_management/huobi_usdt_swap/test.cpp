@@ -7,6 +7,7 @@
 
 // clang-format on
 namespace ccapi {
+
 class ExecutionManagementServiceHuobiUsdtSwapTest : public ::testing::Test {
  public:
   typedef Service::ServiceContextPtr ServiceContextPtr;
@@ -626,6 +627,7 @@ TEST_F(ExecutionManagementServiceHuobiUsdtSwapTest, createEventOrderData) {
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_INSTRUMENT), "BTC-USDT");
   EXPECT_DOUBLE_EQ(std::stod(element.getValue(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY)), 400000);
 }
+
 } /* namespace ccapi */
 #endif
 #endif

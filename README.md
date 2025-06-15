@@ -224,6 +224,7 @@ For a specific exchange and instrument, get recents trades.
 #include "ccapi_cpp/ccapi_session.h"
 
 namespace ccapi {
+
 Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
@@ -232,6 +233,7 @@ class MyEventHandler : public EventHandler {
     std::cout << "Received an event:\n" + event.toStringPretty(2, 2) << std::endl;
   }
 };
+
 } /* namespace ccapi */
 
 using ::ccapi::MyEventHandler;
@@ -300,6 +302,7 @@ For a specific exchange and instrument, whenever the best bid's or ask's price o
 #include "ccapi_cpp/ccapi_session.h"
 
 namespace ccapi {
+
 Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
@@ -318,6 +321,7 @@ class MyEventHandler : public EventHandler {
     }
   }
 };
+
 } /* namespace ccapi */
 
 using ::ccapi::MyEventHandler;
@@ -491,6 +495,7 @@ For a specific exchange and instrument, submit a simple limit order.
 #include "ccapi_cpp/ccapi_session.h"
 
 namespace ccapi {
+
 Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
@@ -499,6 +504,7 @@ class MyEventHandler : public EventHandler {
     std::cout << "Received an event:\n" + event.toStringPretty(2, 2) << std::endl;
   }
 };
+
 } /* namespace ccapi */
 
 using ::ccapi::MyEventHandler;
@@ -588,6 +594,7 @@ For a specific exchange and instrument, receive order updates.
 #include "ccapi_cpp/ccapi_session.h"
 
 namespace ccapi {
+
 Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
@@ -611,6 +618,7 @@ class MyEventHandler : public EventHandler {
     }
   }
 };
+
 } /* namespace ccapi */
 
 using ::ccapi::MyEventHandler;
@@ -832,6 +840,7 @@ For a specific exchange and instrument, submit a simple limit order.
 ```
 #include "ccapi_cpp/ccapi_session.h"
 namespace ccapi {
+
 Logger* Logger::logger = nullptr;  // This line is needed.
 class MyEventHandler : public EventHandler {
  public:
@@ -858,6 +867,7 @@ class MyEventHandler : public EventHandler {
     }
   }
 };
+
 } /* namespace ccapi */
 using ::ccapi::MyEventHandler;
 using ::ccapi::Session;
@@ -971,6 +981,7 @@ An example can be found [here](example/src/market_data_advanced_subscription/mai
 Extend a subclass, e.g. `MyLogger`, from class `Logger` and override method `logMessage`. Assign a `MyLogger` pointer to `Logger::logger`. Add one of the following macros in the compiler command line: `CCAPI_ENABLE_LOG_TRACE`, `CCAPI_ENABLE_LOG_DEBUG`, `CCAPI_ENABLE_LOG_INFO`, `CCAPI_ENABLE_LOG_WARN`, `CCAPI_ENABLE_LOG_ERROR`, `CCAPI_ENABLE_LOG_FATAL`. Enable logging if you'd like to inspect raw responses/messages from the exchange for troubleshooting purposes.
 ```
 namespace ccapi {
+
 class MyLogger final : public Logger {
  public:
   void logMessage(const std::string& severity, const std::string& threadId, const std::string& timeISO, const std::string& fileName,
@@ -985,6 +996,7 @@ class MyLogger final : public Logger {
 
 MyLogger myLogger;
 Logger* Logger::logger = &myLogger;
+
 } /* namespace ccapi */
 ```
 

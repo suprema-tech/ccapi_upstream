@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_market_data_service_huobi_base.h"
 
 namespace ccapi {
+
 class MarketDataServiceHuobiDerivativesBase : public MarketDataServiceHuobiBase {
  public:
   MarketDataServiceHuobiDerivativesBase(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -101,6 +102,7 @@ class MarketDataServiceHuobiDerivativesBase : public MarketDataServiceHuobiBase 
     }
   }
 };
+
 } /* namespace ccapi */
 #endif
 #endif

@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_market_data_service.h"
 
 namespace ccapi {
+
 class MarketDataServiceGemini : public MarketDataService {
  public:
   MarketDataServiceGemini(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -315,6 +316,7 @@ class MarketDataServiceGemini : public MarketDataService {
 
   std::map<std::string, int> sequenceByConnectionIdMap;
 };
+
 } /* namespace ccapi */
 #endif
 #endif
