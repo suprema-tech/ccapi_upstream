@@ -186,10 +186,8 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
         Element element;
         auto it = data[0].FindMember("margin_asset");
         element.insert(CCAPI_EM_ASSET, it != data[0].MemberEnd() ? it->value.GetString() : data[0]["symbol"].GetString());
-        auto marginAvailable = ConvertDecimalToString(Decimal(data[0]["margin_balance"].GetString())
-                                   -(Decimal(data[0]["margin_position"].GetString()))
-                                   -(Decimal(data[0]["margin_frozen"].GetString()))
-                                   );
+        auto marginAvailable = ConvertDecimalToString(Decimal(data[0]["margin_balance"].GetString()) - (Decimal(data[0]["margin_position"].GetString())) -
+                                                      (Decimal(data[0]["margin_frozen"].GetString())));
         element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, marginAvailable);
         elementList.emplace_back(std::move(element));
       } break;
@@ -216,10 +214,9 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
       auto it1 = x.FindMember("trade_volume");
       auto it2 = x.FindMember("trade_avg_price");
       if (it1 != x.MemberEnd() && it2 != x.MemberEnd()) {
-        element.insert(
-            CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
-            ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) * (it2->value.IsNull() ? 0 : std::stod(it2->value.GetString()))))
-                ));
+        element.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
+                       ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) *
+                                                                                        (it2->value.IsNull() ? 0 : std::stod(it2->value.GetString()))))));
       }
     }
   }
@@ -356,8 +353,9 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
             auto it1 = document.FindMember("trade_volume");
             auto it2 = document.FindMember("trade_avg_price");
             if (it1 != document.MemberEnd() && it2 != document.MemberEnd()) {
-              info.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
-                          ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) * std::stod(it2->value.GetString())))));
+              info.insert(
+                  CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
+                  ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) * std::stod(it2->value.GetString())))));
             }
           }
           for (const auto& x : document["trade"].GetArray()) {

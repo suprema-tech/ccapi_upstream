@@ -66,8 +66,9 @@ class ExecutionManagementServiceGateioPerpetualFutures : public ExecutionManagem
           Element element;
           element.insert(CCAPI_INSTRUMENT, x["contract"].GetString());
           element.insert(CCAPI_EM_POSITION_QUANTITY, x["size"].GetString());
-          element.insert(CCAPI_EM_POSITION_COST,
-                         ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(x["entry_price"].GetString()) * std::stod(x["size"].GetString())))));
+          element.insert(
+              CCAPI_EM_POSITION_COST,
+              ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(x["entry_price"].GetString()) * std::stod(x["size"].GetString())))));
           elementList.emplace_back(std::move(element));
         }
       } break;

@@ -252,7 +252,7 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
           std::string available = x["crossedMaxAvailable"].GetString();
           element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, available);
           std::string locked = x["locked"].GetString();
-          element.insert(CCAPI_EM_QUANTITY_TOTAL, (ConvertDecimalToString(Decimal(available)+(Decimal(locked)))));
+          element.insert(CCAPI_EM_QUANTITY_TOTAL, (ConvertDecimalToString(Decimal(available) + (Decimal(locked)))));
           elementList.emplace_back(std::move(element));
         }
       } break;

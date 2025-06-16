@@ -316,8 +316,9 @@ class ExecutionManagementServiceBitfinex : public ExecutionManagementService {
     element.insert(CCAPI_EM_ORDER_REMAINING_QUANTITY, x[6].GetString());
     element.insert(CCAPI_EM_ORDER_STATUS, x[13].GetString());
     element.insert(CCAPI_EM_ORDER_LIMIT_PRICE, x[16].GetString());
-    element.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
-                   ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(x[17].GetString()) * (std::stod(originalAmount) - std::stod(amount))))));
+    element.insert(
+        CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
+        ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(x[17].GetString()) * (std::stod(originalAmount) - std::stod(amount))))));
   }
 
   std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription, const TimePoint& now,

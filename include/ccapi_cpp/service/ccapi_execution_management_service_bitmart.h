@@ -263,7 +263,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
           std::string available = x["available"].GetString();
           std::string frozen = x["frozen"].GetString();
           element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, available);
-          element.insert(CCAPI_EM_QUANTITY_TOTAL, (ConvertDecimalToString(Decimal(available)+(Decimal(frozen)))));
+          element.insert(CCAPI_EM_QUANTITY_TOTAL, (ConvertDecimalToString(Decimal(available) + (Decimal(frozen)))));
           elementList.emplace_back(std::move(element));
         }
       } break;

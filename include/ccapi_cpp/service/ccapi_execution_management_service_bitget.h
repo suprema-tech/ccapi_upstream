@@ -211,7 +211,7 @@ class ExecutionManagementServiceBitget : public ExecutionManagementServiceBitget
           element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, available);
           std::string frozen = x["frozen"].GetString();
           std::string lock = x["locked"].GetString();
-          element.insert(CCAPI_EM_QUANTITY_TOTAL, (ConvertDecimalToString(Decimal(available)+(Decimal(frozen))+(Decimal(lock)))));
+          element.insert(CCAPI_EM_QUANTITY_TOTAL, (ConvertDecimalToString(Decimal(available) + (Decimal(frozen)) + (Decimal(lock)))));
           elementList.emplace_back(std::move(element));
         }
       } break;

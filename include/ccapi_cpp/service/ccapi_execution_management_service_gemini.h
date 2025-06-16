@@ -254,8 +254,9 @@ class ExecutionManagementServiceGemini : public ExecutionManagementService {
       auto it1 = x.FindMember("executed_amount");
       auto it2 = x.FindMember("avg_execution_price");
       if (it1 != x.MemberEnd() && it2 != x.MemberEnd()) {
-        element.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
-                       ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) * std::stod(it2->value.GetString())))));
+        element.insert(
+            CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
+            ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) * std::stod(it2->value.GetString())))));
       }
     }
     {
@@ -386,8 +387,8 @@ class ExecutionManagementServiceGemini : public ExecutionManagementService {
                 auto it1 = x.FindMember("executed_amount");
                 auto it2 = x.FindMember("avg_execution_price");
                 if (it1 != x.MemberEnd() && it2 != x.MemberEnd()) {
-                  info.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
-                              ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) * std::stod(it2->value.GetString())))));
+                  info.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY, ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(
+                                                                                   std::stod(it1->value.GetString()) * std::stod(it2->value.GetString())))));
                 }
               }
               {

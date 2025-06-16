@@ -471,8 +471,9 @@ class ExecutionManagementServiceAscendex : public ExecutionManagementService {
               this->extractOrderInfo(info, data, extractionFieldNameMap);
               auto it = data.FindMember("ap");
               if (it != data.MemberEnd() && !it->value.IsNull()) {
-                info.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
-                            ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(it->value.GetString()) * std::stod(data["cfq"].GetString())))));
+                info.insert(
+                    CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
+                    ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(it->value.GetString()) * std::stod(data["cfq"].GetString())))));
               }
               info.insert(CCAPI_EM_BASE_ASSET_QUANTITY_AVAILABLE_FOR_TRADING, data["bab"].GetString());
               info.insert(CCAPI_EM_BASE_ASSET_QUANTITY_TOTAL, data["btb"].GetString());

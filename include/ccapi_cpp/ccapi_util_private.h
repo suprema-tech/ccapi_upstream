@@ -27,11 +27,11 @@
 #include <unordered_set>
 #include <vector>
 
+#include "boost/multiprecision/cpp_dec_float.hpp"
 #include "ccapi_cpp/ccapi_macro.h"
 #include "ccapi_cpp/ccapi_util.h"
 #include "openssl/evp.h"
 #include "openssl/pem.h"
-#include "boost/multiprecision/cpp_dec_float.hpp"
 
 namespace ccapi {
 
@@ -1400,8 +1400,6 @@ V mapGetWithDefault(const C<K, V, Args...>& m, const K& key, const V defaultValu
   }
   return it->second;
 }
-
-
 
 } /* namespace ccapi */
 #endif  // INCLUDE_CCAPI_CPP_CCAPI_UTIL_PRIVATE_H_
