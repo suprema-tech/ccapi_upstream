@@ -445,12 +445,12 @@ class MarketDataServiceBitfinex : public MarketDataService {
     std::vector<std::string> csData;
     while (i < 25 && (i1 != snapshotBid.rend() || i2 != snapshotAsk.end())) {
       if (i1 != snapshotBid.rend()) {
-        csData.push_back(i1->first.toString());
+        csData.push_back(ConvertDecimalToString(i1->first));
         csData.push_back(i1->second);
         ++i1;
       }
       if (i2 != snapshotAsk.end()) {
-        csData.push_back(i2->first.toString());
+        csData.push_back(ConvertDecimalToString(i2->first));
         csData.push_back("-" + i2->second);
         ++i2;
       }

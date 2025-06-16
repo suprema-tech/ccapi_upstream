@@ -60,6 +60,7 @@
 
 
 
+
 # ccapi
 * A header-only C++ library for streaming market data and executing trades directly from cryptocurrency exchanges (i.e. the connections are between your server and the exchange server without anything in-between).
 * Bindings for other languages such as Python, Java, C#, Go, and Javascript are provided.
@@ -134,6 +135,7 @@ cmake --build .
 
 ## Constants
 [`include/ccapi_cpp/ccapi_macro.h`](include/ccapi_cpp/ccapi_macro.h)
+* For most cryptocurrencies, the default value of `CCAPI_DECIMAL_SCALE` is sufficient. You can override it if you need more.
 
 ## Examples
 [C++](example)
@@ -973,6 +975,7 @@ An example can be found [here](example/src/market_data_advanced_subscription/mai
 
 #### Thread safety
 * The following methods are implemented to be thread-safe: `Session::sendRequest`, `Session::subscribe`, `Session::sendRequestByFix`, `Session::subscribeByFix`, `Session::setTimer`, all public methods in `Queue`.
+* If you choose to inject an external `boost::asio::io_context` to `ServiceContext`, the `boost::asio::io_context` has to run on a single thread to ensure thread safety.
 
 #### Enable library logging
 

@@ -477,7 +477,7 @@ class MarketDataService : public Service {
       for (auto iter = snapshotBid.rbegin(); iter != snapshotBid.rend(); iter++) {
         if (bidIndex < maxMarketDepth) {
           Element element;
-          element.insert(CCAPI_BEST_BID_N_PRICE, iter->first.toString());
+          element.insert(CCAPI_BEST_BID_N_PRICE, ConvertDecimalToString(iter->first));
           element.insert(CCAPI_BEST_BID_N_SIZE, iter->second);
           elementList.emplace_back(std::move(element));
         }
@@ -493,7 +493,7 @@ class MarketDataService : public Service {
       for (auto iter = snapshotAsk.begin(); iter != snapshotAsk.end(); iter++) {
         if (askIndex < maxMarketDepth) {
           Element element;
-          element.insert(CCAPI_BEST_ASK_N_PRICE, iter->first.toString());
+          element.insert(CCAPI_BEST_ASK_N_PRICE, ConvertDecimalToString(iter->first));
           element.insert(CCAPI_BEST_ASK_N_SIZE, iter->second);
           elementList.emplace_back(std::move(element));
         }
@@ -517,7 +517,7 @@ class MarketDataService : public Service {
       for (auto iter = snapshotBid.rbegin(); iter != snapshotBid.rend(); iter++) {
         if (bidIndex < maxMarketDepth) {
           Element element;
-          element.insert(CCAPI_BEST_BID_N_PRICE, iter->first.toString());
+          element.insert(CCAPI_BEST_BID_N_PRICE, ConvertDecimalToString(iter->first));
           element.insert(CCAPI_BEST_BID_N_SIZE, iter->second);
           elementList.emplace_back(std::move(element));
         }
@@ -533,7 +533,7 @@ class MarketDataService : public Service {
       for (auto iter = snapshotAsk.begin(); iter != snapshotAsk.end(); iter++) {
         if (askIndex < maxMarketDepth) {
           Element element;
-          element.insert(CCAPI_BEST_ASK_N_PRICE, iter->first.toString());
+          element.insert(CCAPI_BEST_ASK_N_PRICE, ConvertDecimalToString(iter->first));
           element.insert(CCAPI_BEST_ASK_N_SIZE, iter->second);
           elementList.emplace_back(std::move(element));
         }
@@ -649,7 +649,7 @@ class MarketDataService : public Service {
         for (auto& x : snapshotBidUpdate) {
           Element element;
           std::string k1(CCAPI_BEST_BID_N_PRICE);
-          std::string v1 = x.first.toString();
+          std::string v1 = ConvertDecimalToString(x.first);
           element.emplace(k1, v1);
           std::string k2(CCAPI_BEST_BID_N_SIZE);
           element.emplace(k2, x.second);
@@ -659,7 +659,7 @@ class MarketDataService : public Service {
         for (auto& x : snapshotAskUpdate) {
           Element element;
           std::string k1(CCAPI_BEST_ASK_N_PRICE);
-          std::string v1 = x.first.toString();
+          std::string v1 = ConvertDecimalToString(x.first);
           element.emplace(k1, v1);
           std::string k2(CCAPI_BEST_ASK_N_SIZE);
           element.emplace(k2, x.second);
@@ -675,7 +675,7 @@ class MarketDataService : public Service {
               break;
             }
             Element element;
-            element.insert(CCAPI_BEST_BID_N_PRICE, iter->first.toString());
+            element.insert(CCAPI_BEST_BID_N_PRICE, ConvertDecimalToString(iter->first));
             element.insert(CCAPI_BEST_BID_N_SIZE, iter->second);
             elementList.emplace_back(std::move(element));
             ++bidIndex;
@@ -692,7 +692,7 @@ class MarketDataService : public Service {
               break;
             }
             Element element;
-            element.insert(CCAPI_BEST_ASK_N_PRICE, iter->first.toString());
+            element.insert(CCAPI_BEST_ASK_N_PRICE, ConvertDecimalToString(iter->first));
             element.insert(CCAPI_BEST_ASK_N_SIZE, iter->second);
             elementList.emplace_back(std::move(element));
             ++askIndex;
@@ -805,8 +805,8 @@ class MarketDataService : public Service {
         element.insert(CCAPI_CLOSE_PRICE, CCAPI_CANDLESTICK_EMPTY);
       } else {
         element.insert(CCAPI_OPEN_PRICE, this->openByConnectionIdChannelIdSymbolIdMap[wsConnection.id][channelId][symbolId]);
-        element.insert(CCAPI_HIGH_PRICE, this->highByConnectionIdChannelIdSymbolIdMap[wsConnection.id][channelId][symbolId].toString());
-        element.insert(CCAPI_LOW_PRICE, this->lowByConnectionIdChannelIdSymbolIdMap[wsConnection.id][channelId][symbolId].toString());
+        element.insert(CCAPI_HIGH_PRICE, ConvertDecimalToString(this->highByConnectionIdChannelIdSymbolIdMap[wsConnection.id][channelId][symbolId]));
+        element.insert(CCAPI_LOW_PRICE, ConvertDecimalToString(this->lowByConnectionIdChannelIdSymbolIdMap[wsConnection.id][channelId][symbolId]));
         element.insert(CCAPI_CLOSE_PRICE, this->closeByConnectionIdChannelIdSymbolIdMap[wsConnection.id][channelId][symbolId]);
       }
       elementList.emplace_back(std::move(element));
@@ -840,7 +840,7 @@ class MarketDataService : public Service {
         for (auto& y : detail) {
           auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
           auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
-          Decimal decimalPrice(price, this->sessionOptions.enableCheckOrderBookChecksum);
+          Decimal decimalPrice(price);
           snapshotBid.emplace(std::move(decimalPrice), std::move(size));
         }
         CCAPI_LOGGER_TRACE("lastNToString(snapshotBid, " + toString(maxMarketDepth) + ") = " + lastNToString(snapshotBid, maxMarketDepth));
@@ -848,7 +848,7 @@ class MarketDataService : public Service {
         for (auto& y : detail) {
           auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
           auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
-          Decimal decimalPrice(price, this->sessionOptions.enableCheckOrderBookChecksum);
+          Decimal decimalPrice(price);
           snapshotAsk.emplace(std::move(decimalPrice), std::move(size));
         }
         CCAPI_LOGGER_TRACE("firstNToString(snapshotAsk, " + toString(maxMarketDepth) + ") = " + firstNToString(snapshotAsk, maxMarketDepth));
@@ -930,14 +930,14 @@ class MarketDataService : public Service {
           for (auto& y : detail) {
             auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
             auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
-            Decimal decimalPrice(price, this->sessionOptions.enableCheckOrderBookChecksum);
+            Decimal decimalPrice(price);
             this->updateOrderBook(snapshotBid, decimalPrice, size, this->sessionOptions.enableCheckOrderBookChecksum);
           }
         } else if (type == MarketDataMessage::DataType::ASK) {
           for (auto& y : detail) {
             auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
             auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
-            Decimal decimalPrice(price, this->sessionOptions.enableCheckOrderBookChecksum);
+            Decimal decimalPrice(price);
             this->updateOrderBook(snapshotAsk, decimalPrice, size, this->sessionOptions.enableCheckOrderBookChecksum);
           }
         } else {
@@ -1192,8 +1192,8 @@ class MarketDataService : public Service {
         auto& bid = i1->first;
         auto& ask = i2->first;
         if (bid >= ask) {
-          CCAPI_LOGGER_ERROR("bid = " + toString(bid));
-          CCAPI_LOGGER_ERROR("ask = " + toString(ask));
+          CCAPI_LOGGER_ERROR("bid = " + ConvertDecimalToString(bid));
+          CCAPI_LOGGER_ERROR("ask = " + ConvertDecimalToString(ask));
           shouldProcessRemainingMessage = false;
           return false;
         }
@@ -1405,7 +1405,7 @@ class MarketDataService : public Service {
         for (auto& y : detail) {
           auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
           auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
-          Decimal decimalPrice(price, this->sessionOptions.enableCheckOrderBookChecksum);
+          Decimal decimalPrice(price);
           snapshotBid.emplace(std::move(decimalPrice), std::move(size));
         }
         CCAPI_LOGGER_TRACE("lastNToString(snapshotBid, " + toString(maxMarketDepth) + ") = " + lastNToString(snapshotBid, maxMarketDepth));
@@ -1413,7 +1413,7 @@ class MarketDataService : public Service {
         for (auto& y : detail) {
           auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
           auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
-          Decimal decimalPrice(price, this->sessionOptions.enableCheckOrderBookChecksum);
+          Decimal decimalPrice(price);
           snapshotAsk.emplace(std::move(decimalPrice), std::move(size));
         }
         CCAPI_LOGGER_TRACE("firstNToString(snapshotAsk, " + toString(maxMarketDepth) + ") = " + firstNToString(snapshotAsk, maxMarketDepth));
@@ -1548,14 +1548,14 @@ class MarketDataService : public Service {
                     for (const auto& y : detail) {
                       const auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
                       const auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
-                      Decimal decimalPrice(price, that->sessionOptions.enableCheckOrderBookChecksum);
+                      Decimal decimalPrice(price);
                       snapshotBid.emplace(std::move(decimalPrice), std::move(size));
                     }
                   } else if (type == MarketDataMessage::DataType::ASK) {
                     for (const auto& y : detail) {
                       const auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
                       const auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
-                      Decimal decimalPrice(price, that->sessionOptions.enableCheckOrderBookChecksum);
+                      Decimal decimalPrice(price);
                       snapshotAsk.emplace(std::move(decimalPrice), std::move(size));
                     }
                   }
@@ -1576,14 +1576,14 @@ class MarketDataService : public Service {
                         for (const auto& y : detail) {
                           const auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
                           const auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
-                          Decimal decimalPrice(price, that->sessionOptions.enableCheckOrderBookChecksum);
+                          Decimal decimalPrice(price);
                           that->updateOrderBook(snapshotBid, decimalPrice, size, that->sessionOptions.enableCheckOrderBookChecksum);
                         }
                       } else if (type == MarketDataMessage::DataType::ASK) {
                         for (const auto& y : detail) {
                           const auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
                           const auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
-                          Decimal decimalPrice(price, that->sessionOptions.enableCheckOrderBookChecksum);
+                          Decimal decimalPrice(price);
                           that->updateOrderBook(snapshotAsk, decimalPrice, size, that->sessionOptions.enableCheckOrderBookChecksum);
                         }
                       }
@@ -1601,7 +1601,7 @@ class MarketDataService : public Service {
                 for (auto iter = snapshotBid.rbegin(); iter != snapshotBid.rend(); iter++) {
                   if (bidIndex < maxMarketDepth) {
                     Element element;
-                    element.insert(CCAPI_BEST_BID_N_PRICE, iter->first.toString());
+                    element.insert(CCAPI_BEST_BID_N_PRICE, ConvertDecimalToString(iter->first));
                     element.insert(CCAPI_BEST_BID_N_SIZE, iter->second);
                     elementList.emplace_back(std::move(element));
                   }
@@ -1617,7 +1617,7 @@ class MarketDataService : public Service {
                 for (auto iter = snapshotAsk.begin(); iter != snapshotAsk.end(); iter++) {
                   if (askIndex < maxMarketDepth) {
                     Element element;
-                    element.insert(CCAPI_BEST_ASK_N_PRICE, iter->first.toString());
+                    element.insert(CCAPI_BEST_ASK_N_PRICE, ConvertDecimalToString(iter->first));
                     element.insert(CCAPI_BEST_ASK_N_SIZE, iter->second);
                     elementList.emplace_back(std::move(element));
                   }

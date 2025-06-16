@@ -262,8 +262,8 @@ class MarketDataServiceGemini : public MarketDataService {
     element.insert(CCAPI_INSTRUMENT, x["symbol"].GetString());
     element.insert(CCAPI_BASE_ASSET, x["base_currency"].GetString());
     element.insert(CCAPI_QUOTE_ASSET, x["quote_currency"].GetString());
-    element.insert(CCAPI_ORDER_PRICE_INCREMENT, Decimal(x["quote_increment"].GetString()).toString());
-    element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, Decimal(x["tick_size"].GetString()).toString());
+    element.insert(CCAPI_ORDER_PRICE_INCREMENT, ConvertDecimalToString(Decimal(x["quote_increment"].GetString())));
+    element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, ConvertDecimalToString(Decimal(x["tick_size"].GetString())));
   }
 
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,

@@ -252,7 +252,7 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
           std::string available = x["crossedMaxAvailable"].GetString();
           element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, available);
           std::string locked = x["locked"].GetString();
-          element.insert(CCAPI_EM_QUANTITY_TOTAL, (Decimal(available).add(Decimal(locked))).toString());
+          element.insert(CCAPI_EM_QUANTITY_TOTAL, (ConvertDecimalToString(Decimal(available)+(Decimal(locked)))));
           elementList.emplace_back(std::move(element));
         }
       } break;
@@ -285,7 +285,7 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
         auto it2Str = std::string(it2->value.GetString());
         if (!it1Str.empty() && !it2Str.empty()) {
           element.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
-                         Decimal(UtilString::printDoubleScientific(std::stod(it1Str) * std::stod(it2Str))).toString());
+                         ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(it1Str) * std::stod(it2Str)))));
         }
       }
     }

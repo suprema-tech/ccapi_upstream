@@ -222,7 +222,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
         auto it2 = itr->value.FindMember("price");
         if (it1 != itr->value.MemberEnd() && it2 != itr->value.MemberEnd()) {
           element.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
-                         Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) * std::stod(it2->value.GetString()))).toString());
+                         ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) * std::stod(it2->value.GetString())))));
         }
         element.insert(CCAPI_EM_ORDER_ID, itr->name.GetString());
         elementList.emplace_back(std::move(element));
@@ -253,7 +253,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
             Element element;
             element.insert(CCAPI_INSTRUMENT, itr->value["pair"].GetString());
             element.insert(CCAPI_EM_POSITION_QUANTITY,
-                           Decimal(itr->value["vol"].GetString()).subtract(Decimal(itr->value["vol_closed"].GetString())).toString());
+                           ConvertDecimalToString(Decimal(itr->value["vol"].GetString())-(Decimal(itr->value["vol_closed"].GetString()))));
             element.insert(CCAPI_EM_POSITION_COST, itr->value["cost"].GetString());
             elementList.emplace_back(std::move(element));
           }
@@ -424,7 +424,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
                   if (it1 != itr->value.MemberEnd() && it2 != itr->value.MemberEnd()) {
                     element.insert(
                         CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
-                        Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) * std::stod(it2->value.GetString()))).toString());
+                        ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) * std::stod(it2->value.GetString())))));
                   }
                   element.insert(CCAPI_EM_ORDER_ID, itr->name.GetString());
                   elementList.emplace_back(std::move(element));
@@ -436,7 +436,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
                 auto it2 = itr->value.FindMember("avg_price");
                 if (it1 != itr->value.MemberEnd() && it2 != itr->value.MemberEnd()) {
                   element.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
-                                 Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) * std::stod(it2->value.GetString()))).toString());
+                                 ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) * std::stod(it2->value.GetString())))));
                 }
                 element.insert(CCAPI_EM_ORDER_ID, itr->name.GetString());
                 elementList.emplace_back(std::move(element));

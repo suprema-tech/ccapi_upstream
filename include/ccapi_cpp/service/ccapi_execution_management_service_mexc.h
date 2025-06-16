@@ -212,7 +212,7 @@ class ExecutionManagementServiceMexc : public ExecutionManagementService {
         for (const auto& x : document["balances"].GetArray()) {
           Element element;
           element.insert(CCAPI_EM_ASSET, x["asset"].GetString());
-          element.insert(CCAPI_EM_QUANTITY_TOTAL, Decimal(x["free"].GetString()).add(Decimal(x["locked"].GetString())).toString());
+          element.insert(CCAPI_EM_QUANTITY_TOTAL, ConvertDecimalToString(Decimal(x["free"].GetString())+(Decimal(x["locked"].GetString()))));
           element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, x["free"].GetString());
           elementList.emplace_back(std::move(element));
         }

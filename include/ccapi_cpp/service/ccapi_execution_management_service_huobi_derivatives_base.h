@@ -2,7 +2,7 @@
 #define INCLUDE_CCAPI_CPP_SERVICE_CCAPI_EXECUTION_MANAGEMENT_SERVICE_HUOBI_DERIVATIVES_BASE_H_
 #ifdef CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT
 #if defined(CCAPI_ENABLE_EXCHANGE_HUOBI_USDT_SWAP) || defined(CCAPI_ENABLE_EXCHANGE_HUOBI_COIN_SWAP)
-#include "ccapi_cpp/ccapi_decimal.h"
+#include "ccapi_cpp/ccapi_util_private.h"
 #include "ccapi_cpp/service/ccapi_execution_management_service_huobi_base.h"
 
 namespace ccapi {
@@ -186,10 +186,10 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
         Element element;
         auto it = data[0].FindMember("margin_asset");
         element.insert(CCAPI_EM_ASSET, it != data[0].MemberEnd() ? it->value.GetString() : data[0]["symbol"].GetString());
-        auto marginAvailable = Decimal(data[0]["margin_balance"].GetString())
-                                   .subtract(Decimal(data[0]["margin_position"].GetString()))
-                                   .subtract(Decimal(data[0]["margin_frozen"].GetString()))
-                                   .toString();
+        auto marginAvailable = ConvertDecimalToString(Decimal(data[0]["margin_balance"].GetString())
+                                   -(Decimal(data[0]["margin_position"].GetString()))
+                                   -(Decimal(data[0]["margin_frozen"].GetString()))
+                                   );
         element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, marginAvailable);
         elementList.emplace_back(std::move(element));
       } break;
@@ -218,8 +218,8 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
       if (it1 != x.MemberEnd() && it2 != x.MemberEnd()) {
         element.insert(
             CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
-            Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) * (it2->value.IsNull() ? 0 : std::stod(it2->value.GetString()))))
-                .toString());
+            ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) * (it2->value.IsNull() ? 0 : std::stod(it2->value.GetString()))))
+                ));
       }
     }
   }
@@ -357,7 +357,7 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
             auto it2 = document.FindMember("trade_avg_price");
             if (it1 != document.MemberEnd() && it2 != document.MemberEnd()) {
               info.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
-                          Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) * std::stod(it2->value.GetString()))).toString());
+                          ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) * std::stod(it2->value.GetString())))));
             }
           }
           for (const auto& x : document["trade"].GetArray()) {

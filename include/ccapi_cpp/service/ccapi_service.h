@@ -28,7 +28,7 @@
 #include "boost/beast/http.hpp"
 #include "boost/beast/ssl.hpp"
 #include "boost/beast/version.hpp"
-#include "ccapi_cpp/ccapi_decimal.h"
+#include "ccapi_cpp/ccapi_util_private.h"
 #include "ccapi_cpp/ccapi_event.h"
 #include "ccapi_cpp/ccapi_macro.h"
 #include "ccapi_cpp/ccapi_market_data_message.h"

@@ -330,7 +330,7 @@ class ExecutionManagementServiceMexcFutures : public ExecutionManagementService 
     //     auto it2Str = std::string(it2->value.GetString());
     //     if (!it1Str.empty() && !it2Str.empty()) {
     //       element.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY, Decimal(UtilString::printDoubleScientific(std::stod(it1Str) *
-    //       std::stod(it2Str))).toString());
+    //       std::stod(it2Str)))));
     //     }
     //   }
     // }

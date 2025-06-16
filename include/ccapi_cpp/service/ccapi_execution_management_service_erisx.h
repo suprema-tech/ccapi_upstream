@@ -228,7 +228,7 @@ class ExecutionManagementServiceErisx : public ExecutionManagementService {
       auto it2 = x.FindMember("avgPrice");
       if (it1 != x.MemberEnd() && it2 != x.MemberEnd()) {
         element.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
-                       Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) * std::stod(it2->value.GetString()))).toString());
+                       ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) * std::stod(it2->value.GetString())))));
       }
     }
   }

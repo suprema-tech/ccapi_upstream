@@ -387,9 +387,9 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
             for (const auto& x : document["userAssets"].GetArray()) {
               Element element;
               element.insert(CCAPI_EM_ASSET, x["asset"].GetString());
-              element.insert(CCAPI_EM_QUANTITY_TOTAL, Decimal(x["free"].GetString()).add(Decimal(x["locked"].GetString())).toString());
+              element.insert(CCAPI_EM_QUANTITY_TOTAL, ConvertDecimalToString(Decimal(x["free"].GetString())+(Decimal(x["locked"].GetString()))));
               element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, x["free"].GetString());
-              element.insert(CCAPI_EM_QUANTITY_LIABILITY, Decimal(x["borrowed"].GetString()).add(Decimal(x["interest"].GetString())).toString());
+              element.insert(CCAPI_EM_QUANTITY_LIABILITY, ConvertDecimalToString(Decimal(x["borrowed"].GetString())+(Decimal(x["interest"].GetString()))));
               elementList.emplace_back(std::move(element));
             }
           } else if (marginType == CCAPI_EM_MARGIN_TYPE_ISOLATED_MARGIN) {
@@ -400,9 +400,9 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
                 Element element;
                 element.insert(CCAPI_EM_INSTRUMENT, symbol);
                 element.insert(CCAPI_EM_ASSET, y["asset"].GetString());
-                element.insert(CCAPI_EM_QUANTITY_TOTAL, Decimal(y["free"].GetString()).add(Decimal(y["locked"].GetString())).toString());
+                element.insert(CCAPI_EM_QUANTITY_TOTAL, ConvertDecimalToString(Decimal(y["free"].GetString())+(Decimal(y["locked"].GetString()))));
                 element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, y["free"].GetString());
-                element.insert(CCAPI_EM_QUANTITY_LIABILITY, Decimal(y["borrowed"].GetString()).add(Decimal(y["interest"].GetString())).toString());
+                element.insert(CCAPI_EM_QUANTITY_LIABILITY, ConvertDecimalToString(Decimal(y["borrowed"].GetString())+(Decimal(y["interest"].GetString()))));
                 elementList.emplace_back(std::move(element));
               }
               {
@@ -410,9 +410,9 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
                 Element element;
                 element.insert(CCAPI_EM_INSTRUMENT, symbol);
                 element.insert(CCAPI_EM_ASSET, y["asset"].GetString());
-                element.insert(CCAPI_EM_QUANTITY_TOTAL, Decimal(y["free"].GetString()).add(Decimal(y["locked"].GetString())).toString());
+                element.insert(CCAPI_EM_QUANTITY_TOTAL, ConvertDecimalToString(Decimal(y["free"].GetString())+(Decimal(y["locked"].GetString()))));
                 element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, y["free"].GetString());
-                element.insert(CCAPI_EM_QUANTITY_LIABILITY, Decimal(y["borrowed"].GetString()).add(Decimal(y["interest"].GetString())).toString());
+                element.insert(CCAPI_EM_QUANTITY_LIABILITY, ConvertDecimalToString(Decimal(y["borrowed"].GetString())+(Decimal(y["interest"].GetString()))));
                 elementList.emplace_back(std::move(element));
               }
             }
@@ -420,7 +420,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
             for (const auto& x : document["balances"].GetArray()) {
               Element element;
               element.insert(CCAPI_EM_ASSET, x["asset"].GetString());
-              element.insert(CCAPI_EM_QUANTITY_TOTAL, Decimal(x["free"].GetString()).add(Decimal(x["locked"].GetString())).toString());
+              element.insert(CCAPI_EM_QUANTITY_TOTAL, ConvertDecimalToString(Decimal(x["free"].GetString())+(Decimal(x["locked"].GetString()))));
               element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, x["free"].GetString());
               elementList.emplace_back(std::move(element));
             }
@@ -577,7 +577,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
               auto it = data.FindMember("ap");
               if (it != data.MemberEnd() && !it->value.IsNull()) {
                 info.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
-                            Decimal(UtilString::printDoubleScientific(std::stod(it->value.GetString()) * std::stod(data["z"].GetString()))).toString());
+                            ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(it->value.GetString()) * std::stod(data["z"].GetString())))));
               }
             }
             std::vector<Element> elementList;

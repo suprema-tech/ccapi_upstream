@@ -31,6 +31,7 @@
 #include "ccapi_cpp/ccapi_util.h"
 #include "openssl/evp.h"
 #include "openssl/pem.h"
+#include "boost/multiprecision/cpp_dec_float.hpp"
 
 namespace ccapi {
 
@@ -910,6 +911,49 @@ class UtilSystem {
   }
 };
 
+using Decimal = boost::multiprecision::number<boost::multiprecision::cpp_dec_float<CCAPI_DECIMAL_SCALE>>;
+
+template <typename T>
+struct GetCppDecFloatDigits;
+
+template <unsigned Digits10, typename ExponentType, typename Allocator>
+struct GetCppDecFloatDigits<boost::multiprecision::cpp_dec_float<Digits10, ExponentType, Allocator>> {
+  static constexpr unsigned value = Digits10;
+};
+
+inline std::string ConvertDecimalToString(const Decimal& input, bool normalize = true) {
+  constexpr unsigned precision = GetCppDecFloatDigits<Decimal::backend_type>::value;
+
+  // Always generate fixed-format string
+  std::string s = input.str(precision, std::ios_base::fixed);
+
+  // Fast path: normalization is OFF
+  if (!normalize) {
+    return s;
+  }
+
+  // Fast trimming: remove trailing zeros after the decimal
+  const std::size_t dot_pos = s.find('.');
+  if (dot_pos == std::string::npos) {
+    return s;  // No decimal point
+  }
+
+  std::size_t end = s.size();
+
+  // Find last non-zero character after the decimal
+  while (end > dot_pos + 1 && s[end - 1] == '0') {
+    --end;
+  }
+
+  // Remove decimal point if it's the last remaining character
+  if (end == dot_pos + 1) {
+    --end;
+  }
+
+  s.resize(end);
+  return s;
+}
+
 inline std::string size_tToString(const size_t& t) {
   std::stringstream ss;
   ss << t;
@@ -1056,6 +1100,11 @@ typename std::enable_if<std::is_floating_point<T>::value, std::string>::type toS
 template <typename T>
 typename std::enable_if<std::is_same<T, std::string>::value, std::string>::type toString(const T& t) {
   return t;
+}
+
+template <typename T>
+typename std::enable_if<std::is_same<T, Decimal>::value, std::string>::type toString(const T& t) {
+  return ConvertDecimalToString(t);
 }
 
 template <typename T>
@@ -1351,6 +1400,8 @@ V mapGetWithDefault(const C<K, V, Args...>& m, const K& key, const V defaultValu
   }
   return it->second;
 }
+
+
 
 } /* namespace ccapi */
 #endif  // INCLUDE_CCAPI_CPP_CCAPI_UTIL_PRIVATE_H_

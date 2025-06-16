@@ -211,7 +211,7 @@ class ExecutionManagementServiceBitget : public ExecutionManagementServiceBitget
           element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, available);
           std::string frozen = x["frozen"].GetString();
           std::string lock = x["locked"].GetString();
-          element.insert(CCAPI_EM_QUANTITY_TOTAL, (Decimal(available).add(Decimal(frozen)).add(Decimal(lock))).toString());
+          element.insert(CCAPI_EM_QUANTITY_TOTAL, (ConvertDecimalToString(Decimal(available)+(Decimal(frozen))+(Decimal(lock)))));
           elementList.emplace_back(std::move(element));
         }
       } break;
@@ -231,7 +231,7 @@ class ExecutionManagementServiceBitget : public ExecutionManagementServiceBitget
         auto it2Str = std::string(it2->value.GetString());
         if (!it1Str.empty() && !it2Str.empty()) {
           element.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
-                         Decimal(UtilString::printDoubleScientific(std::stod(it1Str) * std::stod(it2Str))).toString());
+                         ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(it1Str) * std::stod(it2Str)))));
         }
       }
     }
