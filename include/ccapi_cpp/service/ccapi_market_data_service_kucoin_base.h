@@ -74,7 +74,8 @@ class MarketDataServiceKucoinBase : public MarketDataService {
           if (statusCode / 100 == 2) {
             std::string urlWebsocketBase;
             try {
-              rj::Document document;
+              that->jsonDocumentAllocator.Clear();
+              rj::Document document(&that->jsonDocumentAllocator);
               document.Parse<rj::kParseNumbersAsStringsFlag>(body.c_str());
               const rj::Value& instanceServer = document["data"]["instanceServers"][0];
               urlWebsocketBase += std::string(instanceServer["endpoint"].GetString());
@@ -236,7 +237,8 @@ class MarketDataServiceKucoinBase : public MarketDataService {
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
 
-    rj::Document document;
+    this->jsonDocumentAllocator.Clear();
+    rj::Document document(&this->jsonDocumentAllocator);
     document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
     if (document.IsObject()) {
       auto it = document.FindMember("type");
@@ -533,7 +535,8 @@ class MarketDataServiceKucoinBase : public MarketDataService {
 
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
-    rj::Document document;
+    this->jsonDocumentAllocator.Clear();
+    rj::Document document(&this->jsonDocumentAllocator);
     document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
     switch (request.getOperation()) {
       case Request::Operation::GET_RECENT_TRADES:

@@ -340,7 +340,8 @@ class ExecutionManagementServiceFtxBase : public ExecutionManagementService {
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
 
-    rj::Document document;
+    this->jsonDocumentAllocator.Clear();
+    rj::Document document(&this->jsonDocumentAllocator);
     document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
     Event event = this->createEvent(subscription, textMessage, document, timeReceived);
     if (!event.getMessageList().empty()) {

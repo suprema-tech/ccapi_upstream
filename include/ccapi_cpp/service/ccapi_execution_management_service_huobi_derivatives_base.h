@@ -258,7 +258,8 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
 
-    rj::Document document;
+    this->jsonDocumentAllocator.Clear();
+    rj::Document document(&this->jsonDocumentAllocator);
     document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
     std::string op = document["op"].GetString();
     const auto& fieldSet = subscription.getFieldSet();

@@ -75,7 +75,8 @@ class MarketDataServiceAscendex : public MarketDataService {
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
 
-    rj::Document document;
+    this->jsonDocumentAllocator.Clear();
+    rj::Document document(&this->jsonDocumentAllocator);
     document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
     std::string m = document["m"].GetString();
     if (m == "bbo" || m == "depth" || m == "depth-snapshot") {
@@ -275,7 +276,8 @@ class MarketDataServiceAscendex : public MarketDataService {
 
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
-    rj::Document document;
+    this->jsonDocumentAllocator.Clear();
+    rj::Document document(&this->jsonDocumentAllocator);
     document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
     switch (request.getOperation()) {
       case Request::Operation::GET_RECENT_TRADES: {

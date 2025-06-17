@@ -1523,7 +1523,8 @@ class MarketDataService : public Service {
           std::string body = res.body();
           if (statusCode / 100 == 2 && !that->doesHttpBodyContainError(body)) {
             try {
-              rj::Document document;
+              that->jsonDocumentAllocator.Clear();
+              rj::Document document(&that->jsonDocumentAllocator);
               document.Parse<rj::kParseNumbersAsStringsFlag>(body.c_str());
               int64_t versionId;
               that->extractOrderBookInitialVersionId(versionId, document);

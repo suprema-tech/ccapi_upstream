@@ -303,7 +303,8 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
     std::string textMessage(textMessageView);
 
     if (textMessage != "pong") {
-      rj::Document document;
+      this->jsonDocumentAllocator.Clear();
+      rj::Document document(&this->jsonDocumentAllocator);
       document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
       auto it = document.FindMember("errorCode");
       std::string errorCode = it != document.MemberEnd() ? it->value.GetString() : "";

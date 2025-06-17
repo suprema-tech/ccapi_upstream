@@ -74,7 +74,8 @@ class MarketDataServiceHuobi : public MarketDataServiceHuobiBase {
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     switch (request.getOperation()) {
       case Request::Operation::GET_INSTRUMENT: {
-        rj::Document document;
+        this->jsonDocumentAllocator.Clear();
+        rj::Document document(&this->jsonDocumentAllocator);
         document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
         Message message;
         message.setTimeReceived(timeReceived);
@@ -91,7 +92,8 @@ class MarketDataServiceHuobi : public MarketDataServiceHuobiBase {
         event.addMessages({message});
       } break;
       case Request::Operation::GET_INSTRUMENTS: {
-        rj::Document document;
+        this->jsonDocumentAllocator.Clear();
+        rj::Document document(&this->jsonDocumentAllocator);
         document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
         Message message;
         message.setTimeReceived(timeReceived);

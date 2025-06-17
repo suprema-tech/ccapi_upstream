@@ -154,7 +154,8 @@ class MarketDataServiceGateioBase : public MarketDataService {
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
 
-    rj::Document document;
+    this->jsonDocumentAllocator.Clear();
+    rj::Document document(&this->jsonDocumentAllocator);
     document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
     if (document.HasMember("event") && std::string(document["event"].GetString()) == "subscribe") {
       event.setType(Event::Type::SUBSCRIPTION_STATUS);

@@ -60,7 +60,8 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
             if (statusCode / 100 == 2) {
               std::string urlWebsocketBase;
               try {
-                rj::Document document;
+                that->jsonDocumentAllocator.Clear();
+                rj::Document document(&that->jsonDocumentAllocator);
                 document.Parse<rj::kParseNumbersAsStringsFlag>(body.c_str());
                 std::string listenKey = document["listenKey"].GetString();
                 std::string url = that->baseUrlWs + "/" + listenKey;
@@ -435,7 +436,8 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
     std::string textMessage(textMessageView);
-    rj::Document document;
+    this->jsonDocumentAllocator.Clear();
+    rj::Document document(&this->jsonDocumentAllocator);
     document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
     Event event = this->createEvent(wsConnectionPtr, subscription, textMessageView, document, timeReceived);
     if (!event.getMessageList().empty()) {

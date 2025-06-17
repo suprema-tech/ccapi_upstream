@@ -384,7 +384,8 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
     std::string textMessage(textMessageView);
 
     if (textMessage != "pong") {
-      rj::Document document;
+      this->jsonDocumentAllocator.Clear();
+      rj::Document document(&this->jsonDocumentAllocator);
       document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
       auto it = document.FindMember("event");
       std::string eventStr = it != document.MemberEnd() ? it->value.GetString() : "";

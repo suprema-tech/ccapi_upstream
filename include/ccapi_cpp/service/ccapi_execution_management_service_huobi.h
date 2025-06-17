@@ -268,7 +268,8 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
     WsConnection& wsConnection = *wsConnectionPtr;
     std::string textMessage(textMessageView);
 
-    rj::Document document;
+    this->jsonDocumentAllocator.Clear();
+    rj::Document document(&this->jsonDocumentAllocator);
     document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
     std::string actionStr = document["action"].GetString();
     const auto& fieldSet = subscription.getFieldSet();

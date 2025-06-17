@@ -5,6 +5,10 @@
 #define CCAPI_HTTP_RESPONSE_PARSER_BODY_LIMIT (64 * 1024 * 1024)
 #endif
 
+#ifndef CCAPI_JSON_PARSE_BUFFER_SIZE
+#define CCAPI_JSON_PARSE_BUFFER_SIZE (64 * 1024 * 1024)
+#endif
+
 #include "ccapi_cpp/ccapi_logger.h"
 #ifndef RAPIDJSON_HAS_CXX11_NOEXCEPT
 #define RAPIDJSON_HAS_CXX11_NOEXCEPT 0
@@ -104,7 +108,8 @@ class Service : public std::enable_shared_from_this<Service> {
         sessionConfigs(sessionConfigs),
         serviceContextPtr(serviceContextPtr),
         resolver(*serviceContextPtr->ioContextPtr),
-        resolverWs(*serviceContextPtr->ioContextPtr) {
+        resolverWs(*serviceContextPtr->ioContextPtr),
+        jsonDocumentAllocator(jsonParseBuffer.data(), jsonParseBuffer.size()) {
     this->enableCheckPingPongWebsocketProtocolLevel = this->sessionOptions.enableCheckPingPongWebsocketProtocolLevel;
     this->enableCheckPingPongWebsocketApplicationLevel = this->sessionOptions.enableCheckPingPongWebsocketApplicationLevel;
     // this->pingIntervalMillisecondsByMethodMap[PingPongMethod::WEBSOCKET_PROTOCOL_LEVEL] = sessionOptions.pingWebsocketProtocolLevelIntervalMilliseconds;
@@ -1590,6 +1595,9 @@ class Service : public std::enable_shared_from_this<Service> {
   InflateStream inflater;
 
 #endif
+
+  std::array<char, CCAPI_JSON_PARSE_BUFFER_SIZE> jsonParseBuffer;
+  rj::MemoryPoolAllocator<> jsonDocumentAllocator;
 };
 
 } /* namespace ccapi */

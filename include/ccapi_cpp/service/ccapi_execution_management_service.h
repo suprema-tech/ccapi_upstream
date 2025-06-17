@@ -116,7 +116,8 @@ class ExecutionManagementService : public Service {
 #endif
   virtual std::vector<Message> convertTextMessageToMessageRest(const Request& request, const std::string& textMessage, const TimePoint& timeReceived) {
     CCAPI_LOGGER_DEBUG("textMessage = " + textMessage);
-    rj::Document document;
+    this->jsonDocumentAllocator.Clear();
+    rj::Document document(&this->jsonDocumentAllocator);
     document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
     Message message;
     message.setTimeReceived(timeReceived);
@@ -317,14 +318,13 @@ class ExecutionManagementService : public Service {
                         const auto& symbolId = instrument;
                         CCAPI_LOGGER_TRACE("symbolId = " + symbolId);
                         ErrorCode ec;
-                        rj::Document document;
-                        rj::Document::AllocatorType& allocator = document.GetAllocator();
                         auto credential = request.getCredential();
                         if (credential.empty()) {
                           credential = that->credentialDefault;
                         }
-                        that->convertRequestForWebsocket(document, allocator, wsConnection, request, ++that->wsRequestIdByConnectionIdMap[wsConnection.id], now,
-                                                         symbolId, credential);
+                        rj::Document document(&that->jsonDocumentAllocator);
+                        that->convertRequestForWebsocket(document, that->jsonDocumentAllocator, wsConnection, request,
+                                                         ++that->wsRequestIdByConnectionIdMap[wsConnection.id], now, symbolId, credential);
                         rj::StringBuffer stringBuffer;
                         rj::Writer<rj::StringBuffer> writer(stringBuffer);
                         document.Accept(writer);

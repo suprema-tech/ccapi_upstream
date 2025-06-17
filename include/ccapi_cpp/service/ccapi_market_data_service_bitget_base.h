@@ -114,7 +114,8 @@ class MarketDataServiceBitgetBase : public MarketDataService {
     std::string textMessage(textMessageView);
 
     if (textMessage != "pong") {
-      rj::Document document;
+      this->jsonDocumentAllocator.Clear();
+      rj::Document document(&this->jsonDocumentAllocator);
       document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
       auto it = document.FindMember("event");
       std::string eventStr = it != document.MemberEnd() ? it->value.GetString() : "";
@@ -402,7 +403,8 @@ class MarketDataServiceBitgetBase : public MarketDataService {
 
   void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
-    rj::Document document;
+    this->jsonDocumentAllocator.Clear();
+    rj::Document document(&this->jsonDocumentAllocator);
     document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
     switch (request.getOperation()) {
       case Request::Operation::GET_SERVER_TIME: {
