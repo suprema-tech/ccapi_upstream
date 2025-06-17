@@ -86,7 +86,7 @@ class MarketDataServiceErisx : public MarketDataService {
       auto channelId = this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap.at(wsConnection.id).at(exchangeSubscriptionId).at(CCAPI_CHANNEL_ID);
       auto symbolId = this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap.at(wsConnection.id).at(exchangeSubscriptionId).at(CCAPI_SYMBOL_ID);
       MarketDataMessage::RecapType recapType;
-      if (std::string(document["marketDataID"].GetString()) == "0") {
+      if (std::string_view(document["marketDataID"].GetString()) == "0") {
         recapType = MarketDataMessage::RecapType::SOLICITED;
       } else {
         recapType = MarketDataMessage::RecapType::NONE;
@@ -100,9 +100,10 @@ class MarketDataServiceErisx : public MarketDataService {
         for (const auto& side : {"bids", "offers"}) {
           for (const auto& x : document[side].GetArray()) {
             MarketDataMessage::TypeForDataPoint dataPoint;
-            dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(x["price"].GetString())});
-            dataPoint.insert({MarketDataMessage::DataFieldType::SIZE,
-                              std::string(x["updateAction"].GetString()) == "DELETE" ? "0" : UtilString::normalizeDecimalString(x["amount"].GetString())});
+            dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x["price"].GetString()));
+            dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, std::string_view(x["updateAction"].GetString()) == "DELETE"
+                                                                          ? "0"
+                                                                          : UtilString::normalizeDecimalStringView(x["amount"].GetString()));
             marketDataMessage.data[strcmp(side, "bids") == 0 ? MarketDataMessage::DataType::BID : MarketDataMessage::DataType::ASK].push_back(
                 std::move(dataPoint));
           }
@@ -116,10 +117,10 @@ class MarketDataServiceErisx : public MarketDataService {
           marketDataMessage.recapType = recapType;
           marketDataMessage.exchangeSubscriptionId = exchangeSubscriptionId;
           MarketDataMessage::TypeForDataPoint dataPoint;
-          dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(std::string(x["price"].GetString()))});
-          dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(std::string(x["size"].GetString()))});
-          dataPoint.insert({MarketDataMessage::DataFieldType::TRADE_ID, ""});
-          dataPoint.insert({MarketDataMessage::DataFieldType::IS_BUYER_MAKER, std::string(x["tickerType"].GetString()) == "GIVEN" ? "1" : "0"});
+          dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x["price"].GetString()));
+          dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(x["size"].GetString()));
+          dataPoint.emplace(MarketDataMessage::DataFieldType::TRADE_ID, "");
+          dataPoint.emplace(MarketDataMessage::DataFieldType::IS_BUYER_MAKER, std::string_view(x["tickerType"].GetString()) == "GIVEN" ? "1" : "0");
           marketDataMessage.data[MarketDataMessage::DataType::TRADE].emplace_back(std::move(dataPoint));
           marketDataMessageList.emplace_back(std::move(marketDataMessage));
         }
@@ -152,9 +153,10 @@ class MarketDataServiceErisx : public MarketDataService {
         for (const auto& x : document[side].GetArray()) {
           if (std::string(x["action"].GetString()) != "NO CHANGE") {
             MarketDataMessage::TypeForDataPoint dataPoint;
-            dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(x["price"].GetString())});
-            dataPoint.insert({MarketDataMessage::DataFieldType::SIZE,
-                              std::string(x["action"].GetString()) == "DELETE" ? "0" : UtilString::normalizeDecimalString(x["totalVolume"].GetString())});
+            dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x["price"].GetString()));
+            dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, std::string_view(x["action"].GetString()) == "DELETE"
+                                                                          ? "0"
+                                                                          : UtilString::normalizeDecimalStringView(x["totalVolume"].GetString()));
             marketDataMessage.data[strcmp(side, "bids") == 0 ? MarketDataMessage::DataType::BID : MarketDataMessage::DataType::ASK].push_back(
                 std::move(dataPoint));
           }

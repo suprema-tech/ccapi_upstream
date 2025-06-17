@@ -283,7 +283,7 @@ class MarketDataService : public Service {
       message.setTimeReceived(timeReceived);
       message.setCorrelationIdList({this->correlationIdByConnectionIdMap.at(wsConnectionPtr->id)});
       Element element;
-      element.insert(CCAPI_WEBSOCKET_MESSAGE_PAYLOAD, std::string(textMessage));
+      element.insert(CCAPI_WEBSOCKET_MESSAGE_PAYLOAD, textMessage);
       message.setElementList({element});
       event.setMessageList({message});
       this->eventHandler(event, nullptr);
@@ -448,19 +448,19 @@ class MarketDataService : public Service {
     }
   }
 
-  void updateOrderBook(std::map<Decimal, std::string>& snapshot, const Decimal& price, const std::string& size, bool sizeMayHaveTrailingZero = false) {
+  void updateOrderBook(std::map<Decimal, std::string>& snapshot, const Decimal& price, std::string_view size, bool sizeMayHaveTrailingZero = false) {
     auto it = snapshot.find(price);
     if (it == snapshot.end()) {
       if ((!sizeMayHaveTrailingZero && size != "0") ||
-          (sizeMayHaveTrailingZero && ((size.find('.') != std::string::npos && UtilString::rtrim(UtilString::rtrim(size, "0"), ".") != "0") ||
+          (sizeMayHaveTrailingZero && ((size.find('.') != std::string::npos && UtilString::rtrim(UtilString::rtrim(size, '0'), '.') != "0") ||
                                        (size.find('.') == std::string::npos && size != "0")))) {
-        snapshot.emplace(std::move(price), std::move(size));
+        snapshot.emplace(price, std::string(size));
       }
     } else {
       if ((!sizeMayHaveTrailingZero && size != "0") ||
-          (sizeMayHaveTrailingZero && ((size.find('.') != std::string::npos && UtilString::rtrim(UtilString::rtrim(size, "0"), ".") != "0") ||
+          (sizeMayHaveTrailingZero && ((size.find('.') != std::string::npos && UtilString::rtrim(UtilString::rtrim(size, '0'), '.') != "0") ||
                                        (size.find('.') == std::string::npos && size != "0")))) {
-        it->second = std::move(size);
+        it->second = std::string(size);
       } else {
         snapshot.erase(price);
       }
@@ -712,8 +712,8 @@ class MarketDataService : public Service {
         auto& detail = x.second;
         if (type == MarketDataMessage::DataType::TRADE || type == MarketDataMessage::DataType::AGG_TRADE) {
           for (auto& y : detail) {
-            auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
-            auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
+            const auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
+            const auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
             Element element;
             element.insert(CCAPI_LAST_PRICE, price);
             element.insert(CCAPI_LAST_SIZE, size);
@@ -822,18 +822,18 @@ class MarketDataService : public Service {
       auto& detail = x.second;
       if (type == MarketDataMessage::DataType::BID) {
         for (auto& y : detail) {
-          auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
-          auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
+          const auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
+          const auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
           Decimal decimalPrice(price);
-          snapshotBid.emplace(std::move(decimalPrice), std::move(size));
+          snapshotBid.emplace(decimalPrice, std::string(size));
         }
         CCAPI_LOGGER_TRACE("lastNToString(snapshotBid, " + toString(maxMarketDepth) + ") = " + lastNToString(snapshotBid, maxMarketDepth));
       } else if (type == MarketDataMessage::DataType::ASK) {
         for (auto& y : detail) {
-          auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
-          auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
+          const auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
+          const auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
           Decimal decimalPrice(price);
-          snapshotAsk.emplace(std::move(decimalPrice), std::move(size));
+          snapshotAsk.emplace(decimalPrice, std::string(size));
         }
         CCAPI_LOGGER_TRACE("firstNToString(snapshotAsk, " + toString(maxMarketDepth) + ") = " + firstNToString(snapshotAsk, maxMarketDepth));
       } else {
@@ -912,15 +912,15 @@ class MarketDataService : public Service {
         auto& detail = x.second;
         if (type == MarketDataMessage::DataType::BID) {
           for (auto& y : detail) {
-            auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
-            auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
+            const auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
+            const auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
             Decimal decimalPrice(price);
             this->updateOrderBook(snapshotBid, decimalPrice, size, this->sessionOptions.enableCheckOrderBookChecksum);
           }
         } else if (type == MarketDataMessage::DataType::ASK) {
           for (auto& y : detail) {
-            auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
-            auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
+            const auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
+            const auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
             Decimal decimalPrice(price);
             this->updateOrderBook(snapshotAsk, decimalPrice, size, this->sessionOptions.enableCheckOrderBookChecksum);
           }
@@ -1387,18 +1387,18 @@ class MarketDataService : public Service {
       auto& detail = x.second;
       if (type == MarketDataMessage::DataType::BID) {
         for (auto& y : detail) {
-          auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
-          auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
+          const auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
+          const auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
           Decimal decimalPrice(price);
-          snapshotBid.emplace(std::move(decimalPrice), std::move(size));
+          snapshotBid.emplace(decimalPrice, std::string(size));
         }
         CCAPI_LOGGER_TRACE("lastNToString(snapshotBid, " + toString(maxMarketDepth) + ") = " + lastNToString(snapshotBid, maxMarketDepth));
       } else if (type == MarketDataMessage::DataType::ASK) {
         for (auto& y : detail) {
-          auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
-          auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
+          const auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
+          const auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
           Decimal decimalPrice(price);
-          snapshotAsk.emplace(std::move(decimalPrice), std::move(size));
+          snapshotAsk.emplace(decimalPrice, std::string(size));
         }
         CCAPI_LOGGER_TRACE("firstNToString(snapshotAsk, " + toString(maxMarketDepth) + ") = " + firstNToString(snapshotAsk, maxMarketDepth));
       } else {
@@ -1466,7 +1466,7 @@ class MarketDataService : public Service {
         }
       }
       this->marketDataMessageDataBufferByConnectionIdExchangeSubscriptionIdVersionIdMap[wsConnection.id][exchangeSubscriptionId][versionId] =
-          marketDataMessage.data;
+          MarketDataMessage::ConvertDataToOwingData(marketDataMessage.data);
     }
   }
 
@@ -1534,14 +1534,14 @@ class MarketDataService : public Service {
                       const auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
                       const auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
                       Decimal decimalPrice(price);
-                      snapshotBid.emplace(std::move(decimalPrice), std::move(size));
+                      snapshotBid.emplace(decimalPrice, std::string(size));
                     }
                   } else if (type == MarketDataMessage::DataType::ASK) {
                     for (const auto& y : detail) {
                       const auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
                       const auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
                       Decimal decimalPrice(price);
-                      snapshotAsk.emplace(std::move(decimalPrice), std::move(size));
+                      snapshotAsk.emplace(decimalPrice, std::string(size));
                     }
                   }
                 }
@@ -1737,7 +1737,7 @@ class MarketDataService : public Service {
   std::map<std::string, std::map<int, std::vector<std::string>>> exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap;
   // only needed for generic public subscription
   std::map<std::string, std::string> correlationIdByConnectionIdMap;
-  std::map<std::string, std::map<std::string, std::map<int64_t, MarketDataMessage::TypeForData>>>
+  std::map<std::string, std::map<std::string, std::map<int64_t, MarketDataMessage::TypeForOwingData>>>
       marketDataMessageDataBufferByConnectionIdExchangeSubscriptionIdVersionIdMap;
   std::map<std::string, std::map<std::string, int64_t>> orderbookVersionIdByConnectionIdExchangeSubscriptionIdMap;
   std::map<std::string, std::map<std::string, TimerPtr>> fetchMarketDepthInitialSnapshotTimerByConnectionIdExchangeSubscriptionIdMap;

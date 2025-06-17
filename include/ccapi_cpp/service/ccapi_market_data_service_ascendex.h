@@ -101,27 +101,27 @@ class MarketDataServiceAscendex : public MarketDataService {
       if (m == "bbo") {
         {
           MarketDataMessage::TypeForDataPoint dataPoint;
-          dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(data["bid"][0].GetString())});
-          dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(data["bid"][1].GetString())});
+          dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(data["bid"][0].GetString()));
+          dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(data["bid"][1].GetString()));
           marketDataMessage.data[MarketDataMessage::DataType::BID].emplace_back(std::move(dataPoint));
         }
         {
           MarketDataMessage::TypeForDataPoint dataPoint;
-          dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(data["ask"][0].GetString())});
-          dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(data["ask"][1].GetString())});
+          dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(data["ask"][0].GetString()));
+          dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(data["ask"][1].GetString()));
           marketDataMessage.data[MarketDataMessage::DataType::ASK].emplace_back(std::move(dataPoint));
         }
       } else {
         for (const auto& x : data["bids"].GetArray()) {
           MarketDataMessage::TypeForDataPoint dataPoint;
-          dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(x[0].GetString())});
-          dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(x[1].GetString())});
+          dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x[0].GetString()));
+          dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(x[1].GetString()));
           marketDataMessage.data[MarketDataMessage::DataType::BID].emplace_back(std::move(dataPoint));
         }
         for (const auto& x : data["asks"].GetArray()) {
           MarketDataMessage::TypeForDataPoint dataPoint;
-          dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(x[0].GetString())});
-          dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(x[1].GetString())});
+          dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x[0].GetString()));
+          dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(x[1].GetString()));
           marketDataMessage.data[MarketDataMessage::DataType::ASK].emplace_back(std::move(dataPoint));
         }
       }
@@ -138,10 +138,10 @@ class MarketDataServiceAscendex : public MarketDataService {
         marketDataMessage.exchangeSubscriptionId = exchangeSubscriptionId;
         marketDataMessage.tp = TimePoint(std::chrono::milliseconds(std::stoll(x["ts"].GetString())));
         MarketDataMessage::TypeForDataPoint dataPoint;
-        dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(std::string(x["p"].GetString()))});
-        dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(std::string(x["q"].GetString()))});
-        dataPoint.insert({MarketDataMessage::DataFieldType::TRADE_ID, std::string(x["seqnum"].GetString())});
-        dataPoint.insert({MarketDataMessage::DataFieldType::IS_BUYER_MAKER, x["bm"].GetBool() ? "1" : "0"});
+        dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x["p"].GetString()));
+        dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(x["q"].GetString()));
+        dataPoint.emplace(MarketDataMessage::DataFieldType::TRADE_ID, x["seqnum"].GetString());
+        dataPoint.emplace(MarketDataMessage::DataFieldType::IS_BUYER_MAKER, x["bm"].GetBool() ? "1" : "0");
         marketDataMessage.data[MarketDataMessage::DataType::TRADE].emplace_back(std::move(dataPoint));
         marketDataMessageList.emplace_back(std::move(marketDataMessage));
       }
@@ -156,11 +156,11 @@ class MarketDataServiceAscendex : public MarketDataService {
       marketDataMessage.exchangeSubscriptionId = exchangeSubscriptionId;
       marketDataMessage.tp = TimePoint(std::chrono::milliseconds(std::stoll(data["ts"].GetString())));
       MarketDataMessage::TypeForDataPoint dataPoint;
-      dataPoint.insert({MarketDataMessage::DataFieldType::OPEN_PRICE, data["o"].GetString()});
-      dataPoint.insert({MarketDataMessage::DataFieldType::HIGH_PRICE, data["h"].GetString()});
-      dataPoint.insert({MarketDataMessage::DataFieldType::LOW_PRICE, data["l"].GetString()});
-      dataPoint.insert({MarketDataMessage::DataFieldType::CLOSE_PRICE, data["c"].GetString()});
-      dataPoint.insert({MarketDataMessage::DataFieldType::VOLUME, data["v"].GetString()});
+      dataPoint.emplace(MarketDataMessage::DataFieldType::OPEN_PRICE, data["o"].GetString());
+      dataPoint.emplace(MarketDataMessage::DataFieldType::HIGH_PRICE, data["h"].GetString());
+      dataPoint.emplace(MarketDataMessage::DataFieldType::LOW_PRICE, data["l"].GetString());
+      dataPoint.emplace(MarketDataMessage::DataFieldType::CLOSE_PRICE, data["c"].GetString());
+      dataPoint.emplace(MarketDataMessage::DataFieldType::VOLUME, data["v"].GetString());
       marketDataMessage.data[MarketDataMessage::DataType::CANDLESTICK].emplace_back(std::move(dataPoint));
       marketDataMessageList.emplace_back(std::move(marketDataMessage));
     } else if (m == "ping") {
@@ -285,10 +285,10 @@ class MarketDataServiceAscendex : public MarketDataService {
           marketDataMessage.type = MarketDataMessage::Type::MARKET_DATA_EVENTS_TRADE;
           marketDataMessage.tp = TimePoint(std::chrono::milliseconds(std::stoll(x["ts"].GetString())));
           MarketDataMessage::TypeForDataPoint dataPoint;
-          dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(std::string(x["p"].GetString()))});
-          dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(std::string(x["q"].GetString()))});
-          dataPoint.insert({MarketDataMessage::DataFieldType::TRADE_ID, std::string(x["seqnum"].GetString())});
-          dataPoint.insert({MarketDataMessage::DataFieldType::IS_BUYER_MAKER, x["bm"].GetBool() ? "1" : "0"});
+          dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x["p"].GetString()));
+          dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(x["q"].GetString()));
+          dataPoint.emplace(MarketDataMessage::DataFieldType::TRADE_ID, x["seqnum"].GetString());
+          dataPoint.emplace(MarketDataMessage::DataFieldType::IS_BUYER_MAKER, x["bm"].GetBool() ? "1" : "0");
           marketDataMessage.data[MarketDataMessage::DataType::TRADE].emplace_back(std::move(dataPoint));
           marketDataMessageList.emplace_back(std::move(marketDataMessage));
         }
@@ -298,7 +298,7 @@ class MarketDataServiceAscendex : public MarketDataService {
         message.setTimeReceived(timeReceived);
         message.setType(this->requestOperationToMessageTypeMap.at(request.getOperation()));
         for (const auto& x : document["data"].GetArray()) {
-          if (std::string(x["symbol"].GetString()) == request.getInstrument()) {
+          if (std::string_view(x["symbol"].GetString()) == request.getInstrument()) {
             Element element;
             this->extractInstrumentInfo(element, x);
             message.setElementList({element});

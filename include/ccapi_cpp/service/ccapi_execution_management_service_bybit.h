@@ -465,17 +465,17 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
               std::vector<Element> elementList;
               Element element;
               element.insert(CCAPI_TRADE_ID, x["execId"].GetString());
-              element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, std::string(x["execPrice"].GetString()));
-              element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, std::string(x["execQty"].GetString()));
-              element.insert(CCAPI_EM_ORDER_SIDE, std::string(x["side"].GetString()) == "Buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
+              element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, x["execPrice"].GetString());
+              element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, x["execQty"].GetString());
+              element.insert(CCAPI_EM_ORDER_SIDE, std::string_view(x["side"].GetString()) == "Buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
               element.insert(CCAPI_IS_MAKER, x["isMaker"].GetBool() ? "1" : "0");
-              element.insert(CCAPI_EM_ORDER_ID, std::string(x["orderId"].GetString()));
-              element.insert(CCAPI_EM_CLIENT_ORDER_ID, std::string(x["orderLinkId"].GetString()));
+              element.insert(CCAPI_EM_ORDER_ID, x["orderId"].GetString());
+              element.insert(CCAPI_EM_CLIENT_ORDER_ID, x["orderLinkId"].GetString());
               element.insert(CCAPI_EM_ORDER_INSTRUMENT, instrument);
               {
                 auto it = x.FindMember("execFee");
                 if (it != x.MemberEnd() && !it->value.IsNull()) {
-                  element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, std::string(it->value.GetString()));
+                  element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, it->value.GetString());
                 }
               }
               elementList.emplace_back(std::move(element));

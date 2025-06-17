@@ -315,12 +315,12 @@ class ExecutionManagementServiceKrakenFutures : public ExecutionManagementServic
                   element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, x["price"].GetString());
                   element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, x["qty"].GetString());
                   element.insert(CCAPI_EM_ORDER_SIDE, x["buy"].GetBool() ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
-                  element.insert(CCAPI_EM_ORDER_ID, std::string(x["order_id"].GetString()));
-                  element.insert(CCAPI_EM_CLIENT_ORDER_ID, std::string(x["cli_ord_id"].GetString()));
-                  element.insert(CCAPI_IS_MAKER, std::string(x["fill_type"].GetString()) == "maker" ? "1" : "0");
+                  element.insert(CCAPI_EM_ORDER_ID, x["order_id"].GetString());
+                  element.insert(CCAPI_EM_CLIENT_ORDER_ID, x["cli_ord_id"].GetString());
+                  element.insert(CCAPI_IS_MAKER, std::string_view(x["fill_type"].GetString()) == "maker" ? "1" : "0");
                   element.insert(CCAPI_EM_ORDER_INSTRUMENT, instrument);
-                  element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, std::string(x["fee_paid"].GetString()));
-                  element.insert(CCAPI_EM_ORDER_FEE_ASSET, std::string(x["fee_currency"].GetString()));
+                  element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, x["fee_paid"].GetString());
+                  element.insert(CCAPI_EM_ORDER_FEE_ASSET, x["fee_currency"].GetString());
                   elementList.emplace_back(std::move(element));
                   message.setElementList(elementList);
                   messageList.emplace_back(std::move(message));
@@ -342,7 +342,7 @@ class ExecutionManagementServiceKrakenFutures : public ExecutionManagementServic
                 element.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUANTITY, x["filled"].GetString());
                 element.insert(CCAPI_EM_ORDER_LIMIT_PRICE, x["limit_price"].GetString());
                 element.insert(CCAPI_EM_ORDER_ID, x["order_id"].GetString());
-                element.insert(CCAPI_EM_ORDER_SIDE, std::string(x["direction"].GetString()) == "0" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
+                element.insert(CCAPI_EM_ORDER_SIDE, std::string_view(x["direction"].GetString()) == "0" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
                 element.insert("is_cancel", document["is_cancel"].GetBool() ? "1" : "0");
                 elementList.emplace_back(std::move(element));
                 message.setElementList(elementList);

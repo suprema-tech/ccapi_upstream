@@ -57,8 +57,8 @@ class MarketDataServiceHuobiDerivativesBase : public MarketDataServiceHuobiBase 
 
   void extractInstrumentInfo(Element& element, const rj::Value& x) {
     element.insert(CCAPI_INSTRUMENT, x["symbol"].GetString());
-    element.insert(CCAPI_ORDER_PRICE_INCREMENT, UtilString::normalizeDecimalString(x["price_tick"].GetString()));
-    element.insert(CCAPI_CONTRACT_SIZE, UtilString::normalizeDecimalString(x["contract_size"].GetString()));
+    element.insert(CCAPI_ORDER_PRICE_INCREMENT, UtilString::normalizeDecimalStringView(x["price_tick"].GetString()));
+    element.insert(CCAPI_CONTRACT_SIZE, UtilString::normalizeDecimalStringView(x["contract_size"].GetString()));
   }
 
   void convertTextMessageToMarketDataMessage(const Request& request, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
@@ -72,7 +72,7 @@ class MarketDataServiceHuobiDerivativesBase : public MarketDataServiceHuobiBase 
         message.setTimeReceived(timeReceived);
         message.setType(this->requestOperationToMessageTypeMap.at(request.getOperation()));
         for (const auto& x : document["data"].GetArray()) {
-          if (std::string(x["contract_code"].GetString()) == request.getInstrument()) {
+          if (std::string_view(x["contract_code"].GetString()) == request.getInstrument()) {
             Element element;
             this->extractInstrumentInfo(element, x);
             message.setElementList({element});

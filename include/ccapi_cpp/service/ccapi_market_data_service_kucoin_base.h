@@ -222,14 +222,14 @@ class MarketDataServiceKucoinBase : public MarketDataService {
   void extractOrderBookInitialData(MarketDataMessage::TypeForData& input, const rj::Document& document) override {
     for (const auto& x : document["data"]["bids"].GetArray()) {
       MarketDataMessage::TypeForDataPoint dataPoint;
-      dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(x[0].GetString())});
-      dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(x[1].GetString())});
+      dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x[0].GetString()));
+      dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(x[1].GetString()));
       input[MarketDataMessage::DataType::BID].emplace_back(std::move(dataPoint));
     }
     for (const auto& x : document["data"]["asks"].GetArray()) {
       MarketDataMessage::TypeForDataPoint dataPoint;
-      dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(x[0].GetString())});
-      dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(x[1].GetString())});
+      dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x[0].GetString()));
+      dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(x[1].GetString()));
       input[MarketDataMessage::DataType::ASK].emplace_back(std::move(dataPoint));
     }
   }
@@ -264,8 +264,8 @@ class MarketDataServiceKucoinBase : public MarketDataService {
               const rj::Value& asks = itAsks->value;
               for (auto& x : asks.GetArray()) {
                 MarketDataMessage::TypeForDataPoint dataPoint;
-                dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(x[0].GetString())});
-                dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(x[1].GetString())});
+                dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x[0].GetString()));
+                dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(x[1].GetString()));
                 marketDataMessage.data[MarketDataMessage::DataType::ASK].emplace_back(std::move(dataPoint));
               }
             }
@@ -274,8 +274,8 @@ class MarketDataServiceKucoinBase : public MarketDataService {
               const rj::Value& bids = itBids->value;
               for (auto& x : bids.GetArray()) {
                 MarketDataMessage::TypeForDataPoint dataPoint;
-                dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(x[0].GetString())});
-                dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(x[1].GetString())});
+                dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x[0].GetString()));
+                dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(x[1].GetString()));
                 marketDataMessage.data[MarketDataMessage::DataType::BID].emplace_back(std::move(dataPoint));
               }
             }
@@ -297,16 +297,16 @@ class MarketDataServiceKucoinBase : public MarketDataService {
             marketDataMessage.exchangeSubscriptionId = exchangeSubscriptionId;
             {
               MarketDataMessage::TypeForDataPoint dataPoint;
-              dataPoint.insert(
-                  {MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(data[this->tickerBestBidPriceKey.c_str()].GetString())});
-              dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(data["bestBidSize"].GetString())});
+              dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE,
+                                UtilString::normalizeDecimalStringView(data[this->tickerBestBidPriceKey.c_str()].GetString()));
+              dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(data["bestBidSize"].GetString()));
               marketDataMessage.data[MarketDataMessage::DataType::BID].emplace_back(std::move(dataPoint));
             }
             {
               MarketDataMessage::TypeForDataPoint dataPoint;
-              dataPoint.insert(
-                  {MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(data[this->tickerBestAskPriceKey.c_str()].GetString())});
-              dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(data["bestAskSize"].GetString())});
+              dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE,
+                                UtilString::normalizeDecimalStringView(data[this->tickerBestAskPriceKey.c_str()].GetString()));
+              dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(data["bestAskSize"].GetString()));
               marketDataMessage.data[MarketDataMessage::DataType::ASK].emplace_back(std::move(dataPoint));
             }
             marketDataMessageList.emplace_back(std::move(marketDataMessage));
@@ -336,8 +336,8 @@ class MarketDataServiceKucoinBase : public MarketDataService {
                   break;
                 }
                 MarketDataMessage::TypeForDataPoint dataPoint;
-                dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(y[0].GetString())});
-                dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(y[1].GetString())});
+                dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(y[0].GetString()));
+                dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(y[1].GetString()));
                 marketDataMessage.data[x.first].emplace_back(std::move(dataPoint));
                 ++index;
               }
@@ -352,11 +352,11 @@ class MarketDataServiceKucoinBase : public MarketDataService {
             marketDataMessage.tp = UtilTime::makeTimePoint(UtilTime::divideNanoWhole(data[this->recentTradesTimeKey.c_str()].GetString()));
             marketDataMessage.recapType = MarketDataMessage::RecapType::NONE;
             MarketDataMessage::TypeForDataPoint dataPoint;
-            dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(std::string(data["price"].GetString()))});
-            dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(std::string(data["size"].GetString()))});
-            dataPoint.insert({MarketDataMessage::DataFieldType::TRADE_ID, std::string(data["tradeId"].GetString())});
-            dataPoint.insert({MarketDataMessage::DataFieldType::SEQUENCE_NUMBER, std::string(data["sequence"].GetString())});
-            dataPoint.insert({MarketDataMessage::DataFieldType::IS_BUYER_MAKER, std::string(data["side"].GetString()) == "sell" ? "1" : "0"});
+            dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(data["price"].GetString()));
+            dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(data["size"].GetString()));
+            dataPoint.emplace(MarketDataMessage::DataFieldType::TRADE_ID, data["tradeId"].GetString());
+            dataPoint.emplace(MarketDataMessage::DataFieldType::SEQUENCE_NUMBER, data["sequence"].GetString());
+            dataPoint.emplace(MarketDataMessage::DataFieldType::IS_BUYER_MAKER, std::string_view(data["side"].GetString()) == "sell" ? "1" : "0");
             marketDataMessage.data[MarketDataMessage::DataType::TRADE].emplace_back(std::move(dataPoint));
             marketDataMessageList.emplace_back(std::move(marketDataMessage));
           } else if (subject == this->klineSubject) {
@@ -368,12 +368,12 @@ class MarketDataServiceKucoinBase : public MarketDataService {
             marketDataMessage.tp = UtilTime::makeTimePoint(std::make_pair(std::stoll(x[0].GetString()), 0));
             marketDataMessage.recapType = MarketDataMessage::RecapType::NONE;
             MarketDataMessage::TypeForDataPoint dataPoint;
-            dataPoint.insert({MarketDataMessage::DataFieldType::OPEN_PRICE, x[1].GetString()});
-            dataPoint.insert({MarketDataMessage::DataFieldType::HIGH_PRICE, x[3].GetString()});
-            dataPoint.insert({MarketDataMessage::DataFieldType::LOW_PRICE, x[4].GetString()});
-            dataPoint.insert({MarketDataMessage::DataFieldType::CLOSE_PRICE, x[2].GetString()});
-            dataPoint.insert({MarketDataMessage::DataFieldType::VOLUME, x[5].GetString()});
-            dataPoint.insert({MarketDataMessage::DataFieldType::QUOTE_VOLUME, x[6].GetString()});
+            dataPoint.emplace(MarketDataMessage::DataFieldType::OPEN_PRICE, x[1].GetString());
+            dataPoint.emplace(MarketDataMessage::DataFieldType::HIGH_PRICE, x[3].GetString());
+            dataPoint.emplace(MarketDataMessage::DataFieldType::LOW_PRICE, x[4].GetString());
+            dataPoint.emplace(MarketDataMessage::DataFieldType::CLOSE_PRICE, x[2].GetString());
+            dataPoint.emplace(MarketDataMessage::DataFieldType::VOLUME, x[5].GetString());
+            dataPoint.emplace(MarketDataMessage::DataFieldType::QUOTE_VOLUME, x[6].GetString());
             marketDataMessage.data[MarketDataMessage::DataType::CANDLESTICK].emplace_back(std::move(dataPoint));
             marketDataMessageList.emplace_back(std::move(marketDataMessage));
           }
@@ -547,10 +547,10 @@ class MarketDataServiceKucoinBase : public MarketDataService {
           marketDataMessage.type = MarketDataMessage::Type::MARKET_DATA_EVENTS_TRADE;
           marketDataMessage.tp = UtilTime::makeTimePoint(UtilTime::divideNanoWhole(x[this->recentTradesTimeKey.c_str()].GetString()));
           MarketDataMessage::TypeForDataPoint dataPoint;
-          dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(std::string(x["price"].GetString()))});
-          dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(std::string(x["size"].GetString()))});
-          dataPoint.insert({MarketDataMessage::DataFieldType::SEQUENCE_NUMBER, std::string(x["sequence"].GetString())});
-          dataPoint.insert({MarketDataMessage::DataFieldType::IS_BUYER_MAKER, std::string(x["side"].GetString()) == "sell" ? "1" : "0"});
+          dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x["price"].GetString()));
+          dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(x["size"].GetString()));
+          dataPoint.emplace(MarketDataMessage::DataFieldType::SEQUENCE_NUMBER, x["sequence"].GetString());
+          dataPoint.emplace(MarketDataMessage::DataFieldType::IS_BUYER_MAKER, std::string_view(x["side"].GetString()) == "sell" ? "1" : "0");
           marketDataMessage.data[MarketDataMessage::DataType::TRADE].emplace_back(std::move(dataPoint));
           marketDataMessageList.emplace_back(std::move(marketDataMessage));
         }
@@ -564,18 +564,18 @@ class MarketDataServiceKucoinBase : public MarketDataService {
                                                      : TimePoint(std::chrono::seconds(std::stoll(x[0].GetString())));
           MarketDataMessage::TypeForDataPoint dataPoint;
           if (this->isDerivatives) {
-            dataPoint.insert({MarketDataMessage::DataFieldType::OPEN_PRICE, std::string(x[1].GetString())});
-            dataPoint.insert({MarketDataMessage::DataFieldType::HIGH_PRICE, std::string(x[2].GetString())});
-            dataPoint.insert({MarketDataMessage::DataFieldType::LOW_PRICE, std::string(x[3].GetString())});
-            dataPoint.insert({MarketDataMessage::DataFieldType::CLOSE_PRICE, std::string(x[4].GetString())});
-            dataPoint.insert({MarketDataMessage::DataFieldType::VOLUME, std::string(x[5].GetString())});
+            dataPoint.emplace(MarketDataMessage::DataFieldType::OPEN_PRICE, x[1].GetString());
+            dataPoint.emplace(MarketDataMessage::DataFieldType::HIGH_PRICE, x[2].GetString());
+            dataPoint.emplace(MarketDataMessage::DataFieldType::LOW_PRICE, x[3].GetString());
+            dataPoint.emplace(MarketDataMessage::DataFieldType::CLOSE_PRICE, x[4].GetString());
+            dataPoint.emplace(MarketDataMessage::DataFieldType::VOLUME, x[5].GetString());
           } else {
-            dataPoint.insert({MarketDataMessage::DataFieldType::OPEN_PRICE, std::string(x[1].GetString())});
-            dataPoint.insert({MarketDataMessage::DataFieldType::HIGH_PRICE, std::string(x[3].GetString())});
-            dataPoint.insert({MarketDataMessage::DataFieldType::LOW_PRICE, std::string(x[4].GetString())});
-            dataPoint.insert({MarketDataMessage::DataFieldType::CLOSE_PRICE, std::string(x[2].GetString())});
-            dataPoint.insert({MarketDataMessage::DataFieldType::VOLUME, std::string(x[5].GetString())});
-            dataPoint.insert({MarketDataMessage::DataFieldType::QUOTE_VOLUME, std::string(x[6].GetString())});
+            dataPoint.emplace(MarketDataMessage::DataFieldType::OPEN_PRICE, x[1].GetString());
+            dataPoint.emplace(MarketDataMessage::DataFieldType::HIGH_PRICE, x[3].GetString());
+            dataPoint.emplace(MarketDataMessage::DataFieldType::LOW_PRICE, x[4].GetString());
+            dataPoint.emplace(MarketDataMessage::DataFieldType::CLOSE_PRICE, x[2].GetString());
+            dataPoint.emplace(MarketDataMessage::DataFieldType::VOLUME, x[5].GetString());
+            dataPoint.emplace(MarketDataMessage::DataFieldType::QUOTE_VOLUME, x[6].GetString());
           }
           marketDataMessage.data[MarketDataMessage::DataType::CANDLESTICK].emplace_back(std::move(dataPoint));
           marketDataMessageList.emplace_back(std::move(marketDataMessage));
@@ -589,14 +589,14 @@ class MarketDataServiceKucoinBase : public MarketDataService {
                                                    : TimePoint(std::chrono::milliseconds(std::stoll(data["time"].GetString())));
         for (const auto& x : data["bids"].GetArray()) {
           MarketDataMessage::TypeForDataPoint dataPoint;
-          dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, x[0].GetString()});
-          dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, x[1].GetString()});
+          dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, x[0].GetString());
+          dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, x[1].GetString());
           marketDataMessage.data[MarketDataMessage::DataType::BID].emplace_back(std::move(dataPoint));
         }
         for (const auto& x : data["asks"].GetArray()) {
           MarketDataMessage::TypeForDataPoint dataPoint;
-          dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, x[0].GetString()});
-          dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, x[1].GetString()});
+          dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, x[0].GetString());
+          dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, x[1].GetString());
           marketDataMessage.data[MarketDataMessage::DataType::ASK].emplace_back(std::move(dataPoint));
         }
         marketDataMessageList.emplace_back(std::move(marketDataMessage));
@@ -606,7 +606,7 @@ class MarketDataServiceKucoinBase : public MarketDataService {
         message.setTimeReceived(timeReceived);
         message.setType(this->requestOperationToMessageTypeMap.at(request.getOperation()));
         for (const auto& x : document["data"].GetArray()) {
-          if (std::string(x["symbol"].GetString()) == request.getInstrument()) {
+          if (std::string_view(x["symbol"].GetString()) == request.getInstrument()) {
             Element element;
             this->extractInstrumentInfo(element, x);
             message.setElementList({element});

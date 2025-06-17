@@ -366,7 +366,7 @@ class ExecutionManagementServiceMexc : public ExecutionManagementService {
                     const rj::Document& document, const TimePoint& timeReceived) {
     Event event;
     std::vector<Message> messageList;
-    if (document.IsObject() && document.HasMember("code") && std::string(document["code"].GetString()) == "0") {
+    if (document.IsObject() && document.HasMember("code") && std::string_view(document["code"].GetString()) == "0") {
       event.setType(Event::Type::SUBSCRIPTION_STATUS);
       std::string msg = document["msg"].GetString();
       if (msg != "PONG") {
@@ -396,17 +396,17 @@ class ExecutionManagementServiceMexc : public ExecutionManagementService {
           message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_PRIVATE_TRADE);
           std::vector<Element> elementList;
           Element element;
-          element.insert(CCAPI_TRADE_ID, std::string(d["t"].GetString()));
-          element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, std::string(d["p"].GetString()));
-          element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, std::string(d["v"].GetString()));
-          element.insert(CCAPI_EM_ORDER_SIDE, std::string(d["S"].GetString()) == "1" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
-          element.insert(CCAPI_IS_MAKER, std::string(d["m"].GetString()));
-          element.insert(CCAPI_EM_ORDER_ID, std::string(d["i"].GetString()));
+          element.insert(CCAPI_TRADE_ID, d["t"].GetString());
+          element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, d["p"].GetString());
+          element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, d["v"].GetString());
+          element.insert(CCAPI_EM_ORDER_SIDE, std::string_view(d["S"].GetString()) == "1" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
+          element.insert(CCAPI_IS_MAKER, d["m"].GetString());
+          element.insert(CCAPI_EM_ORDER_ID, d["i"].GetString());
           element.insert(CCAPI_EM_ORDER_INSTRUMENT, instrument);
           {
             auto it = d.FindMember("c");
             if (it != d.MemberEnd() && !it->value.IsNull()) {
-              element.insert(CCAPI_EM_CLIENT_ORDER_ID, std::string(it->value.GetString()));
+              element.insert(CCAPI_EM_CLIENT_ORDER_ID, it->value.GetString());
             }
           }
           elementList.emplace_back(std::move(element));
@@ -428,7 +428,7 @@ class ExecutionManagementServiceMexc : public ExecutionManagementService {
           };
           Element info;
           info.insert(CCAPI_EM_ORDER_INSTRUMENT, instrument);
-          info.insert(CCAPI_EM_ORDER_SIDE, std::string(d["S"].GetString()) == "1" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
+          info.insert(CCAPI_EM_ORDER_SIDE, std::string_view(d["S"].GetString()) == "1" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
           this->extractOrderInfo(info, d, extractionFieldNameMap);
           std::vector<Element> elementList;
           elementList.emplace_back(std::move(info));

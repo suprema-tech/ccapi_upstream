@@ -23,6 +23,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -246,6 +247,12 @@ class UtilString {
     return str;
   }
 
+  static std::string_view rtrim(std::string_view str, char c) {
+    std::size_t end = str.find_last_not_of(c);
+    if (end == std::string_view::npos) return {};  // All characters were 'c' — return empty view
+    return str.substr(0, end + 1);
+  }
+
   static void rtrimInPlace(std::string& str, const std::string& chars = "\t\n\v\f\r ") { str.erase(str.find_last_not_of(chars) + 1); }
 
   static void rtrimInPlace(std::string& str, char c) { str.erase(str.find_last_not_of(c) + 1); }
@@ -283,13 +290,33 @@ class UtilString {
     }
   }
 
-  static std::string normalizeDecimalString(const char* data) {
-    std::string str(data);
-    if (str.find('.') != std::string::npos) {
-      rtrimInPlace(str, "0");
-      rtrimInPlace(str, ".");
+  //   static std::string normalizeDecimalStringView(const char* data) {
+  //     std::string str(data);
+  //     if (str.find('.') != std::string::npos) {
+  //       rtrimInPlace(str, "0");
+  //       rtrimInPlace(str, ".");
+  //     }
+  //     return str;
+  //   }
+
+  static std::string_view normalizeDecimalStringView(std::string_view input) {
+    // Quick check for dot
+    size_t dotPos = input.find('.');
+    if (dotPos == std::string_view::npos) return input;
+
+    size_t end = input.size();
+
+    // Remove trailing '0's
+    while (end > dotPos && input[end - 1] == '0') {
+      --end;
     }
-    return str;
+
+    // Remove trailing '.' if all decimals were zeros
+    if (end > dotPos && input[end - 1] == '.') {
+      --end;
+    }
+
+    return input.substr(0, end);
   }
 
   static std::string leftPadTo(const std::string& str, const size_t padToLength, const char paddingChar) {
@@ -850,7 +877,7 @@ class UtilSystem {
   static bool getEnvAsBool(const std::string variableName, const bool defaultValue = false) {
     const char* env_p = std::getenv(variableName.c_str());
     if (env_p) {
-      return UtilString::toLower(std::string(env_p)) == "true";
+      return UtilString::toLower(env_p) == "true";
     } else {
       return defaultValue;
     }

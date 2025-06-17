@@ -303,7 +303,7 @@ class ExecutionManagementServiceCryptocom : public ExecutionManagementService {
       case Request::Operation::GET_ACCOUNT_BALANCES: {
         Element element;
         for (const auto& x : document["result"]["accounts"].GetArray()) {
-          if (std::string(x["balance"].GetString()) == "0") {
+          if (std::string_view(x["balance"].GetString()) == "0") {
             continue;
           }
           element.insert(CCAPI_EM_ASSET, x["currency"].GetString());
@@ -401,15 +401,15 @@ class ExecutionManagementServiceCryptocom : public ExecutionManagementService {
               message.setTime(TimePoint(std::chrono::milliseconds(std::stoll(x["create_time"].GetString()))));
               std::vector<Element> elementList;
               Element element;
-              element.insert(CCAPI_TRADE_ID, std::string(x["trade_id"].GetString()));
-              element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, std::string(x["traded_price"].GetString()));
-              element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, std::string(x["traded_quantity"].GetString()));
-              element.insert(CCAPI_EM_ORDER_SIDE, std::string(x["side"].GetString()) == "BUY" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
-              element.insert(CCAPI_IS_MAKER, std::string(x["liquidity_indicator"].GetString()) == "MAKER" ? "1" : "0");
-              element.insert(CCAPI_EM_ORDER_ID, std::string(x["order_id"].GetString()));
+              element.insert(CCAPI_TRADE_ID, x["trade_id"].GetString());
+              element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, x["traded_price"].GetString());
+              element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, x["traded_quantity"].GetString());
+              element.insert(CCAPI_EM_ORDER_SIDE, std::string_view(x["side"].GetString()) == "BUY" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
+              element.insert(CCAPI_IS_MAKER, std::string_view(x["liquidity_indicator"].GetString()) == "MAKER" ? "1" : "0");
+              element.insert(CCAPI_EM_ORDER_ID, x["order_id"].GetString());
               element.insert(CCAPI_EM_ORDER_INSTRUMENT, instrument);
-              element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, std::string(x["fee"].GetString()));
-              element.insert(CCAPI_EM_ORDER_FEE_ASSET, std::string(x["fee_currency"].GetString()));
+              element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, x["fee"].GetString());
+              element.insert(CCAPI_EM_ORDER_FEE_ASSET, x["fee_currency"].GetString());
               elementList.emplace_back(std::move(element));
               message.setElementList(elementList);
               messageList.emplace_back(std::move(message));

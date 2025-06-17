@@ -382,10 +382,11 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
                 Element element;
                 element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, itr->value["price"].GetString());
                 element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, itr->value["vol"].GetString());
-                element.insert(CCAPI_EM_ORDER_SIDE, std::string(itr->value["type"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
-                element.insert(CCAPI_EM_ORDER_ID, std::string(itr->value["ordertxid"].GetString()));
+                element.insert(CCAPI_EM_ORDER_SIDE,
+                               std::string_view(itr->value["type"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
+                element.insert(CCAPI_EM_ORDER_ID, itr->value["ordertxid"].GetString());
                 element.insert(CCAPI_EM_ORDER_INSTRUMENT, instrument);
-                element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, std::string(itr->value["fee"].GetString()));
+                element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, itr->value["fee"].GetString());
                 elementList.emplace_back(std::move(element));
                 message.setElementList(elementList);
                 messageList.emplace_back(std::move(message));

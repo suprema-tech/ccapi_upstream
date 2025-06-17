@@ -142,8 +142,8 @@ class MarketDataServiceGateioPerpetualFutures : public MarketDataServiceGateioBa
           marketDataMessage.type = MarketDataMessage::Type::MARKET_DATA_EVENTS_TRADE;
           marketDataMessage.tp = UtilTime::makeTimePointMilli(UtilTime::divideMilli(x["create_time_ms"].GetString()));
           MarketDataMessage::TypeForDataPoint dataPoint;
-          std::string size = x["size"].GetString();
-          std::string sizeAbs;
+          std::string_view size = x["size"].GetString();
+          std::string_view sizeAbs;
           bool isBuyerMaker;
           if (size.at(0) == '-') {
             sizeAbs = size.substr(1);
@@ -152,10 +152,10 @@ class MarketDataServiceGateioPerpetualFutures : public MarketDataServiceGateioBa
             sizeAbs = size;
             isBuyerMaker = false;
           }
-          dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(std::string(x["price"].GetString()))});
-          dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(sizeAbs)});
-          dataPoint.insert({MarketDataMessage::DataFieldType::TRADE_ID, std::string(x["id"].GetString())});
-          dataPoint.insert({MarketDataMessage::DataFieldType::IS_BUYER_MAKER, isBuyerMaker ? "1" : "0"});
+          dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x["price"].GetString()));
+          dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(sizeAbs));
+          dataPoint.emplace(MarketDataMessage::DataFieldType::TRADE_ID, x["id"].GetString());
+          dataPoint.emplace(MarketDataMessage::DataFieldType::IS_BUYER_MAKER, isBuyerMaker ? "1" : "0");
           marketDataMessage.data[MarketDataMessage::DataType::TRADE].emplace_back(std::move(dataPoint));
           marketDataMessageList.emplace_back(std::move(marketDataMessage));
         }

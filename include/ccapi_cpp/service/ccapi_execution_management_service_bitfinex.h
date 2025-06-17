@@ -378,7 +378,7 @@ class ExecutionManagementServiceBitfinex : public ExecutionManagementService {
     message.setCorrelationIdList({subscription.getCorrelationId()});
     const auto& fieldSet = subscription.getFieldSet();
     const auto& instrumentSet = subscription.getInstrumentSet();
-    if (document.IsArray() && document.Size() >= 3 && std::string(document[0].GetString()) == "0") {
+    if (document.IsArray() && document.Size() >= 3 && std::string_view(document[0].GetString()) == "0") {
       std::string type = document[1].GetString();
       if ((type == CCAPI_BITFINEX_STREAM_TRADE_RAW_MESSAGE_TYPE) && fieldSet.find(CCAPI_EM_PRIVATE_TRADE) != fieldSet.end()) {
         event.setType(Event::Type::SUBSCRIPTION_DATA);

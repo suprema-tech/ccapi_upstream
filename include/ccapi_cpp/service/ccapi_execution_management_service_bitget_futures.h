@@ -415,19 +415,19 @@ class ExecutionManagementServiceBitgetFutures : public ExecutionManagementServic
                 std::vector<Element> elementList;
                 Element element;
                 element.insert(CCAPI_TRADE_ID, tradeId);
-                element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, std::string(x["fillPrice"].GetString()));
-                element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, std::string(x["baseVolume"].GetString()));
-                element.insert(CCAPI_EM_ORDER_SIDE, std::string(x["side"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
-                element.insert(CCAPI_IS_MAKER, std::string(x["tradeScope"].GetString()) == "M" ? "1" : "0");
-                element.insert(CCAPI_EM_ORDER_ID, std::string(x["orderId"].GetString()));
+                element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, x["fillPrice"].GetString());
+                element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, x["baseVolume"].GetString());
+                element.insert(CCAPI_EM_ORDER_SIDE, std::string_view(x["side"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
+                element.insert(CCAPI_IS_MAKER, std::string_view(x["tradeScope"].GetString()) == "M" ? "1" : "0");
+                element.insert(CCAPI_EM_ORDER_ID, x["orderId"].GetString());
                 auto itClientOId = x.FindMember("clientOId");
                 std::string clientOId = itClientOId != x.MemberEnd() ? itClientOId->value.GetString() : "";
                 if (!clientOId.empty()) {
                   element.insert(CCAPI_EM_CLIENT_ORDER_ID, clientOId);
                 }
                 element.insert(CCAPI_EM_ORDER_INSTRUMENT, instrument);
-                element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, std::string(x["fillFee"].GetString()));
-                element.insert(CCAPI_EM_ORDER_FEE_ASSET, std::string(x["fillFeeCoin"].GetString()));
+                element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, x["fillFee"].GetString());
+                element.insert(CCAPI_EM_ORDER_FEE_ASSET, x["fillFeeCoin"].GetString());
                 elementList.emplace_back(std::move(element));
                 message.setElementList(elementList);
                 messageList.emplace_back(std::move(message));

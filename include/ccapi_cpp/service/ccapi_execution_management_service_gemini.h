@@ -207,7 +207,7 @@ class ExecutionManagementServiceGemini : public ExecutionManagementService {
     if (operation == Request::Operation::CANCEL_OPEN_ORDERS) {
       for (const auto& x : document["details"]["cancelledOrders"].GetArray()) {
         Element element;
-        element.insert(CCAPI_EM_ORDER_ID, std::string(x.GetString()));
+        element.insert(CCAPI_EM_ORDER_ID, x.GetString());
         elementList.emplace_back(std::move(element));
       }
     } else if (document.IsObject()) {
@@ -357,8 +357,8 @@ class ExecutionManagementServiceGemini : public ExecutionManagementService {
               element.insert(CCAPI_TRADE_ID, fill["trade_id"].GetString());
               element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, fill["price"].GetString());
               element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, fill["amount"].GetString());
-              element.insert(CCAPI_EM_ORDER_SIDE, std::string(x["side"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
-              element.insert(CCAPI_IS_MAKER, std::string(fill["liquidity"].GetString()) == "Taker" ? "0" : "1");
+              element.insert(CCAPI_EM_ORDER_SIDE, std::string_view(x["side"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
+              element.insert(CCAPI_IS_MAKER, std::string_view(fill["liquidity"].GetString()) == "Taker" ? "0" : "1");
               element.insert(CCAPI_EM_ORDER_ID, x["order_id"].GetString());
               element.insert(CCAPI_EM_CLIENT_ORDER_ID, x["client_order_id"].GetString());
               element.insert(CCAPI_EM_ORDER_INSTRUMENT, instrument);

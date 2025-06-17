@@ -337,7 +337,7 @@ class ExecutionManagementServiceBitmex : public ExecutionManagementService {
     if (document.FindMember("error") != document.MemberEnd()) {
       auto it = document.FindMember("request");
       if (it != document.MemberEnd()) {
-        if (std::string(it->value["op"].GetString()) == "authKeyExpires") {
+        if (std::string_view(it->value["op"].GetString()) == "authKeyExpires") {
           event.setType(Event::Type::SUBSCRIPTION_STATUS);
           message.setType(Message::Type::SUBSCRIPTION_FAILURE);
           Element element;
@@ -350,7 +350,7 @@ class ExecutionManagementServiceBitmex : public ExecutionManagementService {
       if (document.FindMember("success") != document.MemberEnd()) {
         auto it = document.FindMember("request");
         if (it != document.MemberEnd()) {
-          if (std::string(it->value["op"].GetString()) == "authKeyExpires") {
+          if (std::string_view(it->value["op"].GetString()) == "authKeyExpires") {
             event.setType(Event::Type::SUBSCRIPTION_STATUS);
             message.setType(Message::Type::SUBSCRIPTION_STARTED);
             Element element;
@@ -416,15 +416,16 @@ class ExecutionManagementServiceBitmex : public ExecutionManagementService {
                       message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_PRIVATE_TRADE);
                       std::vector<Element> elementList;
                       Element element;
-                      element.insert(CCAPI_TRADE_ID, std::string(x["trdMatchID"].GetString()));
-                      element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, std::string(x["lastPx"].GetString()));
-                      element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, std::string(x["lastQty"].GetString()));
-                      element.insert(CCAPI_EM_ORDER_SIDE, std::string(x["side"].GetString()) == "Buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
-                      element.insert(CCAPI_IS_MAKER, std::string(x["lastLiquidityInd"].GetString()) == "RemovedLiquidity" ? "0" : "1");
-                      element.insert(CCAPI_EM_ORDER_ID, std::string(x["orderID"].GetString()));
-                      element.insert(CCAPI_EM_CLIENT_ORDER_ID, std::string(x["clOrdID"].GetString()));
+                      element.insert(CCAPI_TRADE_ID, x["trdMatchID"].GetString());
+                      element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, x["lastPx"].GetString());
+                      element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, x["lastQty"].GetString());
+                      element.insert(CCAPI_EM_ORDER_SIDE,
+                                     std::string_view(x["side"].GetString()) == "Buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
+                      element.insert(CCAPI_IS_MAKER, std::string_view(x["lastLiquidityInd"].GetString()) == "RemovedLiquidity" ? "0" : "1");
+                      element.insert(CCAPI_EM_ORDER_ID, x["orderID"].GetString());
+                      element.insert(CCAPI_EM_CLIENT_ORDER_ID, x["clOrdID"].GetString());
                       element.insert(CCAPI_EM_ORDER_INSTRUMENT, instrument);
-                      element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, std::string(x["commission"].GetString()));
+                      element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, x["commission"].GetString());
                       elementList.emplace_back(std::move(element));
                       message.setElementList(elementList);
                       messageList.emplace_back(std::move(message));

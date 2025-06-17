@@ -197,22 +197,22 @@ class MarketDataServiceBitgetBase : public MarketDataService {
             for (const auto& x : datum["bids"].GetArray()) {
               MarketDataMessage::TypeForDataPoint dataPoint;
               if (this->sessionOptions.enableCheckOrderBookChecksum) {
-                dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, x[0].GetString()});
-                dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, x[1].GetString()});
+                dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, x[0].GetString());
+                dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, x[1].GetString());
               } else {
-                dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(x[0].GetString())});
-                dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(x[1].GetString())});
+                dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x[0].GetString()));
+                dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(x[1].GetString()));
               }
               marketDataMessage.data[MarketDataMessage::DataType::BID].emplace_back(std::move(dataPoint));
             }
             for (const auto& x : datum["asks"].GetArray()) {
               MarketDataMessage::TypeForDataPoint dataPoint;
               if (this->sessionOptions.enableCheckOrderBookChecksum) {
-                dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, x[0].GetString()});
-                dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, x[1].GetString()});
+                dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, x[0].GetString());
+                dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, x[1].GetString());
               } else {
-                dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(x[0].GetString())});
-                dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(x[1].GetString())});
+                dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x[0].GetString()));
+                dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(x[1].GetString()));
               }
               marketDataMessage.data[MarketDataMessage::DataType::ASK].emplace_back(std::move(dataPoint));
             }
@@ -228,10 +228,10 @@ class MarketDataServiceBitgetBase : public MarketDataService {
             marketDataMessage.tp = TimePoint(std::chrono::milliseconds(std::stoll(datum["ts"].GetString())));
             marketDataMessage.exchangeSubscriptionId = exchangeSubscriptionId;
             MarketDataMessage::TypeForDataPoint dataPoint;
-            dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(datum["price"].GetString())});
-            dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(datum["size"].GetString())});
-            dataPoint.insert({MarketDataMessage::DataFieldType::IS_BUYER_MAKER, std::string(datum["side"].GetString()) == "Buy" ? "1" : "0"});
-            dataPoint.insert({MarketDataMessage::DataFieldType::TRADE_ID, std::string(datum["tradeId"].GetString())});
+            dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(datum["price"].GetString()));
+            dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(datum["size"].GetString()));
+            dataPoint.emplace(MarketDataMessage::DataFieldType::IS_BUYER_MAKER, std::string_view(datum["side"].GetString()) == "Buy" ? "1" : "0");
+            dataPoint.emplace(MarketDataMessage::DataFieldType::TRADE_ID, datum["tradeId"].GetString());
             marketDataMessage.data[MarketDataMessage::DataType::TRADE].emplace_back(std::move(dataPoint));
             marketDataMessageList.emplace_back(std::move(marketDataMessage));
           }
@@ -243,12 +243,12 @@ class MarketDataServiceBitgetBase : public MarketDataService {
             marketDataMessage.tp = TimePoint(std::chrono::milliseconds(std::stoll(datum[0].GetString())));
             marketDataMessage.exchangeSubscriptionId = exchangeSubscriptionId;
             MarketDataMessage::TypeForDataPoint dataPoint;
-            dataPoint.insert({MarketDataMessage::DataFieldType::OPEN_PRICE, datum[1].GetString()});
-            dataPoint.insert({MarketDataMessage::DataFieldType::HIGH_PRICE, datum[2].GetString()});
-            dataPoint.insert({MarketDataMessage::DataFieldType::LOW_PRICE, datum[3].GetString()});
-            dataPoint.insert({MarketDataMessage::DataFieldType::CLOSE_PRICE, datum[4].GetString()});
-            dataPoint.insert({MarketDataMessage::DataFieldType::VOLUME, datum[5].GetString()});
-            dataPoint.insert({MarketDataMessage::DataFieldType::QUOTE_VOLUME, datum[6].GetString()});
+            dataPoint.emplace(MarketDataMessage::DataFieldType::OPEN_PRICE, datum[1].GetString());
+            dataPoint.emplace(MarketDataMessage::DataFieldType::HIGH_PRICE, datum[2].GetString());
+            dataPoint.emplace(MarketDataMessage::DataFieldType::LOW_PRICE, datum[3].GetString());
+            dataPoint.emplace(MarketDataMessage::DataFieldType::CLOSE_PRICE, datum[4].GetString());
+            dataPoint.emplace(MarketDataMessage::DataFieldType::VOLUME, datum[5].GetString());
+            dataPoint.emplace(MarketDataMessage::DataFieldType::QUOTE_VOLUME, datum[6].GetString());
             marketDataMessage.data[MarketDataMessage::DataType::CANDLESTICK].emplace_back(std::move(dataPoint));
             marketDataMessageList.emplace_back(std::move(marketDataMessage));
           }
@@ -459,10 +459,10 @@ class MarketDataServiceBitgetBase : public MarketDataService {
           marketDataMessage.type = MarketDataMessage::Type::MARKET_DATA_EVENTS_TRADE;
           marketDataMessage.tp = TimePoint(std::chrono::milliseconds(std::stoll(datum["ts"].GetString())));
           MarketDataMessage::TypeForDataPoint dataPoint;
-          dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(datum["price"].GetString())});
-          dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(datum["size"].GetString())});
-          dataPoint.insert({MarketDataMessage::DataFieldType::TRADE_ID, datum["tradeId"].GetString()});
-          dataPoint.insert({MarketDataMessage::DataFieldType::IS_BUYER_MAKER, std::string(datum["side"].GetString()) == "Buy" ? "1" : "0"});
+          dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(datum["price"].GetString()));
+          dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(datum["size"].GetString()));
+          dataPoint.emplace(MarketDataMessage::DataFieldType::TRADE_ID, datum["tradeId"].GetString());
+          dataPoint.emplace(MarketDataMessage::DataFieldType::IS_BUYER_MAKER, std::string_view(datum["side"].GetString()) == "Buy" ? "1" : "0");
           marketDataMessage.data[MarketDataMessage::DataType::TRADE].emplace_back(std::move(dataPoint));
           marketDataMessageList.emplace_back(std::move(marketDataMessage));
         }
@@ -474,12 +474,12 @@ class MarketDataServiceBitgetBase : public MarketDataService {
           marketDataMessage.type = MarketDataMessage::Type::MARKET_DATA_EVENTS_CANDLESTICK;
           marketDataMessage.tp = UtilTime::makeTimePointFromMilliseconds(std::stoll(datum[0].GetString()));
           MarketDataMessage::TypeForDataPoint dataPoint;
-          dataPoint.insert({MarketDataMessage::DataFieldType::OPEN_PRICE, datum[1].GetString()});
-          dataPoint.insert({MarketDataMessage::DataFieldType::HIGH_PRICE, datum[2].GetString()});
-          dataPoint.insert({MarketDataMessage::DataFieldType::LOW_PRICE, datum[3].GetString()});
-          dataPoint.insert({MarketDataMessage::DataFieldType::CLOSE_PRICE, datum[4].GetString()});
-          dataPoint.insert({MarketDataMessage::DataFieldType::VOLUME, datum[5].GetString()});
-          dataPoint.insert({MarketDataMessage::DataFieldType::QUOTE_VOLUME, datum[6].GetString()});
+          dataPoint.emplace(MarketDataMessage::DataFieldType::OPEN_PRICE, datum[1].GetString());
+          dataPoint.emplace(MarketDataMessage::DataFieldType::HIGH_PRICE, datum[2].GetString());
+          dataPoint.emplace(MarketDataMessage::DataFieldType::LOW_PRICE, datum[3].GetString());
+          dataPoint.emplace(MarketDataMessage::DataFieldType::CLOSE_PRICE, datum[4].GetString());
+          dataPoint.emplace(MarketDataMessage::DataFieldType::VOLUME, datum[5].GetString());
+          dataPoint.emplace(MarketDataMessage::DataFieldType::QUOTE_VOLUME, datum[6].GetString());
           marketDataMessage.data[MarketDataMessage::DataType::CANDLESTICK].emplace_back(std::move(dataPoint));
           marketDataMessageList.emplace_back(std::move(marketDataMessage));
         }
@@ -489,7 +489,7 @@ class MarketDataServiceBitgetBase : public MarketDataService {
         message.setTimeReceived(timeReceived);
         message.setType(this->requestOperationToMessageTypeMap.at(request.getOperation()));
         for (const auto& x : document["data"].GetArray()) {
-          if (std::string(x["symbol"].GetString()) == request.getInstrument()) {
+          if (std::string_view(x["symbol"].GetString()) == request.getInstrument()) {
             Element element;
             this->extractInstrumentInfo(element, x);
             message.setElementList({element});

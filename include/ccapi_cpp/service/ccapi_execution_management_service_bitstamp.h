@@ -202,7 +202,7 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
     {
       auto it1 = x.FindMember("type");
       if (it1 != x.MemberEnd()) {
-        element.insert(CCAPI_EM_ORDER_SIDE, std::string(it1->value.GetString()) == "0" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
+        element.insert(CCAPI_EM_ORDER_SIDE, std::string_view(it1->value.GetString()) == "0" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
       }
     }
   }
@@ -396,7 +396,7 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
             };
             Element info;
             this->extractOrderInfo(info, data, extractionFieldNameMap);
-            info.insert(CCAPI_EM_ORDER_SIDE, std::string(data["order_type"].GetString()) == "0" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
+            info.insert(CCAPI_EM_ORDER_SIDE, std::string_view(data["order_type"].GetString()) == "0" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
             info.insert(CCAPI_EM_ORDER_STATUS, eventPayload);
             info.insert(CCAPI_EM_ORDER_INSTRUMENT, instrument);
             std::vector<Element> elementList;
@@ -428,7 +428,7 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
             info.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, data["amount"].GetString());
             info.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, data["price"].GetString());
             info.insert(CCAPI_EM_ORDER_FEE_QUANTITY, data["fee"].GetString());
-            info.insert(CCAPI_EM_ORDER_SIDE, std::string(data["side"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
+            info.insert(CCAPI_EM_ORDER_SIDE, std::string_view(data["side"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
             info.insert(CCAPI_EM_ORDER_INSTRUMENT, instrument);
             std::vector<Element> elementList;
             elementList.emplace_back(std::move(info));

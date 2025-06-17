@@ -163,7 +163,7 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
       elementList.emplace_back(std::move(element));
     } else if (operation == Request::Operation::CANCEL_ORDER) {
       Element element;
-      element.insert(CCAPI_EM_ORDER_ID, std::string(data["successes"].GetString()));
+      element.insert(CCAPI_EM_ORDER_ID, data["successes"].GetString());
       elementList.emplace_back(std::move(element));
     } else if (operation == Request::Operation::GET_ORDER) {
       Element element;
@@ -363,7 +363,7 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
             info.insert(CCAPI_TRADE_ID, std::string(x["trade_id"].GetString()));
             info.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, x["trade_price"].GetString());
             info.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, x["trade_volume"].GetString());
-            info.insert(CCAPI_IS_MAKER, std::string(x["role"].GetString()) == "maker" ? "1" : "0");
+            info.insert(CCAPI_IS_MAKER, std::string_view(x["role"].GetString()) == "maker" ? "1" : "0");
           }
           std::vector<Element> elementList;
           elementList.emplace_back(std::move(info));
@@ -373,7 +373,7 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
       } else if (topic.rfind(this->matchOrderDataTopic + ".", 0) == 0 && fieldSet.find(CCAPI_EM_PRIVATE_TRADE) != fieldSet.end()) {
         std::string instrument = document["contract_code"].GetString();
         if (instrumentSet.empty() || instrumentSet.find(instrument) != instrumentSet.end()) {
-          std::string orderSide = std::string(document["direction"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL;
+          std::string orderSide = std::string_view(document["direction"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL;
           std::string positionSide = document["offset"].GetString();
           std::string orderId = document["order_id"].GetString();
           std::string clientOrderId;
@@ -389,12 +389,12 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
             message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_PRIVATE_TRADE);
             std::vector<Element> elementList;
             Element element;
-            element.insert(CCAPI_TRADE_ID, std::string(x["trade_id"].GetString()));
+            element.insert(CCAPI_TRADE_ID, x["trade_id"].GetString());
             element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, x["trade_price"].GetString());
             element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, x["trade_volume"].GetString());
             element.insert(CCAPI_EM_ORDER_SIDE, orderSide);
             element.insert(CCAPI_EM_POSITION_SIDE, positionSide);
-            element.insert(CCAPI_IS_MAKER, std::string(x["role"].GetString()) == "maker" ? "1" : "0");
+            element.insert(CCAPI_IS_MAKER, std::string_view(x["role"].GetString()) == "maker" ? "1" : "0");
             element.insert(CCAPI_EM_ORDER_ID, orderId);
             if (!clientOrderId.empty()) {
               element.insert(CCAPI_EM_CLIENT_ORDER_ID, clientOrderId);

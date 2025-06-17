@@ -323,7 +323,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
           element.insert(CCAPI_EM_POSITION_QUANTITY, positionQuantity);
           element.insert(CCAPI_EM_POSITION_ASSET, x["posCcy"].GetString());
           element.insert(CCAPI_EM_POSITION_MARGIN_TYPE,
-                         std::string(x["mgnMode"].GetString()) == "cross" ? CCAPI_EM_MARGIN_TYPE_CROSS_MARGIN : CCAPI_EM_MARGIN_TYPE_ISOLATED_MARGIN);
+                         std::string_view(x["mgnMode"].GetString()) == "cross" ? CCAPI_EM_MARGIN_TYPE_CROSS_MARGIN : CCAPI_EM_MARGIN_TYPE_ISOLATED_MARGIN);
           element.insert(CCAPI_MARGIN_ASSET, x["ccy"].GetString());
           element.insert(CCAPI_EM_POSITION_ENTRY_PRICE, x["avgPx"].GetString());
           element.insert(CCAPI_EM_POSITION_LEVERAGE, x["lever"].GetString());
@@ -537,16 +537,16 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
                 std::vector<Element> elementList;
                 Element element;
                 element.insert(CCAPI_TRADE_ID, tradeId);
-                element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, std::string(x["fillPx"].GetString()));
-                element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, std::string(x["fillSz"].GetString()));
-                element.insert(CCAPI_EM_ORDER_SIDE, std::string(x["side"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
-                element.insert(CCAPI_EM_POSITION_SIDE, std::string(x["posSide"].GetString()));
-                element.insert(CCAPI_IS_MAKER, std::string(x["execType"].GetString()) == "M" ? "1" : "0");
-                element.insert(CCAPI_EM_ORDER_ID, std::string(x["ordId"].GetString()));
-                element.insert(CCAPI_EM_CLIENT_ORDER_ID, std::string(x["clOrdId"].GetString()));
+                element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, x["fillPx"].GetString());
+                element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, x["fillSz"].GetString());
+                element.insert(CCAPI_EM_ORDER_SIDE, std::string_view(x["side"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
+                element.insert(CCAPI_EM_POSITION_SIDE, x["posSide"].GetString());
+                element.insert(CCAPI_IS_MAKER, std::string_view(x["execType"].GetString()) == "M" ? "1" : "0");
+                element.insert(CCAPI_EM_ORDER_ID, x["ordId"].GetString());
+                element.insert(CCAPI_EM_CLIENT_ORDER_ID, x["clOrdId"].GetString());
                 element.insert(CCAPI_EM_ORDER_INSTRUMENT, x["instId"].GetString());
-                element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, std::string(x["fillFee"].GetString()));
-                element.insert(CCAPI_EM_ORDER_FEE_ASSET, std::string(x["fillFeeCcy"].GetString()));
+                element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, x["fillFee"].GetString());
+                element.insert(CCAPI_EM_ORDER_FEE_ASSET, x["fillFeeCcy"].GetString());
                 elementList.emplace_back(std::move(element));
                 message.setElementList(elementList);
                 messageList.emplace_back(std::move(message));
@@ -592,11 +592,11 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
             std::vector<Element> elementList;
             Element element;
             element.insert(CCAPI_TRADE_ID, x["tradeId"].GetString());
-            element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, std::string(x["fillPx"].GetString()));
-            element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, std::string(x["fillSz"].GetString()));
-            element.insert(CCAPI_EM_ORDER_SIDE, std::string(x["side"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
-            element.insert(CCAPI_IS_MAKER, std::string(x["execType"].GetString()) == "M" ? "1" : "0");
-            element.insert(CCAPI_EM_ORDER_ID, std::string(x["ordId"].GetString()));
+            element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, x["fillPx"].GetString());
+            element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, x["fillSz"].GetString());
+            element.insert(CCAPI_EM_ORDER_SIDE, std::string_view(x["side"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
+            element.insert(CCAPI_IS_MAKER, std::string_view(x["execType"].GetString()) == "M" ? "1" : "0");
+            element.insert(CCAPI_EM_ORDER_ID, x["ordId"].GetString());
             element.insert(CCAPI_EM_ORDER_INSTRUMENT, x["instId"].GetString());
             elementList.emplace_back(std::move(element));
             message.setElementList(elementList);
@@ -633,7 +633,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
             element.insert(CCAPI_EM_POSITION_QUANTITY, x["pos"].GetString());
             element.insert(CCAPI_EM_POSITION_ASSET, x["posCcy"].GetString());
             element.insert(CCAPI_EM_POSITION_MARGIN_TYPE,
-                           std::string(x["mgnMode"].GetString()) == "cross" ? CCAPI_EM_MARGIN_TYPE_CROSS_MARGIN : CCAPI_EM_MARGIN_TYPE_ISOLATED_MARGIN);
+                           std::string_view(x["mgnMode"].GetString()) == "cross" ? CCAPI_EM_MARGIN_TYPE_CROSS_MARGIN : CCAPI_EM_MARGIN_TYPE_ISOLATED_MARGIN);
             element.insert(CCAPI_MARGIN_ASSET, x["ccy"].GetString());
             element.insert(CCAPI_EM_POSITION_ENTRY_PRICE, x["avgPx"].GetString());
             element.insert(CCAPI_EM_UNREALIZED_PNL, x["upl"].GetString());

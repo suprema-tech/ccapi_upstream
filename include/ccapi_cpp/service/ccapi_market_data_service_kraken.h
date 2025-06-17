@@ -191,16 +191,16 @@ class MarketDataServiceKraken : public MarketDataService {
           if (anonymous2.HasMember("b")) {
             for (const auto& x : anonymous2["b"].GetArray()) {
               MarketDataMessage::TypeForDataPoint dataPoint;
-              dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(x[0].GetString())});
-              dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(x[1].GetString())});
+              dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x[0].GetString()));
+              dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(x[1].GetString()));
               marketDataMessage.data[MarketDataMessage::DataType::BID].emplace_back(std::move(dataPoint));
             }
           }
           if (anonymous2.HasMember("a")) {
             for (const auto& x : anonymous2["a"].GetArray()) {
               MarketDataMessage::TypeForDataPoint dataPoint;
-              dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(x[0].GetString())});
-              dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(x[1].GetString())});
+              dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x[0].GetString()));
+              dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(x[1].GetString()));
               marketDataMessage.data[MarketDataMessage::DataType::ASK].emplace_back(std::move(dataPoint));
             }
           }
@@ -213,14 +213,14 @@ class MarketDataServiceKraken : public MarketDataService {
           marketDataMessage.tp = timeReceived;
           for (const auto& x : anonymous["bs"].GetArray()) {
             MarketDataMessage::TypeForDataPoint dataPoint;
-            dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(x[0].GetString())});
-            dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(x[1].GetString())});
+            dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x[0].GetString()));
+            dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(x[1].GetString()));
             marketDataMessage.data[MarketDataMessage::DataType::BID].emplace_back(std::move(dataPoint));
           }
           for (const auto& x : anonymous["as"].GetArray()) {
             MarketDataMessage::TypeForDataPoint dataPoint;
-            dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(x[0].GetString())});
-            dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(x[1].GetString())});
+            dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x[0].GetString()));
+            dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(x[1].GetString()));
             marketDataMessage.data[MarketDataMessage::DataType::ASK].emplace_back(std::move(dataPoint));
           }
           marketDataMessageList.emplace_back(std::move(marketDataMessage));
@@ -237,9 +237,9 @@ class MarketDataServiceKraken : public MarketDataService {
           tp += std::chrono::nanoseconds(timePair.second);
           marketDataMessage.tp = tp;
           MarketDataMessage::TypeForDataPoint dataPoint;
-          dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(std::string(x[0].GetString()))});
-          dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(std::string(x[1].GetString()))});
-          dataPoint.insert({MarketDataMessage::DataFieldType::IS_BUYER_MAKER, std::string(x[3].GetString()) == "s" ? "1" : "0"});
+          dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x[0].GetString()));
+          dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(x[1].GetString()));
+          dataPoint.emplace(MarketDataMessage::DataFieldType::IS_BUYER_MAKER, std::string_view(x[3].GetString()) == "s" ? "1" : "0");
           marketDataMessage.data[MarketDataMessage::DataType::TRADE].emplace_back(std::move(dataPoint));
           marketDataMessageList.emplace_back(std::move(marketDataMessage));
         }
@@ -255,13 +255,11 @@ class MarketDataServiceKraken : public MarketDataService {
         auto tp = TimePoint(std::chrono::duration<int64_t>(timePair.first - intervalSeconds));
         marketDataMessage.tp = tp;
         MarketDataMessage::TypeForDataPoint dataPoint;
-        dataPoint.insert({MarketDataMessage::DataFieldType::OPEN_PRICE, x[2].GetString()});
-        dataPoint.insert({MarketDataMessage::DataFieldType::HIGH_PRICE, x[3].GetString()});
-        dataPoint.insert({MarketDataMessage::DataFieldType::LOW_PRICE, x[4].GetString()});
-        dataPoint.insert({MarketDataMessage::DataFieldType::CLOSE_PRICE, x[5].GetString()});
-        dataPoint.insert({MarketDataMessage::DataFieldType::VOLUME, x[7].GetString()});
-        dataPoint.insert({MarketDataMessage::DataFieldType::QUOTE_VOLUME,
-                          ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(x[6].GetString()) * std::stod(x[7].GetString()))))});
+        dataPoint.emplace(MarketDataMessage::DataFieldType::OPEN_PRICE, x[2].GetString());
+        dataPoint.emplace(MarketDataMessage::DataFieldType::HIGH_PRICE, x[3].GetString());
+        dataPoint.emplace(MarketDataMessage::DataFieldType::LOW_PRICE, x[4].GetString());
+        dataPoint.emplace(MarketDataMessage::DataFieldType::CLOSE_PRICE, x[5].GetString());
+        dataPoint.emplace(MarketDataMessage::DataFieldType::VOLUME, x[7].GetString());
         marketDataMessage.data[MarketDataMessage::DataType::CANDLESTICK].emplace_back(std::move(dataPoint));
         marketDataMessageList.emplace_back(std::move(marketDataMessage));
       }
@@ -375,9 +373,9 @@ class MarketDataServiceKraken : public MarketDataService {
           tp += std::chrono::nanoseconds(timePair.second);
           marketDataMessage.tp = tp;
           MarketDataMessage::TypeForDataPoint dataPoint;
-          dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(std::string(x[0].GetString()))});
-          dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalString(std::string(x[1].GetString()))});
-          dataPoint.insert({MarketDataMessage::DataFieldType::IS_BUYER_MAKER, std::string(x[3].GetString()) == "s" ? "1" : "0"});
+          dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x[0].GetString()));
+          dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, UtilString::normalizeDecimalStringView(x[1].GetString()));
+          dataPoint.emplace(MarketDataMessage::DataFieldType::IS_BUYER_MAKER, std::string_view(x[3].GetString()) == "s" ? "1" : "0");
           marketDataMessage.data[MarketDataMessage::DataType::TRADE].emplace_back(std::move(dataPoint));
           marketDataMessageList.emplace_back(std::move(marketDataMessage));
         }

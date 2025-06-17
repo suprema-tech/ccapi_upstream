@@ -369,18 +369,18 @@ class ExecutionManagementServiceFtxBase : public ExecutionManagementService {
           message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_PRIVATE_TRADE);
           std::vector<Element> elementList;
           Element element;
-          element.insert(CCAPI_TRADE_ID, std::string(data["tradeId"].GetString()));
-          element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, std::string(data["price"].GetString()));
-          element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, std::string(data["size"].GetString()));
-          element.insert(CCAPI_EM_ORDER_SIDE, std::string(data["side"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
-          element.insert(CCAPI_IS_MAKER, std::string(data["liquidity"].GetString()) == "maker" ? "1" : "0");
-          element.insert(CCAPI_EM_ORDER_ID, std::string(data["orderId"].GetString()));
+          element.insert(CCAPI_TRADE_ID, data["tradeId"].GetString());
+          element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, data["price"].GetString());
+          element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, data["size"].GetString());
+          element.insert(CCAPI_EM_ORDER_SIDE, std::string_view(data["side"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
+          element.insert(CCAPI_IS_MAKER, std::string_view(data["liquidity"].GetString()) == "maker" ? "1" : "0");
+          element.insert(CCAPI_EM_ORDER_ID, data["orderId"].GetString());
           element.insert(CCAPI_EM_ORDER_INSTRUMENT, instrument);
-          element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, std::string(data["fee"].GetString()));
+          element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, data["fee"].GetString());
           {
             auto it = data.FindMember("clientOrderId");
             if (it != data.MemberEnd() && !it->value.IsNull()) {
-              element.insert(CCAPI_EM_CLIENT_ORDER_ID, std::string(it->value.GetString()));
+              element.insert(CCAPI_EM_CLIENT_ORDER_ID, it->value.GetString());
             }
           }
           elementList.emplace_back(std::move(element));

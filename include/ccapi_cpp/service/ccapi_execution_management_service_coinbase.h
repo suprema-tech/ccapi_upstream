@@ -328,7 +328,7 @@ class ExecutionManagementServiceCoinbase : public ExecutionManagementService {
             message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_PRIVATE_TRADE);
             std::vector<Element> elementList;
             Element element;
-            element.insert(CCAPI_TRADE_ID, std::string(document["trade_id"].GetString()));
+            element.insert(CCAPI_TRADE_ID, document["trade_id"].GetString());
             std::string priceStr = document["price"].GetString();
             std::string sizeStr = document["size"].GetString();
             element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, priceStr);

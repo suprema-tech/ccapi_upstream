@@ -124,7 +124,7 @@ class MarketDataServiceBitfinex : public MarketDataService {
     document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     if (document.IsArray() && document.Size() >= 1) {
       auto exchangeSubscriptionId = std::string(document[0].GetString());
-      if (document.Size() >= 2 && document[1].IsString() && std::string(document[1].GetString()) == "hb") {
+      if (document.Size() >= 2 && document[1].IsString() && std::string_view(document[1].GetString()) == "hb") {
         if (this->sessionOptions.enableCheckSequence) {
           int sequence = std::stoi(document[2].GetString());
           if (!this->checkSequence(wsConnectionPtr, sequence)) {
@@ -167,23 +167,23 @@ class MarketDataServiceBitfinex : public MarketDataService {
                 marketDataMessage.tp = timeReceived;
                 for (const auto& x : content.GetArray()) {
                   MarketDataMessage::TypeForDataPoint dataPoint;
-                  dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(x[0].GetString())});
-                  auto count = std::string(x[1].GetString());
-                  auto amount = UtilString::normalizeDecimalString(x[2].GetString());
+                  dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x[0].GetString()));
+                  std::string_view count = x[1].GetString();
+                  std::string_view amount = UtilString::normalizeDecimalStringView(x[2].GetString());
                   if (count != "0") {
                     if (amount.at(0) == '-') {
-                      dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, amount.substr(1)});
+                      dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, amount.substr(1));
                       marketDataMessage.data[MarketDataMessage::DataType::ASK].emplace_back(std::move(dataPoint));
                     } else {
-                      dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, amount});
+                      dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, amount);
                       marketDataMessage.data[MarketDataMessage::DataType::BID].emplace_back(std::move(dataPoint));
                     }
                   } else {
                     if (amount.at(0) == '-') {
-                      dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, "0"});
+                      dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, "0");
                       marketDataMessage.data[MarketDataMessage::DataType::ASK].emplace_back(std::move(dataPoint));
                     } else {
-                      dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, "0"});
+                      dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, "0");
                       marketDataMessage.data[MarketDataMessage::DataType::BID].emplace_back(std::move(dataPoint));
                     }
                   }
@@ -199,11 +199,11 @@ class MarketDataServiceBitfinex : public MarketDataService {
                   timestampInMilliseconds.insert(timestampInMilliseconds.size() - 3, ".");
                   marketDataMessage.tp = UtilTime::makeTimePoint(UtilTime::divide(timestampInMilliseconds));
                   MarketDataMessage::TypeForDataPoint dataPoint;
-                  dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(std::string(x[3].GetString()))});
-                  auto amount = UtilString::normalizeDecimalString(x[2].GetString());
-                  dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, amount.at(0) == '-' ? amount.substr(1) : amount});
-                  dataPoint.insert({MarketDataMessage::DataFieldType::TRADE_ID, std::string(x[0].GetString())});
-                  dataPoint.insert({MarketDataMessage::DataFieldType::IS_BUYER_MAKER, amount.at(0) == '-' ? "1" : "0"});
+                  dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x[3].GetString()));
+                  std::string_view amount = UtilString::normalizeDecimalStringView(x[2].GetString());
+                  dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, amount.at(0) == '-' ? amount.substr(1) : amount);
+                  dataPoint.emplace(MarketDataMessage::DataFieldType::TRADE_ID, x[0].GetString());
+                  dataPoint.emplace(MarketDataMessage::DataFieldType::IS_BUYER_MAKER, amount.at(0) == '-' ? "1" : "0");
                   marketDataMessage.data[MarketDataMessage::DataType::TRADE].emplace_back(std::move(dataPoint));
                   marketDataMessageList.emplace_back(std::move(marketDataMessage));
                 }
@@ -217,11 +217,11 @@ class MarketDataServiceBitfinex : public MarketDataService {
                   timestampInMilliseconds.insert(timestampInMilliseconds.size() - 3, ".");
                   marketDataMessage.tp = UtilTime::makeTimePoint(UtilTime::divide(timestampInMilliseconds));
                   MarketDataMessage::TypeForDataPoint dataPoint;
-                  dataPoint.insert({MarketDataMessage::DataFieldType::OPEN_PRICE, x[1].GetString()});
-                  dataPoint.insert({MarketDataMessage::DataFieldType::HIGH_PRICE, x[3].GetString()});
-                  dataPoint.insert({MarketDataMessage::DataFieldType::LOW_PRICE, x[4].GetString()});
-                  dataPoint.insert({MarketDataMessage::DataFieldType::CLOSE_PRICE, x[2].GetString()});
-                  dataPoint.insert({MarketDataMessage::DataFieldType::VOLUME, x[5].GetString()});
+                  dataPoint.emplace(MarketDataMessage::DataFieldType::OPEN_PRICE, x[1].GetString());
+                  dataPoint.emplace(MarketDataMessage::DataFieldType::HIGH_PRICE, x[3].GetString());
+                  dataPoint.emplace(MarketDataMessage::DataFieldType::LOW_PRICE, x[4].GetString());
+                  dataPoint.emplace(MarketDataMessage::DataFieldType::CLOSE_PRICE, x[2].GetString());
+                  dataPoint.emplace(MarketDataMessage::DataFieldType::VOLUME, x[5].GetString());
                   marketDataMessage.data[MarketDataMessage::DataType::CANDLESTICK].emplace_back(std::move(dataPoint));
                   marketDataMessageList.emplace_back(std::move(marketDataMessage));
                 }
@@ -237,41 +237,45 @@ class MarketDataServiceBitfinex : public MarketDataService {
                 timestampInMilliseconds.insert(timestampInMilliseconds.size() - 3, ".");
                 marketDataMessage.tp = UtilTime::makeTimePoint(UtilTime::divide(timestampInMilliseconds));
                 MarketDataMessage::TypeForDataPoint dataPoint;
-                dataPoint.insert({MarketDataMessage::DataFieldType::OPEN_PRICE, x[1].GetString()});
-                dataPoint.insert({MarketDataMessage::DataFieldType::HIGH_PRICE, x[3].GetString()});
-                dataPoint.insert({MarketDataMessage::DataFieldType::LOW_PRICE, x[4].GetString()});
-                dataPoint.insert({MarketDataMessage::DataFieldType::CLOSE_PRICE, x[2].GetString()});
-                dataPoint.insert({MarketDataMessage::DataFieldType::VOLUME, x[5].GetString()});
+                dataPoint.emplace(MarketDataMessage::DataFieldType::OPEN_PRICE, x[1].GetString());
+                dataPoint.emplace(MarketDataMessage::DataFieldType::HIGH_PRICE, x[3].GetString());
+                dataPoint.emplace(MarketDataMessage::DataFieldType::LOW_PRICE, x[4].GetString());
+                dataPoint.emplace(MarketDataMessage::DataFieldType::CLOSE_PRICE, x[2].GetString());
+                dataPoint.emplace(MarketDataMessage::DataFieldType::VOLUME, x[5].GetString());
                 marketDataMessage.data[MarketDataMessage::DataType::CANDLESTICK].emplace_back(std::move(dataPoint));
                 marketDataMessageList.emplace_back(std::move(marketDataMessage));
               } else {
                 MarketDataMessage::TypeForDataPoint dataPoint;
-                dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(x[0].GetString())});
-                auto count = std::string(x[1].GetString());
-                auto amount = UtilString::normalizeDecimalString(x[2].GetString());
+                dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x[0].GetString()));
+                std::string_view count = std::string(x[1].GetString());
+                std::string_view amount = UtilString::normalizeDecimalStringView(x[2].GetString());
                 if (count != "0") {
                   if (amount.at(0) == '-') {
-                    dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, amount.substr(1)});
-                    this->marketDataMessageDataBufferByConnectionIdExchangeSubscriptionIdMap[wsConnection.id][exchangeSubscriptionId]
+                    dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, amount.substr(1));
+                    this
+                        ->marketDataMessageDataBufferByConnectionIdExchangeSubscriptionIdMap[wsConnection.id][exchangeSubscriptionId]
                                                                                             [MarketDataMessage::DataType::ASK]
-                                                                                                .emplace_back(std::move(dataPoint));
+                        .emplace_back(MarketDataMessage::ConvertDataPointToOwingDataPoint(dataPoint));
                   } else {
-                    dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, amount});
-                    this->marketDataMessageDataBufferByConnectionIdExchangeSubscriptionIdMap[wsConnection.id][exchangeSubscriptionId]
+                    dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, amount);
+                    this
+                        ->marketDataMessageDataBufferByConnectionIdExchangeSubscriptionIdMap[wsConnection.id][exchangeSubscriptionId]
                                                                                             [MarketDataMessage::DataType::BID]
-                                                                                                .emplace_back(std::move(dataPoint));
+                        .emplace_back(MarketDataMessage::ConvertDataPointToOwingDataPoint(dataPoint));
                   }
                 } else {
                   if (amount.at(0) == '-') {
-                    dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, "0"});
-                    this->marketDataMessageDataBufferByConnectionIdExchangeSubscriptionIdMap[wsConnection.id][exchangeSubscriptionId]
+                    dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, "0");
+                    this
+                        ->marketDataMessageDataBufferByConnectionIdExchangeSubscriptionIdMap[wsConnection.id][exchangeSubscriptionId]
                                                                                             [MarketDataMessage::DataType::ASK]
-                                                                                                .emplace_back(std::move(dataPoint));
+                        .emplace_back(MarketDataMessage::ConvertDataPointToOwingDataPoint(dataPoint));
                   } else {
-                    dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, "0"});
-                    this->marketDataMessageDataBufferByConnectionIdExchangeSubscriptionIdMap[wsConnection.id][exchangeSubscriptionId]
+                    dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, "0");
+                    this
+                        ->marketDataMessageDataBufferByConnectionIdExchangeSubscriptionIdMap[wsConnection.id][exchangeSubscriptionId]
                                                                                             [MarketDataMessage::DataType::BID]
-                                                                                                .emplace_back(std::move(dataPoint));
+                        .emplace_back(MarketDataMessage::ConvertDataPointToOwingDataPoint(dataPoint));
                   }
                 }
               }
@@ -296,13 +300,13 @@ class MarketDataServiceBitfinex : public MarketDataService {
                 timestampInMilliseconds.insert(timestampInMilliseconds.size() - 3, ".");
                 marketDataMessage.tp = UtilTime::makeTimePoint(UtilTime::divide(timestampInMilliseconds));
                 MarketDataMessage::TypeForDataPoint dataPoint;
-                dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(std::string(x[3].GetString()))});
-                auto amount = UtilString::normalizeDecimalString(x[2].GetString());
-                dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, amount.at(0) == '-' ? amount.substr(1) : amount});
+                dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x[3].GetString()));
+                std::string_view amount = UtilString::normalizeDecimalStringView(x[2].GetString());
+                dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, amount.at(0) == '-' ? amount.substr(1) : amount);
                 if (str == "tu") {
-                  dataPoint.insert({MarketDataMessage::DataFieldType::TRADE_ID, std::string(x[0].GetString())});
+                  dataPoint.emplace(MarketDataMessage::DataFieldType::TRADE_ID, x[0].GetString());
                 }
-                dataPoint.insert({MarketDataMessage::DataFieldType::IS_BUYER_MAKER, amount.at(0) == '-' ? "1" : "0"});
+                dataPoint.emplace(MarketDataMessage::DataFieldType::IS_BUYER_MAKER, amount.at(0) == '-' ? "1" : "0");
                 marketDataMessage.data[MarketDataMessage::DataType::TRADE].emplace_back(std::move(dataPoint));
                 marketDataMessageList.emplace_back(std::move(marketDataMessage));
               }
@@ -325,8 +329,11 @@ class MarketDataServiceBitfinex : public MarketDataService {
               marketDataMessage.tp = UtilTime::makeTimePoint(UtilTime::divide(timestampInMilliseconds));
               marketDataMessage.exchangeSubscriptionId = exchangeSubscriptionId;
               marketDataMessage.recapType = MarketDataMessage::RecapType::NONE;
-              std::swap(marketDataMessage.data,
-                        this->marketDataMessageDataBufferByConnectionIdExchangeSubscriptionIdMap[wsConnection.id][exchangeSubscriptionId]);
+              marketDataMessage.data = MarketDataMessage::ConvertOwningDataToData(
+                  this->marketDataMessageDataBufferByConnectionIdExchangeSubscriptionIdMap[wsConnection.id][exchangeSubscriptionId]);
+              this->previousMarketDataMessageDataBuffer =
+                  this->marketDataMessageDataBufferByConnectionIdExchangeSubscriptionIdMap[wsConnection.id][exchangeSubscriptionId];
+              this->marketDataMessageDataBufferByConnectionIdExchangeSubscriptionIdMap[wsConnection.id][exchangeSubscriptionId].clear();
               marketDataMessageList.emplace_back(std::move(marketDataMessage));
             }
           }
@@ -521,12 +528,12 @@ class MarketDataServiceBitfinex : public MarketDataService {
           marketDataMessage.type = MarketDataMessage::Type::MARKET_DATA_EVENTS_TRADE;
           marketDataMessage.tp = UtilTime::makeTimePointFromMilliseconds(std::stoll(x[1].GetString()));
           MarketDataMessage::TypeForDataPoint dataPoint;
-          std::string rawAmount = UtilString::normalizeDecimalString(x[2].GetString());
+          std::string_view rawAmount = UtilString::normalizeDecimalStringView(x[2].GetString());
           bool isAmountNegative = !rawAmount.empty() && rawAmount.at(0) == '-';
-          dataPoint.insert({MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalString(std::string(x[3].GetString()))});
-          dataPoint.insert({MarketDataMessage::DataFieldType::SIZE, isAmountNegative ? rawAmount.substr(1) : rawAmount});
-          dataPoint.insert({MarketDataMessage::DataFieldType::TRADE_ID, std::string(x[0].GetString())});
-          dataPoint.insert({MarketDataMessage::DataFieldType::IS_BUYER_MAKER, isAmountNegative ? "1" : "0"});
+          dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x[3].GetString()));
+          dataPoint.emplace(MarketDataMessage::DataFieldType::SIZE, isAmountNegative ? rawAmount.substr(1) : rawAmount);
+          dataPoint.emplace(MarketDataMessage::DataFieldType::TRADE_ID, x[0].GetString());
+          dataPoint.emplace(MarketDataMessage::DataFieldType::IS_BUYER_MAKER, isAmountNegative ? "1" : "0");
           marketDataMessage.data[MarketDataMessage::DataType::TRADE].emplace_back(std::move(dataPoint));
           marketDataMessageList.emplace_back(std::move(marketDataMessage));
         }
@@ -573,7 +580,8 @@ class MarketDataServiceBitfinex : public MarketDataService {
     }
   }
 
-  std::map<std::string, std::map<std::string, MarketDataMessage::TypeForData>> marketDataMessageDataBufferByConnectionIdExchangeSubscriptionIdMap;
+  std::map<std::string, std::map<std::string, MarketDataMessage::TypeForOwingData>> marketDataMessageDataBufferByConnectionIdExchangeSubscriptionIdMap;
+  MarketDataMessage::TypeForOwingData previousMarketDataMessageDataBuffer;
   std::map<std::string, int> sequenceByConnectionIdMap;
 };
 

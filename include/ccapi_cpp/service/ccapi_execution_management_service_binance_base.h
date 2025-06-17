@@ -523,24 +523,24 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
             message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_PRIVATE_TRADE);
             std::vector<Element> elementList;
             Element element;
-            element.insert(CCAPI_TRADE_ID, std::string(data["t"].GetString()));
-            element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, std::string(data["L"].GetString()));
-            element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, std::string(data["l"].GetString()));
-            element.insert(CCAPI_EM_ORDER_SIDE, std::string(data["S"].GetString()) == "BUY" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
+            element.insert(CCAPI_TRADE_ID, data["t"].GetString());
+            element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, data["L"].GetString());
+            element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, data["l"].GetString());
+            element.insert(CCAPI_EM_ORDER_SIDE, std::string_view(data["S"].GetString()) == "BUY" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
             element.insert(CCAPI_IS_MAKER, data["m"].GetBool() ? "1" : "0");
-            element.insert(CCAPI_EM_ORDER_ID, std::string(data["i"].GetString()));
-            element.insert(CCAPI_EM_CLIENT_ORDER_ID, std::string(data["c"].GetString()));
+            element.insert(CCAPI_EM_ORDER_ID, data["i"].GetString());
+            element.insert(CCAPI_EM_CLIENT_ORDER_ID, data["c"].GetString());
             element.insert(CCAPI_EM_ORDER_INSTRUMENT, instrument);
             {
               auto it = data.FindMember("n");
               if (it != data.MemberEnd() && !it->value.IsNull()) {
-                element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, std::string(it->value.GetString()));
+                element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, it->value.GetString());
               }
             }
             {
               auto it = data.FindMember("N");
               if (it != data.MemberEnd() && !it->value.IsNull()) {
-                element.insert(CCAPI_EM_ORDER_FEE_ASSET, std::string(it->value.GetString()));
+                element.insert(CCAPI_EM_ORDER_FEE_ASSET, it->value.GetString());
               }
             }
             elementList.emplace_back(std::move(element));

@@ -181,14 +181,14 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
     const rj::Value& data = document["data"];
     if (operation == Request::Operation::CREATE_ORDER || operation == Request::Operation::CANCEL_ORDER) {
       Element element;
-      element.insert(CCAPI_EM_ORDER_ID, std::string(data.GetString()));
+      element.insert(CCAPI_EM_ORDER_ID, data.GetString());
       elementList.emplace_back(std::move(element));
     } else if (data.IsObject()) {
       Element element;
       this->extractOrderInfo(element, data, extractionFieldNameMap);
       if (operation == Request::Operation::GET_ORDER) {
-        element.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUANTITY, std::string(data["field-amount"].GetString()));
-        element.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY, std::string(data["field-cash-amount"].GetString()));
+        element.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUANTITY, data["field-amount"].GetString());
+        element.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY, data["field-cash-amount"].GetString());
       }
       elementList.emplace_back(std::move(element));
     } else {
@@ -207,14 +207,14 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
       case Request::Operation::GET_ACCOUNTS: {
         for (const auto& x : data.GetArray()) {
           Element element;
-          element.insert(CCAPI_EM_ACCOUNT_ID, std::string(x["id"].GetString()));
+          element.insert(CCAPI_EM_ACCOUNT_ID, x["id"].GetString());
           element.insert(CCAPI_EM_ACCOUNT_TYPE, x["type"].GetString());
           elementList.emplace_back(std::move(element));
         }
       } break;
       case Request::Operation::GET_ACCOUNT_BALANCES: {
         for (const auto& x : data["list"].GetArray()) {
-          if (std::string(x["type"].GetString()) == "trade") {
+          if (std::string_view(x["type"].GetString()) == "trade") {
             Element element;
             element.insert(CCAPI_EM_ASSET, x["currency"].GetString());
             element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, x["balance"].GetString());
@@ -379,7 +379,7 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
           this->extractOrderInfo(info, data, extractionFieldNameMap);
           std::string dataEventType = data["eventType"].GetString();
           if (dataEventType == "trigger" || dataEventType == "deletion") {
-            info.insert(CCAPI_EM_ORDER_SIDE, std::string(data["orderSide"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
+            info.insert(CCAPI_EM_ORDER_SIDE, std::string_view(data["orderSide"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
           } else if (dataEventType == "trade") {
             info.insert(CCAPI_TRADE_ID, std::string(data["tradeId"].GetString()));
             info.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, data["tradePrice"].GetString());
@@ -399,16 +399,16 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
           message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_PRIVATE_TRADE);
           std::vector<Element> elementList;
           Element element;
-          element.insert(CCAPI_TRADE_ID, std::string(data["tradeId"].GetString()));
+          element.insert(CCAPI_TRADE_ID, data["tradeId"].GetString());
           element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, data["tradePrice"].GetString());
           element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, data["tradeVolume"].GetString());
-          element.insert(CCAPI_EM_ORDER_SIDE, std::string(data["orderSide"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
+          element.insert(CCAPI_EM_ORDER_SIDE, std::string_view(data["orderSide"].GetString()) == "buy" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
           element.insert(CCAPI_IS_MAKER, data["aggressor"].GetBool() ? "0" : "1");
-          element.insert(CCAPI_EM_ORDER_ID, std::string(data["orderId"].GetString()));
-          element.insert(CCAPI_EM_CLIENT_ORDER_ID, std::string(data["clientOrderId"].GetString()));
+          element.insert(CCAPI_EM_ORDER_ID, data["orderId"].GetString());
+          element.insert(CCAPI_EM_CLIENT_ORDER_ID, data["clientOrderId"].GetString());
           element.insert(CCAPI_EM_ORDER_INSTRUMENT, instrument);
-          element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, std::string(data["transactFee"].GetString()));
-          element.insert(CCAPI_EM_ORDER_FEE_ASSET, std::string(data["feeCurrency"].GetString()));
+          element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, data["transactFee"].GetString());
+          element.insert(CCAPI_EM_ORDER_FEE_ASSET, data["feeCurrency"].GetString());
           elementList.emplace_back(std::move(element));
           message.setElementList(elementList);
           messageList.emplace_back(std::move(message));
