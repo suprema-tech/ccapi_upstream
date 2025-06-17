@@ -17,7 +17,9 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
 
  protected:
 #endif
-  bool doesHttpBodyContainError(const std::string& body) override { return !std::regex_search(body, std::regex("\"code\":\\s*\"200000\"")); }
+  bool doesHttpBodyContainError(boost::beast::string_view bodyView) override {
+    return !std::regex_search(bodyView.begin(), bodyView.end(), std::regex("\"code\":\\s*\"200000\""));
+  }
 
   void onOpen(std::shared_ptr<WsConnection> wsConnectionPtr) override { wsConnectionPtr->status = WsConnection::Status::OPEN; }
 
@@ -292,7 +294,7 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
 
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
-    const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
+    const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
         {CCAPI_EM_ORDER_ID, std::make_pair("id", JsonDataType::STRING)},
         {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("clientOid", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},
@@ -332,8 +334,9 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
     }
   }
 
-  void extractOrderInfo(Element& element, const rj::Value& x, const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap,
-                        const std::map<std::string, std::function<std::string(const std::string&)>> conversionMap = {}) override {
+  void extractOrderInfo(Element& element, const rj::Value& x,
+                        const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap,
+                        const std::map<std::string_view, std::function<std::string(const std::string&)>> conversionMap = {}) override {
     ExecutionManagementService::extractOrderInfo(element, x, extractionFieldNameMap);
     {
       auto it = x.FindMember("isActive");
@@ -372,10 +375,9 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
 
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
-    std::string textMessage(textMessageView);
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     Event event = this->createEvent(wsConnectionPtr, subscription, textMessageView, document, timeReceived);
     if (!event.getMessageList().empty()) {
       this->eventHandler(event, nullptr);
@@ -384,7 +386,6 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
 
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const TimePoint& timeReceived) {
-    std::string textMessage(textMessageView);
     const WsConnection& wsConnection = *wsConnectionPtr;
 
     Event event;
@@ -431,7 +432,7 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
             message.setCorrelationIdList({subscription.getCorrelationId()});
             message.setTime(time);
             message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_ORDER_UPDATE);
-            std::map<std::string, std::pair<std::string, JsonDataType>> extractionFieldNameMap = {
+            std::map<std::string_view, std::pair<std::string_view, JsonDataType>> extractionFieldNameMap = {
                 {CCAPI_EM_ORDER_ID, std::make_pair("orderId", JsonDataType::STRING)},
                 {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("clientOid", JsonDataType::STRING)},
                 {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},
@@ -442,7 +443,7 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
                 {CCAPI_EM_ORDER_STATUS, std::make_pair("status", JsonDataType::STRING)},
                 {CCAPI_EM_ORDER_INSTRUMENT, std::make_pair("symbol", JsonDataType::STRING)},
             };
-            extractionFieldNameMap.insert({CCAPI_EM_ORDER_QUANTITY, std::make_pair("size", JsonDataType::STRING)});
+            extractionFieldNameMap.emplace(CCAPI_EM_ORDER_QUANTITY, std::make_pair("size", JsonDataType::STRING));
             Element info;
             this->extractOrderInfo(info, data, extractionFieldNameMap);
             std::vector<Element> elementList;
@@ -456,14 +457,14 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
       event.setType(Event::Type::SUBSCRIPTION_STATUS);
       message.setType(Message::Type::SUBSCRIPTION_STARTED);
       Element element;
-      element.insert(CCAPI_INFO_MESSAGE, textMessage);
+      element.insert(CCAPI_INFO_MESSAGE, textMessageView);
       message.setElementList({element});
       messageList.emplace_back(std::move(message));
     } else if (type == "error") {
       event.setType(Event::Type::SUBSCRIPTION_STATUS);
       message.setType(Message::Type::SUBSCRIPTION_FAILURE);
       Element element;
-      element.insert(CCAPI_ERROR_MESSAGE, textMessage);
+      element.insert(CCAPI_ERROR_MESSAGE, textMessageView);
       message.setElementList({element});
       messageList.emplace_back(std::move(message));
     } else if (type == "welcome") {

@@ -1103,6 +1103,11 @@ typename std::enable_if<std::is_same<T, std::string>::value, std::string>::type 
 }
 
 template <typename T>
+typename std::enable_if<std::is_same<T, std::string_view>::value, std::string>::type toString(const T& t) {
+  return std::string(t);
+}
+
+template <typename T>
 typename std::enable_if<std::is_same<T, Decimal>::value, std::string>::type toString(const T& t) {
   return ConvertDecimalToString(t);
 }
@@ -1112,6 +1117,14 @@ typename std::enable_if<std::is_same<T, std::string>::value, std::string>::type 
                                                                                                const bool indentFirstLine = true) {
   std::string sl(leftToIndent, ' ');
   std::string output = (indentFirstLine ? sl : "") + t;
+  return output;
+}
+
+template <typename T>
+typename std::enable_if<std::is_same<T, std::string_view>::value, std::string>::type toStringPretty(const T& t, const int space = 2, const int leftToIndent = 0,
+                                                                                                    const bool indentFirstLine = true) {
+  std::string sl(leftToIndent, ' ');
+  std::string output = (indentFirstLine ? sl : "") + std::string(t);
   return output;
 }
 

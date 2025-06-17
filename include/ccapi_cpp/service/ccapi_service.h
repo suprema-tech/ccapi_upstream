@@ -2,11 +2,11 @@
 #define INCLUDE_CCAPI_CPP_SERVICE_CCAPI_SERVICE_H_
 
 #ifndef CCAPI_HTTP_RESPONSE_PARSER_BODY_LIMIT
-#define CCAPI_HTTP_RESPONSE_PARSER_BODY_LIMIT (64 * 1024 * 1024)
+#define CCAPI_HTTP_RESPONSE_PARSER_BODY_LIMIT (8 * 1024 * 1024)
 #endif
 
 #ifndef CCAPI_JSON_PARSE_BUFFER_SIZE
-#define CCAPI_JSON_PARSE_BUFFER_SIZE (64 * 1024 * 1024)
+#define CCAPI_JSON_PARSE_BUFFER_SIZE (8 * 1024 * 1024)
 #endif
 
 #include "ccapi_cpp/ccapi_logger.h"
@@ -181,8 +181,8 @@ class Service : public std::enable_shared_from_this<Service> {
   virtual void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                                      const std::map<std::string, std::string>& credential) {}
 
-  virtual void processSuccessfulTextMessageRest(int statusCode, const Request& request, const std::string& textMessage, const TimePoint& timeReceived,
-                                                Queue<Event>* eventQueuePtr) {}
+  virtual void processSuccessfulTextMessageRest(int statusCode, const Request& request, boost::beast::string_view textMessageView,
+                                                const TimePoint& timeReceived, Queue<Event>* eventQueuePtr) {}
 
   std::shared_ptr<std::future<void>> sendRequest(Request& request, const bool useFuture, const TimePoint& now, long delayMilliseconds,
                                                  Queue<Event>* eventQueuePtr) {
@@ -280,9 +280,9 @@ class Service : public std::enable_shared_from_this<Service> {
     this->onError(eventType, messageType, e.what(), correlationIdList, eventQueuePtr);
   }
 
-  void onResponseError(const Request& request, int statusCode, const std::string& errorMessage, Queue<Event>* eventQueuePtr) {
+  void onResponseError(const Request& request, int statusCode, boost::beast::string_view errorMessageView, Queue<Event>* eventQueuePtr) {
     std::string statusCodeStr = std::to_string(statusCode);
-    CCAPI_LOGGER_ERROR("request = " + toString(request) + ", statusCode = " + statusCodeStr + ", errorMessage = " + errorMessage);
+    CCAPI_LOGGER_ERROR("request = " + toString(request) + ", statusCode = " + statusCodeStr + ", errorMessage = " + std::string(errorMessageView));
     Event event;
     event.setType(Event::Type::RESPONSE);
     Message message;
@@ -292,7 +292,7 @@ class Service : public std::enable_shared_from_this<Service> {
     message.setCorrelationIdList({request.getCorrelationId()});
     Element element;
     element.insert(CCAPI_HTTP_STATUS_CODE, statusCodeStr);
-    element.insert(CCAPI_ERROR_MESSAGE, UtilString::trim(errorMessage));
+    element.insert(CCAPI_ERROR_MESSAGE, UtilString::trim(std::string(errorMessageView)));
     message.setElementList({element});
     event.setMessageList({message});
     this->eventHandler(event, eventQueuePtr);
@@ -754,10 +754,10 @@ class Service : public std::enable_shared_from_this<Service> {
     }
 #endif
     int statusCode = resPtr->result_int();
-    std::string body = resPtr->body();
+    boost::beast::string_view bodyView(resPtr->body());
     try {
       if (statusCode / 100 == 2) {
-        this->processSuccessfulTextMessageRest(statusCode, request, body, now, eventQueuePtr);
+        this->processSuccessfulTextMessageRest(statusCode, request, bodyView, now, eventQueuePtr);
       } else if (statusCode / 100 == 3) {
         if (resPtr->base().find("Location") != resPtr->base().end()) {
           Url url(resPtr->base()
@@ -780,12 +780,12 @@ class Service : public std::enable_shared_from_this<Service> {
           CCAPI_LOGGER_WARN("redirect from request " + request.toString() + " to url " + url.toString());
           this->tryRequest(request, req, retry, eventQueuePtr);
         }
-        this->onResponseError(request, statusCode, body, eventQueuePtr);
+        this->onResponseError(request, statusCode, bodyView, eventQueuePtr);
         return;
       } else if (statusCode / 100 == 4) {
-        this->onResponseError(request, statusCode, body, eventQueuePtr);
+        this->onResponseError(request, statusCode, bodyView, eventQueuePtr);
       } else if (statusCode / 100 == 5) {
-        this->onResponseError(request, statusCode, body, eventQueuePtr);
+        this->onResponseError(request, statusCode, bodyView, eventQueuePtr);
         retry.numRetry += 1;
         this->tryRequest(request, *reqPtr, retry, eventQueuePtr);
         return;
@@ -812,7 +812,7 @@ class Service : public std::enable_shared_from_this<Service> {
     }
   }
 
-  virtual bool doesHttpBodyContainError(const std::string& body) { return false; }
+  virtual bool doesHttpBodyContainError(boost::beast::string_view bodyView) { return false; }
 
   void tryRequest(const Request& request, http::request<http::string_body>& req, const HttpRetry& retry, Queue<Event>* eventQueuePtr) {
     CCAPI_LOGGER_FUNCTION_ENTER;
@@ -910,7 +910,7 @@ class Service : public std::enable_shared_from_this<Service> {
   }
 
   void appendParam(std::string& queryString, const std::map<std::string, std::string>& param, const std::map<std::string, std::string> standardizationMap = {},
-                   const std::map<std::string, std::function<std::string(const std::string&)>> conversionMap = {}) {
+                   const std::map<std::string_view, std::function<std::string(const std::string&)>> conversionMap = {}) {
     int i = 0;
     for (const auto& kv : param) {
       std::string key = standardizationMap.find(kv.first) != standardizationMap.end() ? standardizationMap.at(kv.first) : kv.first;

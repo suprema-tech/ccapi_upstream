@@ -68,11 +68,10 @@ class MarketDataServiceCoinbase : public MarketDataService {
   void processTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
                           std::vector<MarketDataMessage>& marketDataMessageList) override {
     WsConnection& wsConnection = *wsConnectionPtr;
-    std::string textMessage(textMessageView);
 
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     auto type = std::string(document["type"].GetString());
     if (type == "l2update") {
       auto symbolId = std::string(document["product_id"].GetString());
@@ -159,7 +158,7 @@ class MarketDataServiceCoinbase : public MarketDataService {
       message.setCorrelationIdList(correlationIdList);
       message.setType(Message::Type::SUBSCRIPTION_STARTED);
       Element element;
-      element.insert(CCAPI_INFO_MESSAGE, textMessage);
+      element.insert(CCAPI_INFO_MESSAGE, textMessageView);
       message.setElementList({element});
       messageList.emplace_back(std::move(message));
       event.setMessageList(messageList);
@@ -170,7 +169,7 @@ class MarketDataServiceCoinbase : public MarketDataService {
       message.setTimeReceived(timeReceived);
       message.setType(Message::Type::SUBSCRIPTION_FAILURE);
       Element element;
-      element.insert(CCAPI_ERROR_MESSAGE, textMessage);
+      element.insert(CCAPI_ERROR_MESSAGE, textMessageView);
       message.setElementList({element});
       messageList.emplace_back(std::move(message));
       event.setMessageList(messageList);
@@ -222,11 +221,11 @@ class MarketDataServiceCoinbase : public MarketDataService {
     element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, x["base_increment"].GetString());
   }
 
-  void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
+  void convertTextMessageToMarketDataMessage(const Request& request, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     switch (request.getOperation()) {
       case Request::Operation::GET_RECENT_TRADES: {
         for (const auto& x : document.GetArray()) {

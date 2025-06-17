@@ -35,7 +35,7 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
 
  private:
 #endif
-  bool doesHttpBodyContainError(const std::string& body) override { return body.find("err-code") != std::string::npos; }
+  bool doesHttpBodyContainError(boost::beast::string_view bodyView) override { return bodyView.find("err-code") != std::string::npos; }
 
   void appendSymbolId(rj::Document& document, rj::Document::AllocatorType& allocator, const std::string& symbolId) {
     ExecutionManagementServiceHuobiBase::appendSymbolId(document, allocator, symbolId, "symbol");
@@ -168,7 +168,7 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
 
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
-    const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
+    const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
         {CCAPI_EM_ORDER_ID, std::make_pair("id", JsonDataType::INTEGER)},
         {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("client-order-id", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_SIDE, std::make_pair("type", JsonDataType::STRING)},
@@ -266,11 +266,10 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
     WsConnection& wsConnection = *wsConnectionPtr;
-    std::string textMessage(textMessageView);
 
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     std::string actionStr = document["action"].GetString();
     const auto& fieldSet = subscription.getFieldSet();
     const auto& instrumentSet = subscription.getInstrumentSet();
@@ -312,7 +311,7 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
             }
           }
         } else {
-          this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, textMessage, {subscription.getCorrelationId()});
+          this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, textMessageView, {subscription.getCorrelationId()});
         }
       }
     } else if (actionStr == "ping") {
@@ -330,14 +329,14 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
         this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "pong");
       }
     } else {
-      Event event = this->createEvent(subscription, textMessage, document, actionStr, timeReceived);
+      Event event = this->createEvent(subscription, textMessageView, document, actionStr, timeReceived);
       if (!event.getMessageList().empty()) {
         this->eventHandler(event, nullptr);
       }
     }
   }
 
-  Event createEvent(const Subscription& subscription, const std::string& textMessage, const rj::Document& document, const std::string& actionStr,
+  Event createEvent(const Subscription& subscription, const std::string& textMessageView, const rj::Document& document, const std::string& actionStr,
                     const TimePoint& timeReceived) {
     Event event;
     std::vector<Message> messageList;
@@ -365,7 +364,7 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
           }
           message.setTime(UtilTime::makeTimePointFromMilliseconds(std::stoll(it->value.GetString())));
           message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_ORDER_UPDATE);
-          const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
+          const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
               {CCAPI_EM_ORDER_ID, std::make_pair("orderId", JsonDataType::INTEGER)},
               {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("clientOrderId", JsonDataType::STRING)},
               {CCAPI_EM_ORDER_SIDE, std::make_pair("type", JsonDataType::STRING)},
@@ -421,7 +420,7 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
         event.setType(Event::Type::SUBSCRIPTION_STATUS);
         message.setType(Message::Type::SUBSCRIPTION_STARTED);
         Element element;
-        element.insert(CCAPI_INFO_MESSAGE, textMessage);
+        element.insert(CCAPI_INFO_MESSAGE, textMessageView);
         message.setElementList({element});
         messageList.emplace_back(std::move(message));
       }

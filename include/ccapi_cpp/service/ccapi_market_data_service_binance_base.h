@@ -107,11 +107,10 @@ class MarketDataServiceBinanceBase : public MarketDataService {
   void processTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
                           std::vector<MarketDataMessage>& marketDataMessageList) override {
     WsConnection& wsConnection = *wsConnectionPtr;
-    std::string textMessage(textMessageView);
 
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     if (document.IsObject() && document.HasMember("result") && document["result"].IsNull()) {
       event.setType(Event::Type::SUBSCRIPTION_STATUS);
       std::vector<Message> messageList;
@@ -142,7 +141,7 @@ class MarketDataServiceBinanceBase : public MarketDataService {
       message.setCorrelationIdList(correlationIdList);
       message.setType(Message::Type::SUBSCRIPTION_STARTED);
       Element element;
-      element.insert(CCAPI_INFO_MESSAGE, textMessage);
+      element.insert(CCAPI_INFO_MESSAGE, textMessageView);
       message.setElementList({element});
       messageList.emplace_back(std::move(message));
       event.setMessageList(messageList);
@@ -401,11 +400,11 @@ class MarketDataServiceBinanceBase : public MarketDataService {
     }
   }
 
-  void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
+  void convertTextMessageToMarketDataMessage(const Request& request, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     switch (request.getOperation()) {
       case Request::Operation::GET_RECENT_TRADES:
       case Request::Operation::GET_HISTORICAL_TRADES: {

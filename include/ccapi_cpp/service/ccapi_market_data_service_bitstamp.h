@@ -32,8 +32,8 @@ class MarketDataServiceBitstamp : public MarketDataService {
     this->send(wsConnectionPtr, R"({"event": "bts:heartbeat"})", ec);
   }
 
-  bool doesHttpBodyContainError(const std::string& body) override {
-    return body.find(R"("status": "error")") != std::string::npos || body.find(R"("status":"error")") != std::string::npos;
+  bool doesHttpBodyContainError(boost::beast::string_view bodyView) override {
+    return bodyView.find(R"("status": "error")") != std::string::npos || bodyView.find(R"("status":"error")") != std::string::npos;
   }
 
   std::vector<std::string> createSendStringList(const WsConnection& wsConnection) override {
@@ -68,11 +68,10 @@ class MarketDataServiceBitstamp : public MarketDataService {
   void processTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
                           std::vector<MarketDataMessage>& marketDataMessageList) override {
     WsConnection& wsConnection = *wsConnectionPtr;
-    std::string textMessage(textMessageView);
 
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     const rj::Value& data = document["data"];
     if (document.IsObject() && document.HasMember("event") && std::string(document["event"].GetString()) == "bts:subscription_succeeded") {
       event.setType(Event::Type::SUBSCRIPTION_STATUS);
@@ -97,7 +96,7 @@ class MarketDataServiceBitstamp : public MarketDataService {
       message.setCorrelationIdList(correlationIdList);
       message.setType(Message::Type::SUBSCRIPTION_STARTED);
       Element element;
-      element.insert(CCAPI_INFO_MESSAGE, textMessage);
+      element.insert(CCAPI_INFO_MESSAGE, textMessageView);
       message.setElementList({element});
       messageList.emplace_back(std::move(message));
       event.setMessageList(messageList);
@@ -222,11 +221,11 @@ class MarketDataServiceBitstamp : public MarketDataService {
     }
   }
 
-  void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
+  void convertTextMessageToMarketDataMessage(const Request& request, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     switch (request.getOperation()) {
       case Request::Operation::GET_RECENT_TRADES: {
         for (const auto& x : document.GetArray()) {

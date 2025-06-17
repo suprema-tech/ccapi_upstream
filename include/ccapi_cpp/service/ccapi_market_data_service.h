@@ -648,21 +648,17 @@ class MarketDataService : public Service {
         std::map<Decimal, std::string> snapshotBidUpdate = this->calculateMarketDepthUpdate(true, snapshotBid, snapshotBidPrevious, maxMarketDepth);
         for (auto& x : snapshotBidUpdate) {
           Element element;
-          std::string k1(CCAPI_BEST_BID_N_PRICE);
           std::string v1 = ConvertDecimalToString(x.first);
-          element.emplace(k1, v1);
-          std::string k2(CCAPI_BEST_BID_N_SIZE);
-          element.emplace(k2, x.second);
+          element.insert(CCAPI_BEST_BID_N_PRICE, v1);
+          element.insert(CCAPI_BEST_BID_N_SIZE, x.second);
           elementList.emplace_back(std::move(element));
         }
         std::map<Decimal, std::string> snapshotAskUpdate = this->calculateMarketDepthUpdate(false, snapshotAsk, snapshotAskPrevious, maxMarketDepth);
         for (auto& x : snapshotAskUpdate) {
           Element element;
-          std::string k1(CCAPI_BEST_ASK_N_PRICE);
           std::string v1 = ConvertDecimalToString(x.first);
-          element.emplace(k1, v1);
-          std::string k2(CCAPI_BEST_ASK_N_SIZE);
-          element.emplace(k2, x.second);
+          element.insert(CCAPI_BEST_ASK_N_PRICE, v1);
+          element.insert(CCAPI_BEST_ASK_N_SIZE, x.second);
           elementList.emplace_back(std::move(element));
         }
       } else {
@@ -719,31 +715,25 @@ class MarketDataService : public Service {
             auto& price = y.at(MarketDataMessage::DataFieldType::PRICE);
             auto& size = y.at(MarketDataMessage::DataFieldType::SIZE);
             Element element;
-            std::string k1(CCAPI_LAST_PRICE);
-            std::string k2(CCAPI_LAST_SIZE);
-            element.emplace(k1, price);
-            element.emplace(k2, size);
+            element.insert(CCAPI_LAST_PRICE, price);
+            element.insert(CCAPI_LAST_SIZE, size);
             {
               auto it = y.find(MarketDataMessage::DataFieldType::TRADE_ID);
               if (it != y.end()) {
-                std::string k3(CCAPI_TRADE_ID);
-                element.emplace(k3, it->second);
+                element.insert(CCAPI_TRADE_ID, it->second);
               }
             }
             {
               auto it = y.find(MarketDataMessage::DataFieldType::AGG_TRADE_ID);
               if (it != y.end()) {
-                std::string k3(CCAPI_AGG_TRADE_ID);
-                element.emplace(k3, it->second);
+                element.insert(CCAPI_AGG_TRADE_ID, it->second);
               }
             }
-            std::string k4(CCAPI_IS_BUYER_MAKER);
-            element.emplace(k4, y.at(MarketDataMessage::DataFieldType::IS_BUYER_MAKER));
+            element.insert(CCAPI_IS_BUYER_MAKER, y.at(MarketDataMessage::DataFieldType::IS_BUYER_MAKER));
             {
               auto it = y.find(MarketDataMessage::DataFieldType::SEQUENCE_NUMBER);
               if (it != y.end()) {
-                std::string k5(CCAPI_SEQUENCE_NUMBER);
-                element.emplace(k5, it->second);
+                element.insert(CCAPI_SEQUENCE_NUMBER, it->second);
               }
             }
             elementList.emplace_back(std::move(element));
@@ -763,26 +753,20 @@ class MarketDataService : public Service {
         if (type == MarketDataMessage::DataType::CANDLESTICK) {
           for (auto& y : detail) {
             Element element;
-            std::string k1(CCAPI_OPEN_PRICE);
-            std::string k2(CCAPI_HIGH_PRICE);
-            std::string k3(CCAPI_LOW_PRICE);
-            std::string k4(CCAPI_CLOSE_PRICE);
-            element.emplace(k1, y.at(MarketDataMessage::DataFieldType::OPEN_PRICE));
-            element.emplace(k2, y.at(MarketDataMessage::DataFieldType::HIGH_PRICE));
-            element.emplace(k3, y.at(MarketDataMessage::DataFieldType::LOW_PRICE));
-            element.emplace(k4, y.at(MarketDataMessage::DataFieldType::CLOSE_PRICE));
+            element.insert(CCAPI_OPEN_PRICE, y.at(MarketDataMessage::DataFieldType::OPEN_PRICE));
+            element.insert(CCAPI_HIGH_PRICE, y.at(MarketDataMessage::DataFieldType::HIGH_PRICE));
+            element.insert(CCAPI_LOW_PRICE, y.at(MarketDataMessage::DataFieldType::LOW_PRICE));
+            element.insert(CCAPI_CLOSE_PRICE, y.at(MarketDataMessage::DataFieldType::CLOSE_PRICE));
             {
               auto it = y.find(MarketDataMessage::DataFieldType::VOLUME);
               if (it != y.end()) {
-                std::string k(CCAPI_VOLUME);
-                element.emplace(k, it->second);
+                element.insert(CCAPI_VOLUME, it->second);
               }
             }
             {
               auto it = y.find(MarketDataMessage::DataFieldType::QUOTE_VOLUME);
               if (it != y.end()) {
-                std::string k(CCAPI_QUOTE_VOLUME);
-                element.emplace(k, it->second);
+                element.insert(CCAPI_QUOTE_VOLUME, it->second);
               }
             }
             elementList.emplace_back(std::move(element));
@@ -1302,11 +1286,11 @@ class MarketDataService : public Service {
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
 
-  void processSuccessfulTextMessageRest(int statusCode, const Request& request, const std::string& textMessage, const TimePoint& timeReceived,
+  void processSuccessfulTextMessageRest(int statusCode, const Request& request, boost::beast::string_view textMessageView, const TimePoint& timeReceived,
                                         Queue<Event>* eventQueuePtr) override {
     CCAPI_LOGGER_FUNCTION_ENTER;
     Event event;
-    if (this->doesHttpBodyContainError(textMessage)) {
+    if (this->doesHttpBodyContainError(textMessageView)) {
       event.setType(Event::Type::RESPONSE);
       Message message;
       message.setType(Message::Type::RESPONSE_ERROR);
@@ -1314,7 +1298,7 @@ class MarketDataService : public Service {
       message.setCorrelationIdList({request.getCorrelationId()});
       Element element;
       element.insert(CCAPI_HTTP_STATUS_CODE, "200");
-      element.insert(CCAPI_ERROR_MESSAGE, UtilString::trim(textMessage));
+      element.insert(CCAPI_ERROR_MESSAGE, UtilString::trim(std::string(textMessageView)));
       message.setElementList({element});
       event.setMessageList({message});
     } else {
@@ -1325,7 +1309,7 @@ class MarketDataService : public Service {
         message.setType(Message::Type::GENERIC_PUBLIC_REQUEST);
         Element element;
         element.insert(CCAPI_HTTP_STATUS_CODE, std::to_string(statusCode));
-        element.insert(CCAPI_HTTP_BODY, textMessage);
+        element.insert(CCAPI_HTTP_BODY, textMessageView);
         message.setElementList({element});
         const std::vector<std::string>& correlationIdList = {request.getCorrelationId()};
         CCAPI_LOGGER_TRACE("correlationIdList = " + toString(correlationIdList));
@@ -1333,9 +1317,9 @@ class MarketDataService : public Service {
         event.addMessages({message});
       } else {
         std::vector<MarketDataMessage> marketDataMessageList;
-        this->convertTextMessageToMarketDataMessage(request, textMessage, timeReceived, event, marketDataMessageList);
+        this->convertTextMessageToMarketDataMessage(request, textMessageView, timeReceived, event, marketDataMessageList);
         if (!marketDataMessageList.empty()) {
-          this->processMarketDataMessageList(request, textMessage, timeReceived, event, marketDataMessageList);
+          this->processMarketDataMessageList(request, textMessageView, timeReceived, event, marketDataMessageList);
         }
       }
     }
@@ -1520,12 +1504,12 @@ class MarketDataService : public Service {
         [wsConnection, exchangeSubscriptionId, delayMilliseconds, that = shared_from_base<MarketDataService>()](const http::response<http::string_body>& res) {
           auto timeReceived = UtilTime::now();
           int statusCode = res.result_int();
-          std::string body = res.body();
-          if (statusCode / 100 == 2 && !that->doesHttpBodyContainError(body)) {
+          boost::beast::string_view bodyView(res.body());
+          if (statusCode / 100 == 2 && !that->doesHttpBodyContainError(bodyView)) {
             try {
               that->jsonDocumentAllocator.Clear();
               rj::Document document(&that->jsonDocumentAllocator);
-              document.Parse<rj::kParseNumbersAsStringsFlag>(body.c_str());
+              document.Parse<rj::kParseNumbersAsStringsFlag>(bodyView.data(), bodyView.size());
               int64_t versionId;
               that->extractOrderBookInitialVersionId(versionId, document);
               if (versionId >=
@@ -1692,8 +1676,8 @@ class MarketDataService : public Service {
     return {};
   }
 
-  virtual void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
-                                                     std::vector<MarketDataMessage>& marketDataMessageList) {}
+  virtual void convertTextMessageToMarketDataMessage(const Request& request, boost::beast::string_view textMessageView, const TimePoint& timeReceived,
+                                                     Event& event, std::vector<MarketDataMessage>& marketDataMessageList) {}
 
   virtual void processTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView, const TimePoint& timeReceived,
                                   Event& event, std::vector<MarketDataMessage>& marketDataMessageList) {}

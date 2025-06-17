@@ -291,7 +291,7 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
 
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
-    const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
+    const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
         {CCAPI_EM_ORDER_ID, std::make_pair("id", JsonDataType::STRING)},
         {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("text", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},
@@ -363,10 +363,9 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
 
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
-    std::string textMessage(textMessageView);
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     Event event = this->createEvent(wsConnectionPtr, subscription, textMessageView, document, timeReceived);
     if (!event.getMessageList().empty()) {
       this->eventHandler(event, nullptr);
@@ -375,8 +374,6 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
 
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const TimePoint& timeReceived) {
-    std::string textMessage(textMessageView);
-
     Event event;
     std::vector<Message> messageList;
     Message message;
@@ -424,7 +421,7 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
               message.setTimeReceived(timeReceived);
               message.setCorrelationIdList({subscription.getCorrelationId()});
               message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_ORDER_UPDATE);
-              const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
+              const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
                   {CCAPI_EM_ORDER_ID, std::make_pair("id", JsonDataType::STRING)},
                   {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("text", JsonDataType::STRING)},
                   {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},
@@ -450,7 +447,7 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
       event.setType(Event::Type::SUBSCRIPTION_STATUS);
       message.setType(hasError ? Message::Type::SUBSCRIPTION_FAILURE : Message::Type::SUBSCRIPTION_STARTED);
       Element element;
-      element.insert(hasError ? CCAPI_ERROR_MESSAGE : CCAPI_INFO_MESSAGE, textMessage);
+      element.insert(hasError ? CCAPI_ERROR_MESSAGE : CCAPI_INFO_MESSAGE, textMessageView);
       message.setElementList({element});
       messageList.emplace_back(std::move(message));
     }

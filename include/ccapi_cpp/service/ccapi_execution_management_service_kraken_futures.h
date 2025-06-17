@@ -41,7 +41,7 @@ class ExecutionManagementServiceKrakenFutures : public ExecutionManagementServic
 
  protected:
 #endif
-  bool doesHttpBodyContainError(const std::string& body) override { return body.find(R"("result":"success")") == std::string::npos; }
+  bool doesHttpBodyContainError(boost::beast::string_view bodyView) override { return bodyView.find(R"("result":"success")") == std::string::npos; }
 
   void signReqeustForRestGenericPrivateRequest(http::request<http::string_body>& req, const Request& request, std::string& methodString,
                                                std::string& headerString, std::string& path, std::string& queryString, std::string& body, const TimePoint& now,
@@ -175,7 +175,7 @@ class ExecutionManagementServiceKrakenFutures : public ExecutionManagementServic
 
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
-    const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
+    const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
         {CCAPI_EM_ORDER_ID, std::make_pair("orderId", JsonDataType::STRING)},
         {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("cliOrdId", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},
@@ -275,10 +275,9 @@ class ExecutionManagementServiceKrakenFutures : public ExecutionManagementServic
 
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
-    std::string textMessage(textMessageView);
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     Event event = this->createEvent(wsConnectionPtr, subscription, textMessageView, document, timeReceived);
     if (!event.getMessageList().empty()) {
       this->eventHandler(event, nullptr);
@@ -287,8 +286,6 @@ class ExecutionManagementServiceKrakenFutures : public ExecutionManagementServic
 
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const TimePoint& timeReceived) {
-    std::string textMessage(textMessageView);
-
     Event event;
     std::vector<Message> messageList;
     if (document.FindMember("event") == document.MemberEnd()) {
@@ -419,7 +416,7 @@ class ExecutionManagementServiceKrakenFutures : public ExecutionManagementServic
         message.setCorrelationIdList({subscription.getCorrelationId()});
         message.setType(eventType == "subscribed" ? Message::Type::SUBSCRIPTION_STARTED : Message::Type::SUBSCRIPTION_FAILURE);
         Element element;
-        element.insert(eventType == "subscribed" ? CCAPI_INFO_MESSAGE : CCAPI_ERROR_MESSAGE, textMessage);
+        element.insert(eventType == "subscribed" ? CCAPI_INFO_MESSAGE : CCAPI_ERROR_MESSAGE, textMessageView);
         message.setElementList({element});
         messageList.emplace_back(std::move(message));
       }

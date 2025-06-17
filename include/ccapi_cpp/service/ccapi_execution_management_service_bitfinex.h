@@ -360,10 +360,9 @@ class ExecutionManagementServiceBitfinex : public ExecutionManagementService {
 
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
-    std::string textMessage(textMessageView);
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     Event event = this->createEvent(wsConnectionPtr, subscription, textMessageView, document, timeReceived);
     if (!event.getMessageList().empty()) {
       this->eventHandler(event, nullptr);
@@ -372,8 +371,6 @@ class ExecutionManagementServiceBitfinex : public ExecutionManagementService {
 
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const TimePoint& timeReceived) {
-    std::string textMessage(textMessageView);
-
     Event event;
     std::vector<Message> messageList;
     Message message;
@@ -444,7 +441,7 @@ class ExecutionManagementServiceBitfinex : public ExecutionManagementService {
         if (status != "SUCCESS") {
           message.setType(Message::Type::RESPONSE_ERROR);
           Element element;
-          element.insert(CCAPI_ERROR_MESSAGE, textMessage);
+          element.insert(CCAPI_ERROR_MESSAGE, textMessageView);
           message.setElementList({element});
           messageList.emplace_back(std::move(message));
         } else {
@@ -469,7 +466,7 @@ class ExecutionManagementServiceBitfinex : public ExecutionManagementService {
           event.setType(Event::Type::SUBSCRIPTION_STATUS);
           message.setType(status == "OK" ? Message::Type::SUBSCRIPTION_STARTED : Message::Type::SUBSCRIPTION_FAILURE);
           Element element;
-          element.insert(status == "OK" ? CCAPI_INFO_MESSAGE : CCAPI_ERROR_MESSAGE, textMessage);
+          element.insert(status == "OK" ? CCAPI_INFO_MESSAGE : CCAPI_ERROR_MESSAGE, textMessageView);
           message.setElementList({element});
           messageList.emplace_back(std::move(message));
         }

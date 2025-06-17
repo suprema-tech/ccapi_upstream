@@ -103,13 +103,13 @@ class MarketDataServiceBinanceDerivativesBase : public MarketDataServiceBinanceB
     }
   }
 
-  void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
+  void convertTextMessageToMarketDataMessage(const Request& request, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     switch (request.getOperation()) {
       case Request::Operation::GET_INSTRUMENT: {
         this->jsonDocumentAllocator.Clear();
         rj::Document document(&this->jsonDocumentAllocator);
-        document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+        document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
         Message message;
         message.setTimeReceived(timeReceived);
         message.setType(this->requestOperationToMessageTypeMap.at(request.getOperation()));
@@ -127,7 +127,7 @@ class MarketDataServiceBinanceDerivativesBase : public MarketDataServiceBinanceB
       case Request::Operation::GET_INSTRUMENTS: {
         this->jsonDocumentAllocator.Clear();
         rj::Document document(&this->jsonDocumentAllocator);
-        document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+        document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
         Message message;
         message.setTimeReceived(timeReceived);
         message.setType(this->requestOperationToMessageTypeMap.at(request.getOperation()));
@@ -142,7 +142,7 @@ class MarketDataServiceBinanceDerivativesBase : public MarketDataServiceBinanceB
         event.addMessages({message});
       } break;
       default:
-        MarketDataServiceBinanceBase::convertTextMessageToMarketDataMessage(request, textMessage, timeReceived, event, marketDataMessageList);
+        MarketDataServiceBinanceBase::convertTextMessageToMarketDataMessage(request, textMessageView, timeReceived, event, marketDataMessageList);
     }
   }
 };

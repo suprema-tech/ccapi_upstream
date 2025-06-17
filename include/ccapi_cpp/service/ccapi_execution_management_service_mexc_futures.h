@@ -39,7 +39,9 @@ class ExecutionManagementServiceMexcFutures : public ExecutionManagementService 
     this->send(wsConnectionPtr, R"({"method":"ping"})", ec);
   }
 
-  bool doesHttpBodyContainError(const std::string& body) override { return !std::regex_search(body, std::regex("\"code\":\\s*\"0\"")); }
+  bool doesHttpBodyContainError(boost::beast::string_view bodyView) override {
+    return !std::regex_search(bodyView.begin(), bodyView.end(), std::regex("\"code\":\\s*\"0\""));
+  }
 
   void createSignature(std::string& signature, std::string& queryString, const std::string& reqMethod, const std::string& host, const std::string& path,
                        const std::map<std::string, std::string>& queryParamMap, const std::map<std::string, std::string>& credential) {
@@ -319,8 +321,9 @@ class ExecutionManagementServiceMexcFutures : public ExecutionManagementService 
     // }
   }
 
-  void extractOrderInfo(Element& element, const rj::Value& x, const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap,
-                        const std::map<std::string, std::function<std::string(const std::string&)>> conversionMap = {}) override {
+  void extractOrderInfo(Element& element, const rj::Value& x,
+                        const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap,
+                        const std::map<std::string_view, std::function<std::string(const std::string&)>> conversionMap = {}) override {
     // ExecutionManagementService::extractOrderInfo(element, x, extractionFieldNameMap);
     // {
     //   auto it1 = x.FindMember("accFillSz");
@@ -367,11 +370,10 @@ class ExecutionManagementServiceMexcFutures : public ExecutionManagementService 
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
     WsConnection& wsConnection = *wsConnectionPtr;
-    std::string textMessage(textMessageView);
 
-    // if (textMessage != "pong") {
+    // if (textMessageView != "pong") {
     //   rj::Document document;
-    //   document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    //   document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     //   auto it = document.FindMember("event");
     //   std::string eventStr = it != document.MemberEnd() ? it->value.GetString() : "";
     //   if (eventStr == "login") {
@@ -410,7 +412,7 @@ this->send(wsConnectionPtr, sendString, ec);
     //       this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "subscribe");
     //     }
     //   } else {
-    //     Event event = this->createEvent(subscription, textMessage, document, eventStr, timeReceived);
+    //     Event event = this->createEvent(subscription, textMessageView, document, eventStr, timeReceived);
     //     if (!event.getMessageList().empty()) {
     //       this->eventHandler(event, nullptr);
     //     }
@@ -418,7 +420,7 @@ this->send(wsConnectionPtr, sendString, ec);
     // }
   }
 
-  Event createEvent(const Subscription& subscription, const std::string& textMessage, const rj::Document& document, const std::string& eventStr,
+  Event createEvent(const Subscription& subscription, const std::string& textMessageView, const rj::Document& document, const std::string& eventStr,
                     const TimePoint& timeReceived) {
     Event event;
     // std::vector<Message> messageList;
@@ -437,7 +439,7 @@ this->send(wsConnectionPtr, sendString, ec);
     //     if (code != "0") {
     //       message.setType(Message::Type::RESPONSE_ERROR);
     //       Element element;
-    //       element.insert(CCAPI_ERROR_MESSAGE, textMessage);
+    //       element.insert(CCAPI_ERROR_MESSAGE, textMessageView);
     //       message.setElementList({element});
     //       message.setSecondaryCorrelationIdMap({
     //           {correlationId, document["id"].GetString()},
@@ -525,14 +527,14 @@ this->send(wsConnectionPtr, sendString, ec);
     //   event.setType(Event::Type::SUBSCRIPTION_STATUS);
     //   message.setType(Message::Type::SUBSCRIPTION_STARTED);
     //   Element element;
-    //   element.insert(CCAPI_INFO_MESSAGE, textMessage);
+    //   element.insert(CCAPI_INFO_MESSAGE, textMessageView);
     //   message.setElementList({element});
     //   messageList.emplace_back(std::move(message));
     // } else if (eventStr == "error") {
     //   event.setType(Event::Type::SUBSCRIPTION_STATUS);
     //   message.setType(Message::Type::SUBSCRIPTION_FAILURE);
     //   Element element;
-    //   element.insert(CCAPI_ERROR_MESSAGE, textMessage);
+    //   element.insert(CCAPI_ERROR_MESSAGE, textMessageView);
     //   message.setElementList({element});
     //   messageList.emplace_back(std::move(message));
     // }

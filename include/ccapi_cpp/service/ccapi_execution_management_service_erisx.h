@@ -33,9 +33,9 @@ class ExecutionManagementServiceErisx : public ExecutionManagementService {
 
  private:
 #endif
-  bool doesHttpBodyContainError(const std::string& body) override {
-    return body.find("\"ordStatus\":\"REJECTED\"") != std::string::npos ||
-           body.find("\"message\":\"Rejected with reason NO RESTING ORDERS\"") != std::string::npos;
+  bool doesHttpBodyContainError(boost::beast::string_view bodyView) override {
+    return bodyView.find("\"ordStatus\":\"REJECTED\"") != std::string::npos ||
+           bodyView.find("\"message\":\"Rejected with reason NO RESTING ORDERS\"") != std::string::npos;
   }
 
   void signRequest(http::request<http::string_body>& req, const TimePoint& now, const std::map<std::string, std::string>& credential) {
@@ -189,7 +189,7 @@ class ExecutionManagementServiceErisx : public ExecutionManagementService {
 
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
-    const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
+    const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
         {CCAPI_EM_ORDER_ID, std::make_pair("orderID", JsonDataType::STRING)},
         {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("clOrdID", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},
@@ -220,8 +220,9 @@ class ExecutionManagementServiceErisx : public ExecutionManagementService {
   void extractAccountInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                      const rj::Document& document) override {}
 
-  void extractOrderInfo(Element& element, const rj::Value& x, const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap,
-                        const std::map<std::string, std::function<std::string(const std::string&)>> conversionMap = {}) override {
+  void extractOrderInfo(Element& element, const rj::Value& x,
+                        const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap,
+                        const std::map<std::string_view, std::function<std::string(const std::string&)>> conversionMap = {}) override {
     ExecutionManagementService::extractOrderInfo(element, x, extractionFieldNameMap);
     {
       auto it1 = x.FindMember("cumQty");

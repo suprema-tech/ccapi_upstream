@@ -41,7 +41,9 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
 
   void pingOnApplicationLevel(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode& ec) override { this->send(wsConnectionPtr, "ping", ec); }
 
-  bool doesHttpBodyContainError(const std::string& body) override { return !std::regex_search(body, std::regex("\"code\":\\s*1000")); }
+  bool doesHttpBodyContainError(boost::beast::string_view bodyView) override {
+    return !std::regex_search(bodyView.begin(), bodyView.end(), std::regex("\"code\":\\s*1000"));
+  }
 
   void signReqeustForRestGenericPrivateRequest(http::request<http::string_body>& req, const Request& request, std::string& methodString,
                                                std::string& headerString, std::string& path, std::string& queryString, std::string& body, const TimePoint& now,
@@ -228,7 +230,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
 
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
-    const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
+    const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
         {CCAPI_EM_ORDER_ID, std::make_pair("order_id", JsonDataType::STRING)},
         {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("client_order_id", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},
@@ -300,12 +302,11 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
     WsConnection& wsConnection = *wsConnectionPtr;
-    std::string textMessage(textMessageView);
 
-    if (textMessage != "pong") {
+    if (textMessageView != "pong") {
       this->jsonDocumentAllocator.Clear();
       rj::Document document(&this->jsonDocumentAllocator);
-      document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+      document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
       auto it = document.FindMember("errorCode");
       std::string errorCode = it != document.MemberEnd() ? it->value.GetString() : "";
       Event event;
@@ -339,7 +340,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
           }
 
         } else {
-          event = this->createEvent(subscription, textMessage, document, eventStr, timeReceived);
+          event = this->createEvent(subscription, textMessageView, document, eventStr, timeReceived);
         }
       } else {
         std::string eventStr = document["event"].GetString();
@@ -350,7 +351,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
           message.setTimeReceived(timeReceived);
           message.setType(Message::Type::SUBSCRIPTION_FAILURE);
           Element element;
-          element.insert(CCAPI_ERROR_MESSAGE, textMessage);
+          element.insert(CCAPI_ERROR_MESSAGE, textMessageView);
           message.setElementList({element});
           message.setCorrelationIdList({correlationId});
           messageList.emplace_back(std::move(message));
@@ -364,7 +365,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
     }
   }
 
-  Event createEvent(const Subscription& subscription, const std::string& textMessage, const rj::Document& document, const std::string& eventStr,
+  Event createEvent(const Subscription& subscription, const std::string& textMessageView, const rj::Document& document, const std::string& eventStr,
                     const TimePoint& timeReceived) {
     Event event;
     std::vector<Message> messageList;
@@ -378,7 +379,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
       event.setType(Event::Type::SUBSCRIPTION_STATUS);
       message.setType(Message::Type::SUBSCRIPTION_STARTED);
       Element element;
-      element.insert(CCAPI_INFO_MESSAGE, textMessage);
+      element.insert(CCAPI_INFO_MESSAGE, textMessageView);
       message.setElementList({element});
       messageList.emplace_back(std::move(message));
     } else {
@@ -425,7 +426,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
               message.setCorrelationIdList({subscription.getCorrelationId()});
               message.setTime(UtilTime::makeTimePointFromMilliseconds(std::stoll(std::string(x["ms_t"].GetString()))));
               message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_ORDER_UPDATE);
-              const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
+              const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
                   {CCAPI_EM_ORDER_ID, std::make_pair("order_id", JsonDataType::STRING)},
                   {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("client_order_id", JsonDataType::STRING)},
                   {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},

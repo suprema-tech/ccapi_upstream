@@ -42,7 +42,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
     this->send(wsConnectionPtr, "{\"reqid\":" + std::to_string(UtilTime::getUnixTimestamp(now)) + ",\"event\":\"ping\"}", ec);
   }
 
-  bool doesHttpBodyContainError(const std::string& body) override { return body.find(R"("error":[])") == std::string::npos; }
+  bool doesHttpBodyContainError(boost::beast::string_view bodyView) override { return bodyView.find(R"("error":[])") == std::string::npos; }
 
   void signReqeustForRestGenericPrivateRequest(http::request<http::string_body>& req, const Request& request, std::string& methodString,
                                                std::string& headerString, std::string& path, std::string& queryString, std::string& body, const TimePoint& now,
@@ -196,7 +196,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
 
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
-    const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
+    const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
         {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("userref", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_QUANTITY, std::make_pair("vol", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUANTITY, std::make_pair("vol_exec", JsonDataType::STRING)},
@@ -213,7 +213,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
       for (auto itr = orders.MemberBegin(); itr != orders.MemberEnd(); ++itr) {
         Element element;
         this->extractOrderInfo(element, itr->value, extractionFieldNameMap);
-        const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionMoreFieldNameMap = {
+        const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionMoreFieldNameMap = {
             {CCAPI_EM_ORDER_SIDE, std::make_pair("type", JsonDataType::STRING)},
             {CCAPI_EM_ORDER_LIMIT_PRICE, std::make_pair("price", JsonDataType::STRING)},
             {CCAPI_EM_ORDER_INSTRUMENT, std::make_pair("pair", JsonDataType::STRING)}};
@@ -346,10 +346,9 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
 
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
-    std::string textMessage(textMessageView);
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     Event event = this->createEvent(wsConnectionPtr, subscription, textMessageView, document, timeReceived);
     if (!event.getMessageList().empty()) {
       this->eventHandler(event, nullptr);
@@ -358,8 +357,6 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
 
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const TimePoint& timeReceived) {
-    std::string textMessage(textMessageView);
-
     Event event;
     std::vector<Message> messageList;
     if (document.IsArray() && document.Size() == 3) {
@@ -403,7 +400,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
           message.setTimeReceived(timeReceived);
           message.setCorrelationIdList({subscription.getCorrelationId()});
           std::vector<Element> elementList;
-          const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
+          const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
               {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("userref", JsonDataType::STRING)},
               {CCAPI_EM_ORDER_QUANTITY, std::make_pair("vol", JsonDataType::STRING)},
               {CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUANTITY, std::make_pair("vol_exec", JsonDataType::STRING)},
@@ -417,7 +414,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
                 if (instrumentSet.empty() || instrumentSet.find(instrument) != instrumentSet.end()) {
                   Element element;
                   this->extractOrderInfo(element, itr->value, extractionFieldNameMap);
-                  const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionMoreFieldNameMap = {
+                  const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionMoreFieldNameMap = {
                       {CCAPI_EM_ORDER_SIDE, std::make_pair("type", JsonDataType::STRING)},
                       {CCAPI_EM_ORDER_LIMIT_PRICE, std::make_pair("price", JsonDataType::STRING)},
                       {CCAPI_EM_ORDER_INSTRUMENT, std::make_pair("pair", JsonDataType::STRING)}};
@@ -464,7 +461,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
           message.setCorrelationIdList({subscription.getCorrelationId()});
           message.setType(status == "subscribed" ? Message::Type::SUBSCRIPTION_STARTED : Message::Type::SUBSCRIPTION_FAILURE);
           Element element;
-          element.insert(status == "subscribed" ? CCAPI_INFO_MESSAGE : CCAPI_ERROR_MESSAGE, textMessage);
+          element.insert(status == "subscribed" ? CCAPI_INFO_MESSAGE : CCAPI_ERROR_MESSAGE, textMessageView);
           message.setElementList({element});
           messageList.emplace_back(std::move(message));
         }

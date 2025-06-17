@@ -236,7 +236,7 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
 
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
-    const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
+    const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
         {CCAPI_EM_ORDER_ID, std::make_pair("order_id", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_SIDE, std::make_pair("direction", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_QUANTITY, std::make_pair("amount", JsonDataType::STRING)},
@@ -286,8 +286,9 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
     }
   }
 
-  void extractOrderInfo(Element& element, const rj::Value& x, const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap,
-                        const std::map<std::string, std::function<std::string(const std::string&)>> conversionMap = {}) override {
+  void extractOrderInfo(Element& element, const rj::Value& x,
+                        const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap,
+                        const std::map<std::string_view, std::function<std::string(const std::string&)>> conversionMap = {}) override {
     ExecutionManagementService::extractOrderInfo(element, x, extractionFieldNameMap);
     {
       auto it1 = x.FindMember("filled_amount");
@@ -332,10 +333,9 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
 
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
-    std::string textMessage(textMessageView);
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     Event event = this->createEvent(wsConnectionPtr, subscription, textMessageView, document, timeReceived);
     if (!event.getMessageList().empty()) {
       this->eventHandler(event, nullptr);
@@ -344,7 +344,6 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
 
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const TimePoint& timeReceived) {
-    std::string textMessage(textMessageView);
     const WsConnection& wsConnection = *wsConnectionPtr;
 
     Event event;
@@ -364,7 +363,7 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
           event.setType(Event::Type::SUBSCRIPTION_STATUS);
           message.setType(Message::Type::SUBSCRIPTION_FAILURE);
           Element element;
-          element.insert(CCAPI_ERROR_MESSAGE, textMessage);
+          element.insert(CCAPI_ERROR_MESSAGE, textMessageView);
           message.setElementList({element});
           messageList.emplace_back(std::move(message));
           if (it != document.MemberEnd()) {
@@ -423,7 +422,7 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
             event.setType(Event::Type::SUBSCRIPTION_STATUS);
             message.setType(Message::Type::SUBSCRIPTION_STARTED);
             Element element;
-            element.insert(CCAPI_INFO_MESSAGE, textMessage);
+            element.insert(CCAPI_INFO_MESSAGE, textMessageView);
             message.setElementList({element});
             messageList.emplace_back(std::move(message));
             if (it != document.MemberEnd()) {
@@ -473,7 +472,7 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
               }
             } else if (field == CCAPI_EM_ORDER_UPDATE && fieldSet.find(CCAPI_EM_ORDER_UPDATE) != fieldSet.end()) {
               message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_ORDER_UPDATE);
-              const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
+              const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
                   {CCAPI_EM_ORDER_ID, std::make_pair("order_id", JsonDataType::STRING)},
                   {CCAPI_EM_ORDER_SIDE, std::make_pair("direction", JsonDataType::STRING)},
                   {CCAPI_EM_ORDER_LIMIT_PRICE, std::make_pair("price", JsonDataType::STRING)},

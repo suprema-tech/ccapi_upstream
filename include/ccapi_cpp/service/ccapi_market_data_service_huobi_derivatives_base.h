@@ -33,7 +33,7 @@ class MarketDataServiceHuobiDerivativesBase : public MarketDataServiceHuobiBase 
     }
   }
 
-  bool doesHttpBodyContainError(const std::string& body) override { return body.find("err_code") != std::string::npos; }
+  bool doesHttpBodyContainError(boost::beast::string_view bodyView) override { return bodyView.find("err_code") != std::string::npos; }
 
   void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const TimePoint& now, const std::string& symbolId,
                              const std::map<std::string, std::string>& credential) override {
@@ -61,13 +61,13 @@ class MarketDataServiceHuobiDerivativesBase : public MarketDataServiceHuobiBase 
     element.insert(CCAPI_CONTRACT_SIZE, UtilString::normalizeDecimalString(x["contract_size"].GetString()));
   }
 
-  void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
+  void convertTextMessageToMarketDataMessage(const Request& request, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     switch (request.getOperation()) {
       case Request::Operation::GET_INSTRUMENT: {
         this->jsonDocumentAllocator.Clear();
         rj::Document document(&this->jsonDocumentAllocator);
-        document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+        document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
         Message message;
         message.setTimeReceived(timeReceived);
         message.setType(this->requestOperationToMessageTypeMap.at(request.getOperation()));
@@ -85,7 +85,7 @@ class MarketDataServiceHuobiDerivativesBase : public MarketDataServiceHuobiBase 
       case Request::Operation::GET_INSTRUMENTS: {
         this->jsonDocumentAllocator.Clear();
         rj::Document document(&this->jsonDocumentAllocator);
-        document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+        document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
         Message message;
         message.setTimeReceived(timeReceived);
         message.setType(this->requestOperationToMessageTypeMap.at(request.getOperation()));
@@ -100,7 +100,7 @@ class MarketDataServiceHuobiDerivativesBase : public MarketDataServiceHuobiBase 
         event.addMessages({message});
       } break;
       default:
-        MarketDataServiceHuobiBase::convertTextMessageToMarketDataMessage(request, textMessage, timeReceived, event, marketDataMessageList);
+        MarketDataServiceHuobiBase::convertTextMessageToMarketDataMessage(request, textMessageView, timeReceived, event, marketDataMessageList);
     }
   }
 };

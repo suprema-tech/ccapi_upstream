@@ -25,7 +25,7 @@ class MarketDataServiceMexcFutures : public MarketDataService {
 
  protected:
 #endif
-  bool doesHttpBodyContainError(const std::string& body) override { return body.find(R"("code":0)") == std::string::npos; }
+  bool doesHttpBodyContainError(boost::beast::string_view bodyView) override { return bodyView.find(R"("code":0)") == std::string::npos; }
 
   void pingOnApplicationLevel(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode& ec) override {
     this->send(wsConnectionPtr, R"({"method":"ping"})", ec);
@@ -86,11 +86,10 @@ class MarketDataServiceMexcFutures : public MarketDataService {
   void processTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
                           std::vector<MarketDataMessage>& marketDataMessageList) override {
     WsConnection& wsConnection = *wsConnectionPtr;
-    std::string textMessage(textMessageView);
 
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     if (document.IsObject() && document.HasMember("channel")) {
       std::string channel = document["channel"].GetString();
       if (channel.rfind("push.", 0) == 0) {
@@ -147,7 +146,7 @@ class MarketDataServiceMexcFutures : public MarketDataService {
           message.setTimeReceived(timeReceived);
           message.setType(Message::Type::SUBSCRIPTION_FAILURE);
           Element element;
-          element.insert(CCAPI_ERROR_MESSAGE, textMessage);
+          element.insert(CCAPI_ERROR_MESSAGE, textMessageView);
           message.setElementList({element});
           messageList.emplace_back(std::move(message));
         } else if (channel.rfind("rs.sub.", 0) == 0) {
@@ -156,7 +155,7 @@ class MarketDataServiceMexcFutures : public MarketDataService {
           message.setTimeReceived(timeReceived);
           message.setType(Message::Type::SUBSCRIPTION_STARTED);
           Element element;
-          element.insert(CCAPI_INFO_MESSAGE, textMessage);
+          element.insert(CCAPI_INFO_MESSAGE, textMessageView);
           message.setElementList({element});
           messageList.emplace_back(std::move(message));
         }
@@ -210,11 +209,11 @@ class MarketDataServiceMexcFutures : public MarketDataService {
     element.insert(CCAPI_CONTRACT_SIZE, x["contractSize"].GetString());
   }
 
-  void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
+  void convertTextMessageToMarketDataMessage(const Request& request, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     switch (request.getOperation()) {
       case Request::Operation::GET_RECENT_TRADES: {
         for (const auto& x : document["data"].GetArray()) {

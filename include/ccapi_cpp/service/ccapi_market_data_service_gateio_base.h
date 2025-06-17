@@ -152,11 +152,10 @@ class MarketDataServiceGateioBase : public MarketDataService {
   void processTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
                           std::vector<MarketDataMessage>& marketDataMessageList) override {
     WsConnection& wsConnection = *wsConnectionPtr;
-    std::string textMessage(textMessageView);
 
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     if (document.HasMember("event") && std::string(document["event"].GetString()) == "subscribe") {
       event.setType(Event::Type::SUBSCRIPTION_STATUS);
       std::vector<Message> messageList;
@@ -191,7 +190,7 @@ class MarketDataServiceGateioBase : public MarketDataService {
       bool hasError = document.HasMember("error") && !document["error"].IsNull();
       message.setType(!hasError ? Message::Type::SUBSCRIPTION_STARTED : Message::Type::SUBSCRIPTION_FAILURE);
       Element element;
-      element.insert(!hasError ? CCAPI_INFO_MESSAGE : CCAPI_ERROR_MESSAGE, textMessage);
+      element.insert(!hasError ? CCAPI_INFO_MESSAGE : CCAPI_ERROR_MESSAGE, textMessageView);
       message.setElementList({element});
       messageList.emplace_back(std::move(message));
       event.setMessageList(messageList);

@@ -29,7 +29,7 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
 
  protected:
 #endif
-  bool doesHttpBodyContainError(const std::string& body) override { return body.find("err_code") != std::string::npos; }
+  bool doesHttpBodyContainError(boost::beast::string_view bodyView) override { return bodyView.find("err_code") != std::string::npos; }
 
   void appendSymbolId(rj::Document& document, rj::Document::AllocatorType& allocator, const std::string& symbolId) {
     ExecutionManagementServiceHuobiBase::appendSymbolId(document, allocator, symbolId, "contract_code");
@@ -147,7 +147,7 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
 
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
-    const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
+    const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
         {CCAPI_EM_ORDER_ID, std::make_pair("order_id", JsonDataType::STRING)},
         {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("client_order_id", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_SIDE, std::make_pair("direction", JsonDataType::STRING)},
@@ -207,8 +207,9 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
     }
   }
 
-  void extractOrderInfo(Element& element, const rj::Value& x, const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap,
-                        const std::map<std::string, std::function<std::string(const std::string&)>> conversionMap = {}) override {
+  void extractOrderInfo(Element& element, const rj::Value& x,
+                        const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap,
+                        const std::map<std::string_view, std::function<std::string(const std::string&)>> conversionMap = {}) override {
     ExecutionManagementService::extractOrderInfo(element, x, extractionFieldNameMap);
     {
       auto it1 = x.FindMember("trade_volume");
@@ -256,11 +257,10 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
     WsConnection& wsConnection = *wsConnectionPtr;
-    std::string textMessage(textMessageView);
 
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     std::string op = document["op"].GetString();
     const auto& fieldSet = subscription.getFieldSet();
     const auto& instrumentSet = subscription.getInstrumentSet();
@@ -294,7 +294,7 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
           }
         }
       } else {
-        this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, textMessage, {subscription.getCorrelationId()});
+        this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, textMessageView, {subscription.getCorrelationId()});
       }
     } else if (op == "ping") {
       rj::StringBuffer stringBufferSubscribe;
@@ -311,14 +311,14 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
         this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "pong");
       }
     } else {
-      Event event = this->createEvent(subscription, textMessage, document, op, timeReceived);
+      Event event = this->createEvent(subscription, textMessageView, document, op, timeReceived);
       if (!event.getMessageList().empty()) {
         this->eventHandler(event, nullptr);
       }
     }
   }
 
-  Event createEvent(const Subscription& subscription, const std::string& textMessage, const rj::Document& document, const std::string& op,
+  Event createEvent(const Subscription& subscription, const std::string& textMessageView, const rj::Document& document, const std::string& op,
                     const TimePoint& timeReceived) {
     Event event;
     std::vector<Message> messageList;
@@ -338,7 +338,7 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
         if (instrumentSet.empty() || instrumentSet.find(instrument) != instrumentSet.end()) {
           message.setTime(UtilTime::makeTimePointFromMilliseconds(std::stoll(document["ts"].GetString())));
           message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_ORDER_UPDATE);
-          const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
+          const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
               {CCAPI_EM_ORDER_ID, std::make_pair("order_id", JsonDataType::STRING)},
               {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("client_order_id", JsonDataType::STRING)},
               {CCAPI_EM_ORDER_SIDE, std::make_pair("direction", JsonDataType::STRING)},
@@ -412,14 +412,14 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
         event.setType(Event::Type::SUBSCRIPTION_STATUS);
         message.setType(Message::Type::SUBSCRIPTION_FAILURE);
         Element element;
-        element.insert(CCAPI_ERROR_MESSAGE, textMessage);
+        element.insert(CCAPI_ERROR_MESSAGE, textMessageView);
         message.setElementList({element});
         messageList.emplace_back(std::move(message));
       } else {
         event.setType(Event::Type::SUBSCRIPTION_STATUS);
         message.setType(Message::Type::SUBSCRIPTION_STARTED);
         Element element;
-        element.insert(CCAPI_INFO_MESSAGE, textMessage);
+        element.insert(CCAPI_INFO_MESSAGE, textMessageView);
         message.setElementList({element});
         messageList.emplace_back(std::move(message));
       }

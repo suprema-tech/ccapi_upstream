@@ -22,7 +22,9 @@ class ExecutionManagementServiceBitgetBase : public ExecutionManagementService {
 
   void pingOnApplicationLevel(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode& ec) override { this->send(wsConnectionPtr, "ping", ec); }
 
-  bool doesHttpBodyContainError(const std::string& body) override { return !std::regex_search(body, std::regex("\"code\":\\s*\"00000\"")); }
+  bool doesHttpBodyContainError(boost::beast::string_view bodyView) override {
+    return !std::regex_search(bodyView.begin(), bodyView.end(), std::regex("\"code\":\\s*\"00000\""));
+  }
 
   void signReqeustForRestGenericPrivateRequest(http::request<http::string_body>& req, const Request& request, std::string& methodString,
                                                std::string& headerString, std::string& path, std::string& queryString, std::string& body, const TimePoint& now,

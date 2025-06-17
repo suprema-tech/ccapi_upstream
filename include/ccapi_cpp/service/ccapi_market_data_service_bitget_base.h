@@ -20,7 +20,9 @@ class MarketDataServiceBitgetBase : public MarketDataService {
 
  protected:
 #endif
-  bool doesHttpBodyContainError(const std::string& body) override { return !std::regex_search(body, std::regex("\"code\":\\s*\"00000\"")); }
+  bool doesHttpBodyContainError(boost::beast::string_view bodyView) override {
+    return !std::regex_search(bodyView.begin(), bodyView.end(), std::regex("\"code\":\\s*\"00000\""));
+  }
 
   void prepareSubscriptionDetail(std::string& channelId, std::string& symbolId, const std::string& field, const WsConnection& wsConnection,
                                  const Subscription& subscription, const std::map<std::string, std::string> optionMap) override {
@@ -111,12 +113,11 @@ class MarketDataServiceBitgetBase : public MarketDataService {
   void processTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
                           std::vector<MarketDataMessage>& marketDataMessageList) override {
     WsConnection& wsConnection = *wsConnectionPtr;
-    std::string textMessage(textMessageView);
 
-    if (textMessage != "pong") {
+    if (textMessageView != "pong") {
       this->jsonDocumentAllocator.Clear();
       rj::Document document(&this->jsonDocumentAllocator);
-      document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+      document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
       auto it = document.FindMember("event");
       std::string eventStr = it != document.MemberEnd() ? it->value.GetString() : "";
       // if (eventStr == "login") {
@@ -147,7 +148,7 @@ class MarketDataServiceBitgetBase : public MarketDataService {
           message.setCorrelationIdList(correlationIdList);
           message.setType(Message::Type::SUBSCRIPTION_STARTED);
           Element element;
-          element.insert(CCAPI_INFO_MESSAGE, textMessage);
+          element.insert(CCAPI_INFO_MESSAGE, textMessageView);
           message.setElementList({element});
           messageList.emplace_back(std::move(message));
           event.setMessageList(messageList);
@@ -158,7 +159,7 @@ class MarketDataServiceBitgetBase : public MarketDataService {
           message.setTimeReceived(timeReceived);
           message.setType(Message::Type::SUBSCRIPTION_FAILURE);
           Element element;
-          element.insert(CCAPI_ERROR_MESSAGE, textMessage);
+          element.insert(CCAPI_ERROR_MESSAGE, textMessageView);
           message.setElementList({element});
           messageList.emplace_back(std::move(message));
           event.setMessageList(messageList);
@@ -401,11 +402,11 @@ class MarketDataServiceBitgetBase : public MarketDataService {
     }
   }
 
-  void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
+  void convertTextMessageToMarketDataMessage(const Request& request, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     switch (request.getOperation()) {
       case Request::Operation::GET_SERVER_TIME: {
         Message message;

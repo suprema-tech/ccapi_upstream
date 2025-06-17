@@ -39,7 +39,9 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
 
   void pingOnApplicationLevel(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode& ec) override { this->send(wsConnectionPtr, "ping", ec); }
 
-  bool doesHttpBodyContainError(const std::string& body) override { return !std::regex_search(body, std::regex("\"code\":\\s*\"0\"")); }
+  bool doesHttpBodyContainError(boost::beast::string_view bodyView) override {
+    return !std::regex_search(bodyView.begin(), bodyView.end(), std::regex("\"code\":\\s*\"0\""));
+  }
 
   void signReqeustForRestGenericPrivateRequest(http::request<http::string_body>& req, const Request& request, std::string& methodString,
                                                std::string& headerString, std::string& path, std::string& queryString, std::string& body, const TimePoint& now,
@@ -276,7 +278,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
   }
 
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const rj::Document& document) {
-    const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
+    const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
         {CCAPI_EM_ORDER_ID, std::make_pair("ordId", JsonDataType::STRING)},
         {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("clOrdId", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},
@@ -333,8 +335,9 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
     }
   }
 
-  void extractOrderInfo(Element& element, const rj::Value& x, const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap,
-                        const std::map<std::string, std::function<std::string(const std::string&)>> conversionMap = {}) override {
+  void extractOrderInfo(Element& element, const rj::Value& x,
+                        const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap,
+                        const std::map<std::string_view, std::function<std::string(const std::string&)>> conversionMap = {}) override {
     ExecutionManagementService::extractOrderInfo(element, x, extractionFieldNameMap);
     // {
     //   auto it1 = x.FindMember("accFillSz");
@@ -381,12 +384,10 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
 
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
-    std::string textMessage(textMessageView);
-
-    if (textMessage != "pong") {
+    if (textMessageView != "pong") {
       this->jsonDocumentAllocator.Clear();
       rj::Document document(&this->jsonDocumentAllocator);
-      document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+      document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
       auto it = document.FindMember("event");
       std::string eventStr = it != document.MemberEnd() ? it->value.GetString() : "";
       if (eventStr == "login") {
@@ -397,7 +398,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
         Element element;
         element.insert(CCAPI_CONNECTION_ID, wsConnectionPtr->id);
         element.insert(CCAPI_CONNECTION_URL, wsConnectionPtr->url);
-        element.insert(CCAPI_INFO_MESSAGE, textMessage);
+        element.insert(CCAPI_INFO_MESSAGE, textMessageView);
         message.setElementList({element});
         std::vector<Message> messageList;
         messageList.emplace_back(std::move(message));
@@ -473,7 +474,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
           }
         }
       } else {
-        Event event = this->createEvent(*wsConnectionPtr, subscription, textMessage, document, eventStr, timeReceived);
+        Event event = this->createEvent(*wsConnectionPtr, subscription, textMessageView, document, eventStr, timeReceived);
         if (!event.getMessageList().empty()) {
           this->eventHandler(event, nullptr);
         }
@@ -481,7 +482,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
     }
   }
 
-  Event createEvent(const WsConnection& wsConnection, const Subscription& subscription, const std::string& textMessage, const rj::Document& document,
+  Event createEvent(const WsConnection& wsConnection, const Subscription& subscription, const std::string& textMessageView, const rj::Document& document,
                     const std::string& eventStr, const TimePoint& timeReceived) {
     Event event;
     std::vector<Message> messageList;
@@ -500,7 +501,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
         if (code != "0") {
           message.setType(Message::Type::RESPONSE_ERROR);
           Element element;
-          element.insert(CCAPI_ERROR_MESSAGE, textMessage);
+          element.insert(CCAPI_ERROR_MESSAGE, textMessageView);
           message.setElementList({element});
           message.setCorrelationIdList({requestCorrelationId});
           messageList.emplace_back(std::move(message));
@@ -559,7 +560,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
               message.setCorrelationIdList({subscription.getCorrelationId()});
               message.setTime(UtilTime::makeTimePointFromMilliseconds(std::stoll(std::string(x["uTime"].GetString()))));
               message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_ORDER_UPDATE);
-              const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
+              const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
                   {CCAPI_EM_ORDER_ID, std::make_pair("ordId", JsonDataType::STRING)},
                   {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("clOrdId", JsonDataType::STRING)},
                   {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},
@@ -647,7 +648,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
       message.setType(Message::Type::SUBSCRIPTION_STARTED);
       message.setCorrelationIdList({correlationId});
       Element element;
-      element.insert(CCAPI_INFO_MESSAGE, textMessage);
+      element.insert(CCAPI_INFO_MESSAGE, textMessageView);
       message.setElementList({element});
       messageList.emplace_back(std::move(message));
     } else if (eventStr == "error") {
@@ -655,7 +656,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
       message.setType(Message::Type::SUBSCRIPTION_FAILURE);
       message.setCorrelationIdList({correlationId});
       Element element;
-      element.insert(CCAPI_ERROR_MESSAGE, textMessage);
+      element.insert(CCAPI_ERROR_MESSAGE, textMessageView);
       message.setElementList({element});
       messageList.emplace_back(std::move(message));
     }

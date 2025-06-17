@@ -35,7 +35,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
 
  protected:
 #endif
-  bool doesHttpBodyContainError(const std::string& body) override { return body.find(R"("retCode":0)") == std::string::npos; }
+  bool doesHttpBodyContainError(boost::beast::string_view bodyView) override { return bodyView.find(R"("retCode":0)") == std::string::npos; }
 
   void pingOnApplicationLevel(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode& ec) override { this->send(wsConnectionPtr, R"({"op":"ping"})", ec); }
 
@@ -124,10 +124,9 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
 
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
-    std::string textMessage(textMessageView);
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     Event event = this->createEvent(wsConnectionPtr, subscription, textMessageView, document, timeReceived);
     if (!event.getMessageList().empty()) {
       this->eventHandler(event, nullptr);
@@ -284,7 +283,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
   }
 
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const rj::Document& document) {
-    const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
+    const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
         {CCAPI_EM_ORDER_ID, std::make_pair("orderId", JsonDataType::STRING)},
         {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("orderLinkId", JsonDataType::STRING)},
     };
@@ -304,7 +303,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
 
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
-    std::map<std::string, std::pair<std::string, JsonDataType>> extractionFieldNameMap = {
+    std::map<std::string_view, std::pair<std::string_view, JsonDataType>> extractionFieldNameMap = {
         {CCAPI_EM_ORDER_ID, std::make_pair("orderId", JsonDataType::STRING)},
         {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("orderLinkId", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},
@@ -358,7 +357,6 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
 
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const TimePoint& timeReceived) {
-    std::string textMessage(textMessageView);
     Event event;
     std::vector<Message> messageList;
     Message message;
@@ -375,7 +373,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
             Element element;
             element.insert(CCAPI_CONNECTION_ID, wsConnectionPtr->id);
             element.insert(CCAPI_CONNECTION_URL, wsConnectionPtr->url);
-            element.insert(CCAPI_INFO_MESSAGE, textMessage);
+            element.insert(CCAPI_INFO_MESSAGE, textMessageView);
             message.setElementList({element});
             messageList.emplace_back(std::move(message));
           } else {
@@ -384,7 +382,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
             Element element;
             element.insert(CCAPI_CONNECTION_ID, wsConnectionPtr->id);
             element.insert(CCAPI_CONNECTION_URL, wsConnectionPtr->url);
-            element.insert(CCAPI_ERROR_MESSAGE, textMessage);
+            element.insert(CCAPI_ERROR_MESSAGE, textMessageView);
             message.setElementList({element});
             messageList.emplace_back(std::move(message));
           }
@@ -396,7 +394,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
           if (retCode != "0") {
             message.setType(Message::Type::RESPONSE_ERROR);
             Element element;
-            element.insert(CCAPI_ERROR_MESSAGE, textMessage);
+            element.insert(CCAPI_ERROR_MESSAGE, textMessageView);
             message.setElementList({element});
             message.setCorrelationIdList({requestCorrelationId});
             messageList.emplace_back(std::move(message));
@@ -433,7 +431,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
               message.setCorrelationIdList({subscription.getCorrelationId()});
               message.setTime(time);
               message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_ORDER_UPDATE);
-              const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
+              const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
                   {CCAPI_EM_ORDER_ID, std::make_pair("orderId", JsonDataType::STRING)},
                   {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("orderLinkId", JsonDataType::STRING)},
                   {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},
@@ -537,7 +535,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
             Element element;
             element.insert(CCAPI_CONNECTION_ID, wsConnectionPtr->id);
             element.insert(CCAPI_CONNECTION_URL, wsConnectionPtr->url);
-            element.insert(CCAPI_INFO_MESSAGE, textMessage);
+            element.insert(CCAPI_INFO_MESSAGE, textMessageView);
             message.setElementList({element});
             messageList.emplace_back(std::move(message));
 
@@ -575,7 +573,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
             Element element;
             element.insert(CCAPI_CONNECTION_ID, wsConnectionPtr->id);
             element.insert(CCAPI_CONNECTION_URL, wsConnectionPtr->url);
-            element.insert(CCAPI_ERROR_MESSAGE, textMessage);
+            element.insert(CCAPI_ERROR_MESSAGE, textMessageView);
             message.setElementList({element});
             messageList.emplace_back(std::move(message));
           }
@@ -584,7 +582,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
           event.setType(Event::Type::SUBSCRIPTION_STATUS);
           message.setType(success ? Message::Type::SUBSCRIPTION_STARTED : Message::Type::SUBSCRIPTION_FAILURE);
           Element element;
-          element.insert(success ? CCAPI_INFO_MESSAGE : CCAPI_ERROR_MESSAGE, textMessage);
+          element.insert(success ? CCAPI_INFO_MESSAGE : CCAPI_ERROR_MESSAGE, textMessageView);
           message.setElementList({element});
           messageList.emplace_back(std::move(message));
         }

@@ -114,11 +114,12 @@ class ExecutionManagementService : public Service {
 
  protected:
 #endif
-  virtual std::vector<Message> convertTextMessageToMessageRest(const Request& request, const std::string& textMessage, const TimePoint& timeReceived) {
-    CCAPI_LOGGER_DEBUG("textMessage = " + textMessage);
+  virtual std::vector<Message> convertTextMessageToMessageRest(const Request& request, boost::beast::string_view textMessageView,
+                                                               const TimePoint& timeReceived) {
+    CCAPI_LOGGER_DEBUG("textMessageView = " + std::string(textMessageView));
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     Message message;
     message.setTimeReceived(timeReceived);
     message.setCorrelationIdList({request.getCorrelationId()});
@@ -139,10 +140,10 @@ class ExecutionManagementService : public Service {
     return messageList;
   }
 
-  void processSuccessfulTextMessageRest(int statusCode, const Request& request, const std::string& textMessage, const TimePoint& timeReceived,
+  void processSuccessfulTextMessageRest(int statusCode, const Request& request, boost::beast::string_view textMessageView, const TimePoint& timeReceived,
                                         Queue<Event>* eventQueuePtr) override {
     Event event;
-    if (this->doesHttpBodyContainError(textMessage)) {
+    if (this->doesHttpBodyContainError(textMessageView)) {
       event.setType(Event::Type::RESPONSE);
       Message message;
       message.setType(Message::Type::RESPONSE_ERROR);
@@ -150,7 +151,7 @@ class ExecutionManagementService : public Service {
       message.setCorrelationIdList({request.getCorrelationId()});
       Element element;
       element.insert(CCAPI_HTTP_STATUS_CODE, "200");
-      element.insert(CCAPI_ERROR_MESSAGE, UtilString::trim(textMessage));
+      element.insert(CCAPI_ERROR_MESSAGE, UtilString::trim(std::string(textMessageView)));
       message.setElementList({element});
       event.setMessageList({message});
     } else {
@@ -161,14 +162,14 @@ class ExecutionManagementService : public Service {
         message.setType(Message::Type::GENERIC_PRIVATE_REQUEST);
         Element element;
         element.insert(CCAPI_HTTP_STATUS_CODE, std::to_string(statusCode));
-        element.insert(CCAPI_HTTP_BODY, textMessage);
+        element.insert(CCAPI_HTTP_BODY, textMessageView);
         message.setElementList({element});
         const std::vector<std::string>& correlationIdList = {request.getCorrelationId()};
         CCAPI_LOGGER_TRACE("correlationIdList = " + toString(correlationIdList));
         message.setCorrelationIdList(correlationIdList);
         event.addMessages({message});
       } else {
-        const std::vector<Message>& messageList = this->convertTextMessageToMessageRest(request, textMessage, timeReceived);
+        const std::vector<Message>& messageList = this->convertTextMessageToMessageRest(request, textMessageView, timeReceived);
         event.addMessages(messageList);
       }
     }
@@ -177,10 +178,11 @@ class ExecutionManagementService : public Service {
     }
   }
 
-  virtual void extractOrderInfo(Element& element, const rj::Value& x, const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap,
-                                const std::map<std::string, std::function<std::string(const std::string&)>> conversionMap = {}) {
+  virtual void extractOrderInfo(Element& element, const rj::Value& x,
+                                const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap,
+                                const std::map<std::string_view, std::function<std::string(const std::string&)>> conversionMap = {}) {
     for (const auto& y : extractionFieldNameMap) {
-      auto it = x.FindMember(y.second.first.c_str());
+      auto it = x.FindMember(rj::StringRef(y.second.first.data(), y.second.first.size()));
       if (it != x.MemberEnd() && !it->value.IsNull()) {
         std::string value = y.second.second == JsonDataType::STRING    ? it->value.GetString()
                             : y.second.second == JsonDataType::INTEGER ? std::string(it->value.GetString())

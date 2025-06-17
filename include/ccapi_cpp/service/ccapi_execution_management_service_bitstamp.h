@@ -39,9 +39,9 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
     this->send(wsConnectionPtr, R"({"event": "bts:heartbeat"})", ec);
   }
 
-  bool doesHttpBodyContainError(const std::string& body) override {
-    return body.find(R"("status": "error")") != std::string::npos || body.find(R"("status":"error")") != std::string::npos ||
-           body.find(R"("error":)") != std::string::npos;
+  bool doesHttpBodyContainError(boost::beast::string_view bodyView) override {
+    return bodyView.find(R"("status": "error")") != std::string::npos || bodyView.find(R"("status":"error")") != std::string::npos ||
+           bodyView.find(R"("error":)") != std::string::npos;
   }
 
   void signReqeustForRestGenericPrivateRequest(http::request<http::string_body>& req, const Request& request, std::string& methodString,
@@ -195,8 +195,9 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
     }
   }
 
-  void extractOrderInfo(Element& element, const rj::Value& x, const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap,
-                        const std::map<std::string, std::function<std::string(const std::string&)>> conversionMap = {}) override {
+  void extractOrderInfo(Element& element, const rj::Value& x,
+                        const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap,
+                        const std::map<std::string_view, std::function<std::string(const std::string&)>> conversionMap = {}) override {
     ExecutionManagementService::extractOrderInfo(element, x, extractionFieldNameMap);
     {
       auto it1 = x.FindMember("type");
@@ -208,7 +209,7 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
 
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
-    std::map<std::string, std::pair<std::string, JsonDataType>> extractionFieldNameMap = {
+    std::map<std::string_view, std::pair<std::string_view, JsonDataType>> extractionFieldNameMap = {
         {CCAPI_EM_ORDER_ID, std::make_pair("id", JsonDataType::INTEGER)},
         {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("client_order_id", JsonDataType::INTEGER)},
         {CCAPI_EM_ORDER_QUANTITY, std::make_pair("amount", JsonDataType::STRING)},
@@ -356,10 +357,9 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
 
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
-    std::string textMessage(textMessageView);
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     Event event = this->createEvent(wsConnectionPtr, subscription, textMessageView, document, timeReceived);
     if (!event.getMessageList().empty()) {
       this->eventHandler(event, nullptr);
@@ -368,8 +368,6 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
 
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const TimePoint& timeReceived) {
-    std::string textMessage(textMessageView);
-
     Event event;
     std::vector<Message> messageList;
     Message message;
@@ -390,7 +388,7 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
         if (instrumentSet.empty() || instrumentSet.find(instrument) != instrumentSet.end()) {
           if (fieldSet.find(CCAPI_EM_ORDER_UPDATE) != fieldSet.end()) {
             message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_ORDER_UPDATE);
-            const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
+            const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
                 {CCAPI_EM_ORDER_ID, std::make_pair("id", JsonDataType::STRING)},
                 {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("client_order_id", JsonDataType::STRING)},
                 {CCAPI_EM_ORDER_LIMIT_PRICE, std::make_pair("price", JsonDataType::STRING)},
@@ -442,7 +440,7 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
         event.setType(Event::Type::SUBSCRIPTION_STATUS);
         message.setType(Message::Type::SUBSCRIPTION_STARTED);
         Element element;
-        element.insert(CCAPI_INFO_MESSAGE, textMessage);
+        element.insert(CCAPI_INFO_MESSAGE, textMessageView);
         message.setElementList({element});
         messageList.emplace_back(std::move(message));
       }
