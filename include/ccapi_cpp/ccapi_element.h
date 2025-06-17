@@ -81,7 +81,8 @@ class Element {
  private:
 #endif
   bool isFix;
-  std::map<std::string_view, std::string> nameValueMap;
+  std::map<std::string_view, std::string> nameValueMap;  // They key std::string_view is created from a string literal and therefore is safe, because string
+                                                         // literals have static storage duration, meaning they live for the entire duration of the program.
   std::map<int, std::string> tagValueMap;
 };
 
