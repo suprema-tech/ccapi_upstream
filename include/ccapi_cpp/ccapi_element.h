@@ -72,8 +72,17 @@ class Element {
                                      "nameValueMap = " + ccapi::toStringPretty(nameValueMap, space, space + leftToIndent, false) + "\n" + sl + "]";
     return output;
   }
-
+#ifdef SWIG
+  std::map<std::string, std::string> getNameValueMap() const {
+    std::map<std::string, std::string> result;
+    for (const auto& [key, value] : nameValueMap) {
+        result.emplace(std::string(key), value);
+    }
+    return result;
+}
+#else
   const std::map<std::string_view, std::string>& getNameValueMap() const { return nameValueMap; }
+#endif
 
   const std::map<int, std::string>& getTagValueMap() const { return tagValueMap; }
 #ifndef CCAPI_EXPOSE_INTERNAL
