@@ -137,9 +137,11 @@ class WsConnection {
   std::string path;
   std::string host;
   std::string port;
-#ifndef CCAPI_EXPOSE_INTERNAL
- private:
-#endif
+
+  beast::flat_buffer readMessageBuffer;
+  std::array<char, CCAPI_WEBSOCKET_WRITE_BUFFER_SIZE> writeMessageBuffer;
+  size_t writeMessageBufferWrittenLength;
+  std::vector<size_t> writeMessageBufferBoundary;
 };
 
 } /* namespace ccapi */

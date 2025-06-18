@@ -1072,7 +1072,7 @@ class Service : public std::enable_shared_from_this<Service> {
     auto& stream = *wsConnectionPtr->streamPtr;
     CCAPI_LOGGER_TRACE("before async_read");
     auto& connectionId = wsConnectionPtr->id;
-    auto& readMessageBuffer = this->readMessageBufferByConnectionIdMap[connectionId];
+    auto& readMessageBuffer = wsConnectionPtr->readMessageBuffer;
     stream.async_read(readMessageBuffer, beast::bind_front_handler(&Service::onReadWs, shared_from_this(), wsConnectionPtr));
     CCAPI_LOGGER_TRACE("after async_read");
   }
@@ -1107,7 +1107,7 @@ class Service : public std::enable_shared_from_this<Service> {
       return;
     }
     auto& connectionId = wsConnectionPtr->id;
-    auto& readMessageBuffer = this->readMessageBufferByConnectionIdMap[connectionId];
+    auto& readMessageBuffer = wsConnectionPtr->readMessageBuffer;
     this->onMessage(wsConnectionPtr, (const char*)readMessageBuffer.data().data(), readMessageBuffer.size());
     readMessageBuffer.consume(readMessageBuffer.size());
     this->startReadWs(wsConnectionPtr);
@@ -1153,9 +1153,9 @@ class Service : public std::enable_shared_from_this<Service> {
       return;
     }
     auto& connectionId = wsConnectionPtr->id;
-    auto& writeMessageBuffer = this->writeMessageBufferByConnectionIdMap[connectionId];
-    auto& writeMessageBufferWrittenLength = this->writeMessageBufferWrittenLengthByConnectionIdMap[connectionId];
-    auto& writeMessageBufferBoundary = this->writeMessageBufferBoundaryByConnectionIdMap[connectionId];
+    auto& writeMessageBuffer = wsConnectionPtr->writeMessageBuffer;
+    auto& writeMessageBufferWrittenLength = wsConnectionPtr->writeMessageBufferWrittenLength;
+    auto& writeMessageBufferBoundary = wsConnectionPtr->writeMessageBufferBoundary;
     size_t n = writeMessageBufferWrittenLength;
     memcpy(writeMessageBuffer.data() + n, data, dataSize);
     writeMessageBufferBoundary.push_back(dataSize);
@@ -1205,9 +1205,9 @@ class Service : public std::enable_shared_from_this<Service> {
       return;
     }
     auto& connectionId = wsConnectionPtr->id;
-    auto& writeMessageBuffer = this->writeMessageBufferByConnectionIdMap[connectionId];
-    auto& writeMessageBufferWrittenLength = this->writeMessageBufferWrittenLengthByConnectionIdMap[connectionId];
-    auto& writeMessageBufferBoundary = this->writeMessageBufferBoundaryByConnectionIdMap[connectionId];
+    auto& writeMessageBuffer = wsConnectionPtr->writeMessageBuffer;
+    auto& writeMessageBufferWrittenLength = wsConnectionPtr->writeMessageBufferWrittenLength;
+    auto& writeMessageBufferBoundary = wsConnectionPtr->writeMessageBufferBoundary;
     writeMessageBufferWrittenLength -= writeMessageBufferBoundary.front();
     writeMessageBufferBoundary.erase(writeMessageBufferBoundary.begin());
     CCAPI_LOGGER_TRACE("writeMessageBufferWrittenLength = " + toString(writeMessageBufferWrittenLength));
@@ -1300,9 +1300,6 @@ class Service : public std::enable_shared_from_this<Service> {
       this->connectRetryOnFailTimerByConnectionIdMap.at(wsConnection.id)->cancel();
       this->connectRetryOnFailTimerByConnectionIdMap.erase(wsConnection.id);
     }
-    this->readMessageBufferByConnectionIdMap.erase(wsConnection.id);
-    this->writeMessageBufferByConnectionIdMap.erase(wsConnection.id);
-    this->writeMessageBufferWrittenLengthByConnectionIdMap.erase(wsConnection.id);
   }
 
   virtual void onClose(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode ec) {
@@ -1557,10 +1554,6 @@ class Service : public std::enable_shared_from_this<Service> {
   std::map<std::string, TimerPtr> sendRequestDelayTimerByCorrelationIdMap;
 
   std::map<std::string, std::shared_ptr<WsConnection>> wsConnectionPtrByIdMap;
-  std::map<std::string, beast::flat_buffer> readMessageBufferByConnectionIdMap;
-  std::map<std::string, std::array<char, CCAPI_WEBSOCKET_WRITE_BUFFER_SIZE>> writeMessageBufferByConnectionIdMap;
-  std::map<std::string, size_t> writeMessageBufferWrittenLengthByConnectionIdMap;
-  std::map<std::string, std::vector<size_t>> writeMessageBufferBoundaryByConnectionIdMap;
 
   std::map<std::string, bool> wsConnectionPendingPingingByConnectionIdMap;
   std::map<std::string, bool> shouldProcessRemainingMessageOnClosingByConnectionIdMap;
