@@ -236,7 +236,7 @@ class ExecutionManagementService : public Service {
     auto now = UtilTime::now();
     WsConnection& wsConnection = *wsConnectionPtr;
     auto correlationId = wsConnection.subscriptionList.at(0).getCorrelationId();
-    this->wsConnectionByCorrelationIdMap.insert({correlationId, wsConnectionPtr});
+    this->wsConnectionPtrByCorrelationIdMap.insert({correlationId, wsConnectionPtr});
     this->correlationIdByConnectionIdMap.insert({wsConnection.id, correlationId});
     auto credential = wsConnection.credential;
     this->logonToExchange(wsConnectionPtr, now, credential);
@@ -246,7 +246,7 @@ class ExecutionManagementService : public Service {
     CCAPI_LOGGER_FUNCTION_ENTER;
     WsConnection& wsConnection = *wsConnectionPtr;
     if (this->correlationIdByConnectionIdMap.find(wsConnection.id) != this->correlationIdByConnectionIdMap.end()) {
-      this->wsConnectionByCorrelationIdMap.erase(this->correlationIdByConnectionIdMap.at(wsConnection.id));
+      this->wsConnectionPtrByCorrelationIdMap.erase(this->correlationIdByConnectionIdMap.at(wsConnection.id));
       this->correlationIdByConnectionIdMap.erase(wsConnection.id);
     }
     this->wsRequestIdByConnectionIdMap.erase(wsConnection.id);
@@ -305,8 +305,8 @@ class ExecutionManagementService : public Service {
                         CCAPI_LOGGER_DEBUG("request = " + toString(request));
                         CCAPI_LOGGER_TRACE("now = " + toString(now));
                         request.setTimeSent(now);
-                        auto it = that->wsConnectionByCorrelationIdMap.find(websocketOrderEntrySubscriptionCorrelationId);
-                        if (it == that->wsConnectionByCorrelationIdMap.end()) {
+                        auto it = that->wsConnectionPtrByCorrelationIdMap.find(websocketOrderEntrySubscriptionCorrelationId);
+                        if (it == that->wsConnectionPtrByCorrelationIdMap.end()) {
                           that->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE, "Websocket connection was not found",
                                         {websocketOrderEntrySubscriptionCorrelationId});
                           return;
@@ -374,8 +374,7 @@ class ExecutionManagementService : public Service {
   std::string getAccountPositionsTarget;
   std::map<std::string, std::string> correlationIdByConnectionIdMap;
 
-  std::map<std::string, std::shared_ptr<WsConnection>>
-      wsConnectionByCorrelationIdMap;  // TODO(cryptochassis): for consistency, to be renamed to wsConnectionPtrByCorrelationIdMap
+  std::map<std::string, std::shared_ptr<WsConnection>> wsConnectionPtrByCorrelationIdMap;
 
   std::map<std::string, unsigned int> wsRequestIdByConnectionIdMap;
   std::map<std::string, std::map<unsigned int, std::string>> requestCorrelationIdByWsRequestIdByConnectionIdMap;

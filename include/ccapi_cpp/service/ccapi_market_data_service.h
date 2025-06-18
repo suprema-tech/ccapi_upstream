@@ -71,7 +71,7 @@ class MarketDataService : public Service {
           if (wsConnectionIdListByInstrumentGroupMap.find(instrumentGroup) != wsConnectionIdListByInstrumentGroupMap.end() &&
               that->subscriptionStatusByInstrumentGroupInstrumentMap.find(instrumentGroup) != that->subscriptionStatusByInstrumentGroupInstrumentMap.end()) {
             auto wsConnectionId = wsConnectionIdListByInstrumentGroupMap.at(instrumentGroup).at(0);
-            auto wsConnectionPtr = that->wsConnectionByIdMap.at(wsConnectionId);
+            auto wsConnectionPtr = that->wsConnectionPtrByIdMap.at(wsConnectionId);
             WsConnection& wsConnection = *wsConnectionPtr;
             for (const auto& subscription : subscriptionListGivenInstrumentGroup) {
               auto instrument = subscription.getInstrument();
@@ -1229,14 +1229,14 @@ class MarketDataService : public Service {
         TimerPtr timerPtr(new boost::asio::steady_timer(*this->serviceContextPtr->ioContextPtr, std::chrono::milliseconds(waitMilliseconds)));
         timerPtr->async_wait(
             [wsConnection, channelId, symbolId, field, optionMap, correlationIdList, previousConflateTp, interval, gracePeriod, this](ErrorCode const& ec) {
-              if (this->wsConnectionByIdMap.find(wsConnection.id) != this->wsConnectionByIdMap.end()) {
+              if (this->wsConnectionPtrByIdMap.find(wsConnection.id) != this->wsConnectionPtrByIdMap.end()) {
                 if (ec && ec != boost::asio::error::operation_aborted) {
                   CCAPI_LOGGER_ERROR("wsConnection = " + toString(wsConnection) + ", conflate timer error: " + ec.message());
                   this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
                 } else {
                   if (
 
-                      this->wsConnectionByIdMap.at(wsConnection.id)->status == WsConnection::Status::OPEN
+                      this->wsConnectionPtrByIdMap.at(wsConnection.id)->status == WsConnection::Status::OPEN
 
                   ) {
                     auto conflateTp = previousConflateTp + interval;
