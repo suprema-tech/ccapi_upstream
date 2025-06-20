@@ -474,7 +474,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
           }
         }
       } else {
-        Event event = this->createEvent(*wsConnectionPtr, subscription, textMessageView, document, eventStr, timeReceived);
+        Event event = this->createEvent(wsConnectionPtr, subscription, textMessageView, document, eventStr, timeReceived);
         if (!event.getMessageList().empty()) {
           this->eventHandler(event, nullptr);
         }
