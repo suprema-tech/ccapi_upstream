@@ -699,7 +699,7 @@ TEST_F(ExecutionManagementServiceOkxTest, createEventWebsocketTradePlaceOrder) {
   WsConnection wsConnection;
   std::string requestCorrelationId("123");
   this->service->requestCorrelationIdByWsRequestIdByConnectionIdMap[wsConnection.id][1512] = requestCorrelationId;
-  auto messageList = this->service->createEvent(wsConnection, subscription, textMessage, document, "", this->now).getMessageList();
+  auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), subscription, textMessage, document, "", this->now).getMessageList();
   EXPECT_EQ(messageList.size(), 1);
   verifyCorrelationId(messageList, requestCorrelationId);
   auto message = messageList.at(0);
@@ -733,7 +733,7 @@ TEST_F(ExecutionManagementServiceOkxTest, createEventWebsocketTradeCancelOrder) 
   WsConnection wsConnection;
   std::string requestCorrelationId("123");
   this->service->requestCorrelationIdByWsRequestIdByConnectionIdMap[wsConnection.id][1] = requestCorrelationId;
-  auto messageList = this->service->createEvent(wsConnection, subscription, textMessage, document, "", this->now).getMessageList();
+  auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), subscription, textMessage, document, "", this->now).getMessageList();
   EXPECT_EQ(messageList.size(), 1);
   verifyCorrelationId(messageList, requestCorrelationId);
   auto message = messageList.at(0);
