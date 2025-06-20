@@ -25,7 +25,7 @@ class MarketDataServiceGateioBase : public MarketDataService {
                ec);
   }
 
-  void prepareSubscriptionDetail(std::string& channelId, std::string& symbolId, const std::string& field, const WsConnection& wsConnection,
+  void prepareSubscriptionDetail(std::string& channelId, std::string& symbolId, const std::string& field, std::shared_ptr<WsConnection> wsConnectionPtr,
                                  const Subscription& subscription, const std::map<std::string, std::string> optionMap) override {
     auto marketDepthRequested = std::stoi(optionMap.at(CCAPI_MARKET_DEPTH_MAX));
     auto conflateIntervalMilliseconds = std::stoi(optionMap.at(CCAPI_CONFLATE_INTERVAL_MILLISECONDS));
@@ -49,7 +49,7 @@ class MarketDataServiceGateioBase : public MarketDataService {
         if (!updateSpeed.empty()) {
           channelId += "&UPDATE_SPEED=" + updateSpeed;
         }
-        this->marketDepthSubscribedToExchangeByConnectionIdChannelIdSymbolIdMap[wsConnection.id][channelId][symbolId] = marketDepthSubscribedToExchange;
+        this->marketDepthSubscribedToExchangeByConnectionIdChannelIdSymbolIdMap[wsConnectionPtr->id][channelId][symbolId] = marketDepthSubscribedToExchange;
       }
     } else if (field == CCAPI_CANDLESTICK) {
       std::string interval =
@@ -58,10 +58,10 @@ class MarketDataServiceGateioBase : public MarketDataService {
     }
   }
 
-  std::vector<std::string> createSendStringList(const WsConnection& wsConnection) override {
+  std::vector<std::string> createSendStringList(std::shared_ptr<WsConnection> wsConnectionPtr) override {
     auto now = UtilTime::now();
     std::vector<std::string> sendStringList;
-    for (const auto& subscriptionListByChannelIdSymbolId : this->subscriptionListByConnectionIdChannelIdSymbolIdMap.at(wsConnection.id)) {
+    for (const auto& subscriptionListByChannelIdSymbolId : this->subscriptionListByConnectionIdChannelIdSymbolIdMap.at(wsConnectionPtr->id)) {
       auto channelId = subscriptionListByChannelIdSymbolId.first;
       if (channelId == this->websocketChannelBookTicker || channelId == this->websocketChannelTrades ||
           channelId.rfind(this->websocketChannelCandlesticks, 0) == 0) {
@@ -80,23 +80,23 @@ class MarketDataServiceGateioBase : public MarketDataService {
         for (const auto& subscriptionListByInstrument : subscriptionListByChannelIdSymbolId.second) {
           auto symbolId = subscriptionListByInstrument.first;
           if (channelId == this->websocketChannelBookTicker) {
-            this->l2UpdateIsReplaceByConnectionIdChannelIdSymbolIdMap[wsConnection.id][channelId][symbolId] = true;
+            this->l2UpdateIsReplaceByConnectionIdChannelIdSymbolIdMap[wsConnectionPtr->id][channelId][symbolId] = true;
           }
           if (channelId.rfind(this->websocketChannelCandlesticks, 0) == 0) {
             payload.PushBack(rj::Value(std::string(channelId.substr(this->websocketChannelCandlesticks.length())).c_str(), allocator).Move(), allocator);
           }
           payload.PushBack(rj::Value(symbolId.c_str(), allocator).Move(), allocator);
           std::string exchangeSubscriptionId = channelId + "|" + symbolId;
-          this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnection.id][exchangeSubscriptionId][CCAPI_CHANNEL_ID] = channelId;
-          this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnection.id][exchangeSubscriptionId][CCAPI_SYMBOL_ID] = symbolId;
+          this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_CHANNEL_ID] = channelId;
+          this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_SYMBOL_ID] = symbolId;
           exchangeSubscriptionIdList.push_back(exchangeSubscriptionId);
         }
         document.AddMember("payload", payload, allocator);
         // if (!this->isDerivatives) {
-        document.AddMember("id", rj::Value(this->exchangeJsonPayloadIdByConnectionIdMap[wsConnection.id]).Move(), allocator);
-        this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap[wsConnection.id][this->exchangeJsonPayloadIdByConnectionIdMap[wsConnection.id]] =
+        document.AddMember("id", rj::Value(this->exchangeJsonPayloadIdByConnectionIdMap[wsConnectionPtr->id]).Move(), allocator);
+        this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap[wsConnectionPtr->id][this->exchangeJsonPayloadIdByConnectionIdMap[wsConnectionPtr->id]] =
             exchangeSubscriptionIdList;
-        this->exchangeJsonPayloadIdByConnectionIdMap[wsConnection.id] += 1;
+        this->exchangeJsonPayloadIdByConnectionIdMap[wsConnectionPtr->id] += 1;
         // }
         rj::StringBuffer stringBuffer;
         rj::Writer<rj::StringBuffer> writer(stringBuffer);
@@ -106,9 +106,9 @@ class MarketDataServiceGateioBase : public MarketDataService {
       } else if (channelId.rfind(this->websocketChannelOrderBook, 0) == 0) {
         for (const auto& subscriptionListByInstrument : subscriptionListByChannelIdSymbolId.second) {
           auto symbolId = subscriptionListByInstrument.first;
-          this->l2UpdateIsReplaceByConnectionIdChannelIdSymbolIdMap[wsConnection.id][channelId][symbolId] = true;
+          this->l2UpdateIsReplaceByConnectionIdChannelIdSymbolIdMap[wsConnectionPtr->id][channelId][symbolId] = true;
           int marketDepthSubscribedToExchange =
-              this->marketDepthSubscribedToExchangeByConnectionIdChannelIdSymbolIdMap.at(wsConnection.id).at(channelId).at(symbolId);
+              this->marketDepthSubscribedToExchangeByConnectionIdChannelIdSymbolIdMap.at(wsConnectionPtr->id).at(channelId).at(symbolId);
           rj::Document document;
           document.SetObject();
           rj::Document::AllocatorType& allocator = document.GetAllocator();
@@ -127,16 +127,16 @@ class MarketDataServiceGateioBase : public MarketDataService {
           }
           document.AddMember("payload", payload, allocator);
           std::string exchangeSubscriptionId = std::string(this->websocketChannelOrderBook) + "|" + symbolId;
-          this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnection.id][exchangeSubscriptionId][CCAPI_CHANNEL_ID] = channelId;
-          this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnection.id][exchangeSubscriptionId][CCAPI_SYMBOL_ID] = symbolId;
+          this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_CHANNEL_ID] = channelId;
+          this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_SYMBOL_ID] = symbolId;
           // if (!this->isDerivatives) {
           std::vector<std::string> exchangeSubscriptionIdList;
           exchangeSubscriptionIdList.push_back(exchangeSubscriptionId);
-          document.AddMember("id", rj::Value(this->exchangeJsonPayloadIdByConnectionIdMap[wsConnection.id]).Move(), allocator);
-          this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap[wsConnection.id]
-                                                                                [this->exchangeJsonPayloadIdByConnectionIdMap[wsConnection.id]] =
+          document.AddMember("id", rj::Value(this->exchangeJsonPayloadIdByConnectionIdMap[wsConnectionPtr->id]).Move(), allocator);
+          this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap[wsConnectionPtr->id]
+                                                                                [this->exchangeJsonPayloadIdByConnectionIdMap[wsConnectionPtr->id]] =
               exchangeSubscriptionIdList;
-          this->exchangeJsonPayloadIdByConnectionIdMap[wsConnection.id] += 1;
+          this->exchangeJsonPayloadIdByConnectionIdMap[wsConnectionPtr->id] += 1;
           // }
           rj::StringBuffer stringBuffer;
           rj::Writer<rj::StringBuffer> writer(stringBuffer);
@@ -163,19 +163,19 @@ class MarketDataServiceGateioBase : public MarketDataService {
       message.setTimeReceived(timeReceived);
       std::vector<std::string> correlationIdList;
       if (document.HasMember("id") && !document["id"].IsNull()) {
-        if (this->correlationIdListByConnectionIdChannelIdSymbolIdMap.find(wsConnection.id) !=
+        if (this->correlationIdListByConnectionIdChannelIdSymbolIdMap.find(wsConnectionPtr->id) !=
             this->correlationIdListByConnectionIdChannelIdSymbolIdMap.end()) {
           int id = std::stoi(document["id"].GetString());
-          if (this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap.find(wsConnection.id) !=
+          if (this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap.find(wsConnectionPtr->id) !=
                   this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap.end() &&
-              this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap.at(wsConnection.id).find(id) !=
-                  this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap.at(wsConnection.id).end()) {
-            for (const auto& exchangeSubscriptionId : this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap.at(wsConnection.id).at(id)) {
+              this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap.at(wsConnectionPtr->id).find(id) !=
+                  this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap.at(wsConnectionPtr->id).end()) {
+            for (const auto& exchangeSubscriptionId : this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap.at(wsConnectionPtr->id).at(id)) {
               auto splitted = UtilString::split(exchangeSubscriptionId, '|');
               std::string channelId = splitted.at(0);
               std::string symbolId = splitted.at(1);
-              const auto& it = this->correlationIdListByConnectionIdChannelIdSymbolIdMap.at(wsConnection.id).lower_bound(channelId);
-              if (it != this->correlationIdListByConnectionIdChannelIdSymbolIdMap.at(wsConnection.id).end()) {
+              const auto& it = this->correlationIdListByConnectionIdChannelIdSymbolIdMap.at(wsConnectionPtr->id).lower_bound(channelId);
+              if (it != this->correlationIdListByConnectionIdChannelIdSymbolIdMap.at(wsConnectionPtr->id).end()) {
                 const std::string& k = it->first;
                 if (k.compare(0, channelId.size(), channelId) == 0) {
                   std::vector<std::string> correlationIdList_2 = it->second.at(symbolId);
@@ -218,11 +218,11 @@ class MarketDataServiceGateioBase : public MarketDataService {
           std::map<std::string, std::string> optionMap;
           if (!symbolId.empty()) {
             exchangeSubscriptionId = channelId + "|" + symbolId;
-            optionMap = (*this->optionMapByConnectionIdChannelIdSymbolIdMap.at(wsConnection.id).lower_bound("channelId")).second.at(symbolId);
+            optionMap = (*this->optionMapByConnectionIdChannelIdSymbolIdMap.at(wsConnectionPtr->id).lower_bound("channelId")).second.at(symbolId);
           }
           if (channel == this->websocketChannelBookTicker) {
             marketDataMessage.type = MarketDataMessage::Type::MARKET_DATA_EVENTS_MARKET_DEPTH;
-            marketDataMessage.recapType = this->processedInitialSnapshotByConnectionIdChannelIdSymbolIdMap[wsConnection.id][channelId][symbolId]
+            marketDataMessage.recapType = this->processedInitialSnapshotByConnectionIdChannelIdSymbolIdMap[wsConnectionPtr->id][channelId][symbolId]
                                               ? MarketDataMessage::RecapType::NONE
                                               : MarketDataMessage::RecapType::SOLICITED;
             marketDataMessage.tp = TimePoint(std::chrono::milliseconds(std::stoll(result["t"].GetString())));
@@ -248,7 +248,7 @@ class MarketDataServiceGateioBase : public MarketDataService {
             marketDataMessageList.emplace_back(std::move(marketDataMessage));
           } else if (channel == this->websocketChannelOrderBook) {
             marketDataMessage.type = MarketDataMessage::Type::MARKET_DATA_EVENTS_MARKET_DEPTH;
-            marketDataMessage.recapType = this->processedInitialSnapshotByConnectionIdChannelIdSymbolIdMap[wsConnection.id][channelId][symbolId]
+            marketDataMessage.recapType = this->processedInitialSnapshotByConnectionIdChannelIdSymbolIdMap[wsConnectionPtr->id][channelId][symbolId]
                                               ? MarketDataMessage::RecapType::NONE
                                               : MarketDataMessage::RecapType::SOLICITED;
             marketDataMessage.tp = TimePoint(std::chrono::milliseconds(std::stoll(result["t"].GetString())));

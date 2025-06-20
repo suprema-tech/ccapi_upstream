@@ -346,7 +346,7 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
     }
   }
 
-  std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription, const TimePoint& now,
+  std::vector<std::string> createSendStringListFromSubscription(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, const TimePoint& now,
                                                                 const std::map<std::string, std::string>& credential) override {
     std::string topic;
     const auto& fieldSet = subscription.getFieldSet();
@@ -469,9 +469,9 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
       messageList.emplace_back(std::move(message));
     } else if (type == "welcome") {
       this->pingIntervalMillisecondsByMethodMap[PingPongMethod::WEBSOCKET_APPLICATION_LEVEL] =
-          std::stol(this->extraPropertyByConnectionIdMap.at(wsConnection.id).at("pingInterval"));
+          std::stol(this->extraPropertyByConnectionIdMap.at(wsConnectionPtr->id).at("pingInterval"));
       this->pongTimeoutMillisecondsByMethodMap[PingPongMethod::WEBSOCKET_APPLICATION_LEVEL] =
-          std::stol(this->extraPropertyByConnectionIdMap.at(wsConnection.id).at("pingTimeout"));
+          std::stol(this->extraPropertyByConnectionIdMap.at(wsConnectionPtr->id).at("pingTimeout"));
       if (this->pingIntervalMillisecondsByMethodMap[PingPongMethod::WEBSOCKET_APPLICATION_LEVEL] <=
           this->pongTimeoutMillisecondsByMethodMap[PingPongMethod::WEBSOCKET_APPLICATION_LEVEL]) {
         this->pongTimeoutMillisecondsByMethodMap[PingPongMethod::WEBSOCKET_APPLICATION_LEVEL] =
@@ -482,7 +482,7 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
 
     } else if (type == "pong") {
       auto now = UtilTime::now();
-      this->lastPongTpByMethodByConnectionIdMap[wsConnection.id][PingPongMethod::WEBSOCKET_APPLICATION_LEVEL] = now;
+      this->lastPongTpByMethodByConnectionIdMap[wsConnectionPtr->id][PingPongMethod::WEBSOCKET_APPLICATION_LEVEL] = now;
     }
     event.setMessageList(messageList);
     return event;

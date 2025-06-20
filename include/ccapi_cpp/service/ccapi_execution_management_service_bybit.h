@@ -93,7 +93,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
     req.set("X-Referer", CCAPI_BYBIT_API_BROKER_ID);
   }
 
-  std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription, const TimePoint& now,
+  std::vector<std::string> createSendStringListFromSubscription(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, const TimePoint& now,
                                                                 const std::map<std::string, std::string>& credential) override {
     std::vector<std::string> sendStringList;
     rj::Document document;
@@ -592,12 +592,12 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
     return event;
   }
 
-  void convertRequestForWebsocket(rj::Document& document, rj::Document::AllocatorType& allocator, const WsConnection& wsConnection, const Request& request,
+  void convertRequestForWebsocket(rj::Document& document, rj::Document::AllocatorType& allocator, std::shared_ptr<WsConnection> wsConnectionPtr, const Request& request,
                                   unsigned long wsRequestId, const TimePoint& now, const std::string& symbolId,
                                   const std::map<std::string, std::string>& credential) override {
     document.SetObject();
     document.AddMember("reqId", rj::Value(std::to_string(wsRequestId).c_str(), allocator).Move(), allocator);
-    this->requestCorrelationIdByWsRequestIdByConnectionIdMap[wsConnection.id][wsRequestId] = request.getCorrelationId();
+    this->requestCorrelationIdByWsRequestIdByConnectionIdMap[wsConnectionPtr->id][wsRequestId] = request.getCorrelationId();
     rj::Value header(rj::kObjectType);
     header.AddMember("X-BAPI-TIMESTAMP",
                      rj::Value(std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count()).c_str(), allocator).Move(),
@@ -641,7 +641,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
         document.AddMember("args", args, allocator);
       } break;
       default:
-        this->convertRequestForWebsocketCustom(document, allocator, wsConnection, request, wsRequestId, now, symbolId, credential);
+        this->convertRequestForWebsocketCustom(document, allocator, wsConnectionPtr, request, wsRequestId, now, symbolId, credential);
     }
   }
 };

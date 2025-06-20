@@ -200,7 +200,7 @@ class ExecutionManagementService : public Service {
     }
   }
 
-  virtual void convertRequestForWebsocketCustom(rj::Document& document, rj::Document::AllocatorType& allocator, const WsConnection& wsConnection,
+  virtual void convertRequestForWebsocketCustom(rj::Document& document, rj::Document::AllocatorType& allocator, std::shared_ptr<WsConnection> wsConnectionPtr,
                                                 const Request& request, unsigned long wsRequestId, const TimePoint& now, const std::string& symbolId,
                                                 const std::map<std::string, std::string>& credential) {
     auto errorMessage = "Websocket unimplemented operation " + Request::operationToString(request.getOperation()) + " for exchange " + request.getExchange();
@@ -211,9 +211,9 @@ class ExecutionManagementService : public Service {
     CCAPI_LOGGER_INFO("about to logon to exchange");
     CCAPI_LOGGER_INFO("exchange is " + this->exchangeName);
     WsConnection& wsConnection = *wsConnectionPtr;
-    CCAPI_LOGGER_FINE("wsConnection = " + toString(wsConnection));
-    auto subscription = wsConnection.subscriptionList.at(0);
-    std::vector<std::string> sendStringList = this->createSendStringListFromSubscription(wsConnection, subscription, now, credential);
+    CCAPI_LOGGER_FINE("wsConnection = " + toString(*wsConnectionPtr));
+    auto subscription = wsConnectionPtr->subscriptionList.at(0);
+    std::vector<std::string> sendStringList = this->createSendStringListFromSubscription(wsConnectionPtr, subscription, now, credential);
     for (const auto& sendString : sendStringList) {
       CCAPI_LOGGER_FINE("sendString = " + sendString);
       ErrorCode ec;
@@ -235,22 +235,22 @@ class ExecutionManagementService : public Service {
     Service::onOpen(wsConnectionPtr);
     auto now = UtilTime::now();
     WsConnection& wsConnection = *wsConnectionPtr;
-    auto correlationId = wsConnection.subscriptionList.at(0).getCorrelationId();
+    auto correlationId = wsConnectionPtr->subscriptionList.at(0).getCorrelationId();
     this->wsConnectionPtrByCorrelationIdMap.insert({correlationId, wsConnectionPtr});
-    this->correlationIdByConnectionIdMap.insert({wsConnection.id, correlationId});
-    auto credential = wsConnection.credential;
+    this->correlationIdByConnectionIdMap.insert({wsConnectionPtr->id, correlationId});
+    auto credential = wsConnectionPtr->credential;
     this->logonToExchange(wsConnectionPtr, now, credential);
   }
 
   void onClose(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode ec) override {
     CCAPI_LOGGER_FUNCTION_ENTER;
     WsConnection& wsConnection = *wsConnectionPtr;
-    if (this->correlationIdByConnectionIdMap.find(wsConnection.id) != this->correlationIdByConnectionIdMap.end()) {
-      this->wsConnectionPtrByCorrelationIdMap.erase(this->correlationIdByConnectionIdMap.at(wsConnection.id));
-      this->correlationIdByConnectionIdMap.erase(wsConnection.id);
+    if (this->correlationIdByConnectionIdMap.find(wsConnectionPtr->id) != this->correlationIdByConnectionIdMap.end()) {
+      this->wsConnectionPtrByCorrelationIdMap.erase(this->correlationIdByConnectionIdMap.at(wsConnectionPtr->id));
+      this->correlationIdByConnectionIdMap.erase(wsConnectionPtr->id);
     }
-    this->wsRequestIdByConnectionIdMap.erase(wsConnection.id);
-    this->requestCorrelationIdByWsRequestIdByConnectionIdMap.erase(wsConnection.id);
+    this->wsRequestIdByConnectionIdMap.erase(wsConnectionPtr->id);
+    this->requestCorrelationIdByWsRequestIdByConnectionIdMap.erase(wsConnectionPtr->id);
     Service::onClose(wsConnectionPtr, ec);
   }
 
@@ -315,7 +315,7 @@ class ExecutionManagementService : public Service {
                         auto wsConnectionPtr = it->second;
                         auto& wsConnection = *wsConnectionPtr;
 
-                        CCAPI_LOGGER_TRACE("wsConnection = " + toString(wsConnection));
+                        CCAPI_LOGGER_TRACE("wsConnection = " + toString(*wsConnectionPtr));
                         const auto& instrument = request.getInstrument();
                         const auto& symbolId = instrument;
                         CCAPI_LOGGER_TRACE("symbolId = " + symbolId);
@@ -325,8 +325,8 @@ class ExecutionManagementService : public Service {
                           credential = that->credentialDefault;
                         }
                         rj::Document document(&that->jsonDocumentAllocator);
-                        that->convertRequestForWebsocket(document, that->jsonDocumentAllocator, wsConnection, request,
-                                                         ++that->wsRequestIdByConnectionIdMap[wsConnection.id], now, symbolId, credential);
+                        that->convertRequestForWebsocket(document, that->jsonDocumentAllocator, wsConnectionPtr, request,
+                                                         ++that->wsRequestIdByConnectionIdMap[wsConnectionPtr->id], now, symbolId, credential);
                         rj::StringBuffer stringBuffer;
                         rj::Writer<rj::StringBuffer> writer(stringBuffer);
                         document.Accept(writer);
@@ -345,7 +345,7 @@ class ExecutionManagementService : public Service {
   virtual void convertRequestForRest(http::request<http::string_body>& req, const Request& request, const std::string& wsRequestId, const TimePoint& now,
                                      const std::string& symbolId, const std::map<std::string, std::string>& credential) {}
 
-  virtual void convertRequestForWebsocket(rj::Document& document, rj::Document::AllocatorType& allocator, const WsConnection& wsConnection,
+  virtual void convertRequestForWebsocket(rj::Document& document, rj::Document::AllocatorType& allocator, std::shared_ptr<WsConnection> wsConnectionPtr,
                                           const Request& request, unsigned long wsRequestId, const TimePoint& now, const std::string& symbolId,
                                           const std::map<std::string, std::string>& credential) {}
 
@@ -355,7 +355,7 @@ class ExecutionManagementService : public Service {
   virtual void extractAccountInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                              const rj::Document& document) {}
 
-  virtual std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription,
+  virtual std::vector<std::string> createSendStringListFromSubscription(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription,
                                                                         const TimePoint& now, const std::map<std::string, std::string>& credential) {
     return {};
   }

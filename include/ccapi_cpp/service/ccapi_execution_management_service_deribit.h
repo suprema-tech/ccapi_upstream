@@ -301,7 +301,7 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
     }
   }
 
-  std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription, const TimePoint& now,
+  std::vector<std::string> createSendStringListFromSubscription(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, const TimePoint& now,
                                                                 const std::map<std::string, std::string>& credential) override {
     std::vector<std::string> sendStringList;
     rj::Document document;
@@ -322,7 +322,7 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
                           {"signature", signature},
                           {"nonce", nonce},
                       });
-    this->authorizationJsonrpcIdSetByConnectionIdMap[wsConnection.id].insert(requestId);
+    this->authorizationJsonrpcIdSetByConnectionIdMap[wsConnectionPtr->id].insert(requestId);
     rj::StringBuffer stringBuffer;
     rj::Writer<rj::StringBuffer> writer(stringBuffer);
     document.Accept(writer);
@@ -358,8 +358,8 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
       const rj::Value& error = document["error"];
       if (error.FindMember("code") != error.MemberEnd() && std::string(error["code"].GetString()) != "0") {
         int64_t requestId = std::stoll(it->value.GetString());
-        if (this->authorizationJsonrpcIdSetByConnectionIdMap.at(wsConnection.id).find(requestId) !=
-            this->authorizationJsonrpcIdSetByConnectionIdMap.at(wsConnection.id).end()) {
+        if (this->authorizationJsonrpcIdSetByConnectionIdMap.at(wsConnectionPtr->id).find(requestId) !=
+            this->authorizationJsonrpcIdSetByConnectionIdMap.at(wsConnectionPtr->id).end()) {
           event.setType(Event::Type::SUBSCRIPTION_STATUS);
           message.setType(Message::Type::SUBSCRIPTION_FAILURE);
           Element element;
@@ -367,7 +367,7 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
           message.setElementList({element});
           messageList.emplace_back(std::move(message));
           if (it != document.MemberEnd()) {
-            this->authorizationJsonrpcIdSetByConnectionIdMap.at(wsConnection.id).erase(std::stoll(it->value.GetString()));
+            this->authorizationJsonrpcIdSetByConnectionIdMap.at(wsConnectionPtr->id).erase(std::stoll(it->value.GetString()));
           }
         }
       }
@@ -376,8 +376,8 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
       if (itResult != document.MemberEnd()) {
         int64_t requestId = std::stoll(it->value.GetString());
         if (itResult->value.IsObject()) {
-          if (this->authorizationJsonrpcIdSetByConnectionIdMap.at(wsConnection.id).find(requestId) !=
-              this->authorizationJsonrpcIdSetByConnectionIdMap.at(wsConnection.id).end()) {
+          if (this->authorizationJsonrpcIdSetByConnectionIdMap.at(wsConnectionPtr->id).find(requestId) !=
+              this->authorizationJsonrpcIdSetByConnectionIdMap.at(wsConnectionPtr->id).end()) {
             rj::Document document;
             document.SetObject();
             rj::Document::AllocatorType& allocator = document.GetAllocator();
@@ -385,7 +385,7 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
             document.AddMember("method", rj::Value("private/subscribe").Move(), allocator);
             int64_t requestId = std::chrono::duration_cast<std::chrono::nanoseconds>(timeReceived.time_since_epoch()).count();
             document.AddMember("id", rj::Value(requestId).Move(), allocator);
-            this->subscriptionJsonrpcIdSetByConnectionIdMap[wsConnection.id].insert(requestId);
+            this->subscriptionJsonrpcIdSetByConnectionIdMap[wsConnectionPtr->id].insert(requestId);
             rj::Value channels(rj::kArrayType);
             for (const auto& instrument : instrumentSet) {
               for (const auto& field : fieldSet) {
@@ -413,12 +413,12 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
               this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "subscribe");
             }
             if (it != document.MemberEnd()) {
-              this->authorizationJsonrpcIdSetByConnectionIdMap.at(wsConnection.id).erase(std::stoll(it->value.GetString()));
+              this->authorizationJsonrpcIdSetByConnectionIdMap.at(wsConnectionPtr->id).erase(std::stoll(it->value.GetString()));
             }
           }
         } else if (itResult->value.IsArray()) {
-          if (this->subscriptionJsonrpcIdSetByConnectionIdMap.at(wsConnection.id).find(requestId) !=
-              this->subscriptionJsonrpcIdSetByConnectionIdMap.at(wsConnection.id).end()) {
+          if (this->subscriptionJsonrpcIdSetByConnectionIdMap.at(wsConnectionPtr->id).find(requestId) !=
+              this->subscriptionJsonrpcIdSetByConnectionIdMap.at(wsConnectionPtr->id).end()) {
             event.setType(Event::Type::SUBSCRIPTION_STATUS);
             message.setType(Message::Type::SUBSCRIPTION_STARTED);
             Element element;
@@ -426,7 +426,7 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
             message.setElementList({element});
             messageList.emplace_back(std::move(message));
             if (it != document.MemberEnd()) {
-              this->subscriptionJsonrpcIdSetByConnectionIdMap.at(wsConnection.id).erase(std::stoll(it->value.GetString()));
+              this->subscriptionJsonrpcIdSetByConnectionIdMap.at(wsConnectionPtr->id).erase(std::stoll(it->value.GetString()));
             }
           }
         }

@@ -229,12 +229,12 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
     }
   }
 
-  void convertRequestForWebsocket(rj::Document& document, rj::Document::AllocatorType& allocator, const WsConnection& wsConnection, const Request& request,
+  void convertRequestForWebsocket(rj::Document& document, rj::Document::AllocatorType& allocator, std::shared_ptr<WsConnection> wsConnectionPtr, const Request& request,
                                   unsigned long wsRequestId, const TimePoint& now, const std::string& symbolId,
                                   const std::map<std::string, std::string>& credential) override {
     document.SetObject();
     document.AddMember("id", rj::Value(std::to_string(wsRequestId).c_str(), allocator).Move(), allocator);
-    this->requestCorrelationIdByWsRequestIdByConnectionIdMap[wsConnection.id][wsRequestId] = request.getCorrelationId();
+    this->requestCorrelationIdByWsRequestIdByConnectionIdMap[wsConnectionPtr->id][wsRequestId] = request.getCorrelationId();
     Request::Operation operation = request.getOperation();
     switch (operation) {
       case Request::Operation::CREATE_ORDER: {
@@ -268,7 +268,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
         document.AddMember("args", args, allocator);
       } break;
       default:
-        this->convertRequestForWebsocketCustom(document, allocator, wsConnection, request, wsRequestId, now, symbolId, credential);
+        this->convertRequestForWebsocketCustom(document, allocator, wsConnectionPtr, request, wsRequestId, now, symbolId, credential);
     }
   }
 
@@ -353,7 +353,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
     // }
   }
 
-  std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription, const TimePoint& now,
+  std::vector<std::string> createSendStringListFromSubscription(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, const TimePoint& now,
                                                                 const std::map<std::string, std::string>& credential) override {
     std::vector<std::string> sendStringList;
     rj::Document document;
@@ -482,7 +482,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
     }
   }
 
-  Event createEvent(const WsConnection& wsConnection, const Subscription& subscription, const std::string& textMessageView, const rj::Document& document,
+  Event createEvent(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, const std::string& textMessageView, const rj::Document& document,
                     const std::string& eventStr, const TimePoint& timeReceived) {
     Event event;
     std::vector<Message> messageList;
@@ -495,7 +495,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
       std::string op = it != document.MemberEnd() ? it->value.GetString() : "";
       if (op == "order" || op == "cancel-order") {
         unsigned long wsRequestId = std::stoul(document["id"].GetString());
-        const auto& requestCorrelationId = this->requestCorrelationIdByWsRequestIdByConnectionIdMap.at(wsConnection.id).at(wsRequestId);
+        const auto& requestCorrelationId = this->requestCorrelationIdByWsRequestIdByConnectionIdMap.at(wsConnectionPtr->id).at(wsRequestId);
         event.setType(Event::Type::RESPONSE);
         std::string code = document["code"].GetString();
         if (code != "0") {
@@ -517,7 +517,7 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
           message.setCorrelationIdList({requestCorrelationId});
           messageList.emplace_back(std::move(message));
         }
-        this->requestCorrelationIdByWsRequestIdByConnectionIdMap.at(wsConnection.id).erase(wsRequestId);
+        this->requestCorrelationIdByWsRequestIdByConnectionIdMap.at(wsConnectionPtr->id).erase(wsRequestId);
       } else {
         message.setCorrelationIdList({correlationId});
         const rj::Value& arg = document["arg"];

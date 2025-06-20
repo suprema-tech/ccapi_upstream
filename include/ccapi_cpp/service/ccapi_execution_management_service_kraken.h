@@ -316,7 +316,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
         this->sessionOptions.httpRequestTimeoutMilliseconds);
   }
 
-  std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription, const TimePoint& now,
+  std::vector<std::string> createSendStringListFromSubscription(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, const TimePoint& now,
                                                                 const std::map<std::string, std::string>& credential) override {
     const auto& fieldSet = subscription.getFieldSet();
     std::vector<std::string> sendStringList;
@@ -333,7 +333,7 @@ class ExecutionManagementServiceKraken : public ExecutionManagementService {
       document.AddMember("event", rj::Value("subscribe").Move(), allocator);
       rj::Value subscription(rj::kObjectType);
       subscription.AddMember("name", rj::Value(name.c_str(), allocator).Move(), allocator);
-      subscription.AddMember("token", rj::Value(this->extraPropertyByConnectionIdMap.at(wsConnection.id).at("token").c_str(), allocator).Move(), allocator);
+      subscription.AddMember("token", rj::Value(this->extraPropertyByConnectionIdMap.at(wsConnectionPtr->id).at("token").c_str(), allocator).Move(), allocator);
       document.AddMember("subscription", subscription, allocator);
       rj::StringBuffer stringBuffer;
       rj::Writer<rj::StringBuffer> writer(stringBuffer);

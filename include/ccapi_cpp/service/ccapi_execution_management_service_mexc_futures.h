@@ -339,7 +339,7 @@ class ExecutionManagementServiceMexcFutures : public ExecutionManagementService 
     // }
   }
 
-  std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription, const TimePoint& now,
+  std::vector<std::string> createSendStringListFromSubscription(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, const TimePoint& now,
                                                                 const std::map<std::string, std::string>& credential) override {
     std::vector<std::string> sendStringList;
     // rj::Document document;
@@ -404,7 +404,7 @@ class ExecutionManagementServiceMexcFutures : public ExecutionManagementService 
     //     std::string sendString = stringBufferSubscribe.GetString();
     //     ErrorCode ec;
 
-    this->send(wsConnection.hdl, sendString, wspp::frame::opcode::text, ec);
+    this->send(wsConnectionPtr->hdl, sendString, wspp::frame::opcode::text, ec);
 #else
 this->send(wsConnectionPtr, sendString, ec);
 #endif

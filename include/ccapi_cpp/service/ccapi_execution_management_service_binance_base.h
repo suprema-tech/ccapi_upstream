@@ -631,11 +631,11 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
     return event;
   }
 
-  void convertRequestForWebsocket(rj::Document& document, rj::Document::AllocatorType& allocator, const WsConnection& wsConnection, const Request& request,
+  void convertRequestForWebsocket(rj::Document& document, rj::Document::AllocatorType& allocator, std::shared_ptr<WsConnection> wsConnectionPtr, const Request& request,
                                   unsigned long wsRequestId, const TimePoint& now, const std::string& symbolId,
                                   const std::map<std::string, std::string>& credential) override {
     document.SetObject();
-    this->requestCorrelationIdByWsRequestIdByConnectionIdMap[wsConnection.id][wsRequestId] = request.getCorrelationId();
+    this->requestCorrelationIdByWsRequestIdByConnectionIdMap[wsConnectionPtr->id][wsRequestId] = request.getCorrelationId();
     Request::Operation operation = request.getOperation();
     switch (operation) {
       case Request::Operation::CREATE_ORDER: {
@@ -688,7 +688,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
         document.AddMember("params", params, allocator);
       } break;
       default:
-        this->convertRequestForWebsocketCustom(document, allocator, wsConnection, request, wsRequestId, now, symbolId, credential);
+        this->convertRequestForWebsocketCustom(document, allocator, wsConnectionPtr, request, wsRequestId, now, symbolId, credential);
     }
   }
 
@@ -734,9 +734,9 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
     elementList.emplace_back(std::move(element));
   }
 
-  std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription, const TimePoint& now,
+  std::vector<std::string> createSendStringListFromSubscription(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, const TimePoint& now,
                                                                 const std::map<std::string, std::string>& credential) override {
-    if (wsConnection.host == this->websocketOrderEntryHost) {
+    if (wsConnectionPtr->host == this->websocketOrderEntryHost) {
       auto it = credential.find(this->websocketOrderEntryApiPrivateKeyPathName);
       if (it == credential.end()) {
         throw std::runtime_error("Missing credential: " + this->websocketOrderEntryApiPrivateKeyPathName);

@@ -13,6 +13,9 @@ namespace ccapi {
  */
 class WsConnection {
  public:
+   WsConnection(const WsConnection&) = delete;
+  WsConnection& operator=(const WsConnection&) = delete;
+
   WsConnection(std::string url, std::string group, std::vector<Subscription> subscriptionList, std::map<std::string, std::string> credential,
                std::shared_ptr<beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>> streamPtr)
       : url(url), group(group), subscriptionList(subscriptionList), credential(credential), streamPtr(streamPtr) {
@@ -27,8 +30,6 @@ class WsConnection {
                    [](Subscription subscription) { return subscription.getCorrelationId(); });
     this->setUrlParts();
   }
-
-  WsConnection() {}
 
   std::string toString() const {
     std::map<std::string, std::string> shortCredential;

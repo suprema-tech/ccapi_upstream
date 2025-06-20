@@ -29,7 +29,7 @@ class MarketDataServiceBitmart : public MarketDataService {
 
  private:
 #endif
-  void prepareSubscriptionDetail(std::string& channelId, std::string& symbolId, const std::string& field, const WsConnection& wsConnection,
+  void prepareSubscriptionDetail(std::string& channelId, std::string& symbolId, const std::string& field, std::shared_ptr<WsConnection> wsConnectionPtr,
                                  const Subscription& subscription, const std::map<std::string, std::string> optionMap) override {
     auto marketDepthRequested = std::stoi(optionMap.at(CCAPI_MARKET_DEPTH_MAX));
     if (field == CCAPI_MARKET_DEPTH) {
@@ -54,25 +54,25 @@ class MarketDataServiceBitmart : public MarketDataService {
     return !std::regex_search(bodyView.begin(), bodyView.end(), std::regex("\"code\":\\s*1000"));
   }
 
-  std::vector<std::string> createSendStringList(const WsConnection& wsConnection) override {
+  std::vector<std::string> createSendStringList(std::shared_ptr<WsConnection> wsConnectionPtr) override {
     std::vector<std::string> sendStringList;
     rj::Document document;
     document.SetObject();
     rj::Document::AllocatorType& allocator = document.GetAllocator();
     document.AddMember("op", rj::Value("subscribe").Move(), allocator);
     rj::Value args(rj::kArrayType);
-    for (const auto& subscriptionListByChannelIdSymbolId : this->subscriptionListByConnectionIdChannelIdSymbolIdMap.at(wsConnection.id)) {
+    for (const auto& subscriptionListByChannelIdSymbolId : this->subscriptionListByConnectionIdChannelIdSymbolIdMap.at(wsConnectionPtr->id)) {
       auto channelId = subscriptionListByChannelIdSymbolId.first;
       for (const auto& subscriptionListBySymbolId : subscriptionListByChannelIdSymbolId.second) {
         std::string symbolId = subscriptionListBySymbolId.first;
         if (channelId == CCAPI_WEBSOCKET_BITMART_CHANNEL_PUBLIC_DEPTH5 || channelId == CCAPI_WEBSOCKET_BITMART_CHANNEL_PUBLIC_DEPTH20 ||
             channelId == CCAPI_WEBSOCKET_BITMART_CHANNEL_PUBLIC_DEPTH50) {
-          this->l2UpdateIsReplaceByConnectionIdChannelIdSymbolIdMap[wsConnection.id][channelId][symbolId] = true;
+          this->l2UpdateIsReplaceByConnectionIdChannelIdSymbolIdMap[wsConnectionPtr->id][channelId][symbolId] = true;
         }
         std::string exchangeSubscriptionId = UtilString::split(channelId, "?").at(0) + ":" + symbolId;
         args.PushBack(rj::Value(exchangeSubscriptionId.c_str(), allocator).Move(), allocator);
-        this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnection.id][exchangeSubscriptionId][CCAPI_CHANNEL_ID] = channelId;
-        this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnection.id][exchangeSubscriptionId][CCAPI_SYMBOL_ID] = symbolId;
+        this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_CHANNEL_ID] = channelId;
+        this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_SYMBOL_ID] = symbolId;
       }
     }
     document.AddMember("args", args, allocator);
@@ -98,8 +98,8 @@ class MarketDataServiceBitmart : public MarketDataService {
         std::string channelId = document["table"].GetString();
         std::string symbolId = document["data"][0]["symbol"].GetString();
         std::string exchangeSubscriptionId = channelId + ":" + symbolId;
-        if (!this->subscriptionStartedByConnectionIdChannelIdSymbolIdMap[wsConnection.id][channelId][symbolId]) {
-          const auto& subscriptionList = this->subscriptionListByConnectionIdChannelIdSymbolIdMap.at(wsConnection.id).at(channelId).at(symbolId);
+        if (!this->subscriptionStartedByConnectionIdChannelIdSymbolIdMap[wsConnectionPtr->id][channelId][symbolId]) {
+          const auto& subscriptionList = this->subscriptionListByConnectionIdChannelIdSymbolIdMap.at(wsConnectionPtr->id).at(channelId).at(symbolId);
           std::vector<std::string> correlationIdList;
           for (const auto& subscription : subscriptionList) {
             correlationIdList.push_back(subscription.getCorrelationId());
@@ -125,7 +125,7 @@ class MarketDataServiceBitmart : public MarketDataService {
             marketDataMessage.tp = TimePoint(std::chrono::milliseconds(std::stoll(datum["ms_t"].GetString())));
             marketDataMessage.exchangeSubscriptionId = exchangeSubscriptionId;
             marketDataMessage.type = MarketDataMessage::Type::MARKET_DATA_EVENTS_MARKET_DEPTH;
-            if (this->processedInitialSnapshotByConnectionIdChannelIdSymbolIdMap[wsConnection.id][channelId][symbolId]) {
+            if (this->processedInitialSnapshotByConnectionIdChannelIdSymbolIdMap[wsConnectionPtr->id][channelId][symbolId]) {
               marketDataMessage.recapType = MarketDataMessage::RecapType::NONE;
             } else {
               marketDataMessage.recapType = MarketDataMessage::RecapType::SOLICITED;
@@ -146,7 +146,7 @@ class MarketDataServiceBitmart : public MarketDataService {
           }
         } else if (channelId == CCAPI_WEBSOCKET_BITMART_CHANNEL_TRADE) {
           MarketDataMessage::RecapType recapType = MarketDataMessage::RecapType::NONE;
-          if (!this->subscriptionStartedByConnectionIdChannelIdSymbolIdMap[wsConnection.id][channelId][symbolId]) {
+          if (!this->subscriptionStartedByConnectionIdChannelIdSymbolIdMap[wsConnectionPtr->id][channelId][symbolId]) {
             recapType = MarketDataMessage::RecapType::SOLICITED;
           }
           for (const auto& datum : document["data"].GetArray()) {
@@ -163,8 +163,8 @@ class MarketDataServiceBitmart : public MarketDataService {
             marketDataMessageList.emplace_back(std::move(marketDataMessage));
           }
         }
-        if (!this->subscriptionStartedByConnectionIdChannelIdSymbolIdMap[wsConnection.id][channelId][symbolId]) {
-          this->subscriptionStartedByConnectionIdChannelIdSymbolIdMap[wsConnection.id][channelId][symbolId] = true;
+        if (!this->subscriptionStartedByConnectionIdChannelIdSymbolIdMap[wsConnectionPtr->id][channelId][symbolId]) {
+          this->subscriptionStartedByConnectionIdChannelIdSymbolIdMap[wsConnectionPtr->id][channelId][symbolId] = true;
         }
       } else {
         std::string eventStr = document["event"].GetString();
@@ -180,7 +180,7 @@ class MarketDataServiceBitmart : public MarketDataService {
           message.setElementList({element});
           const auto& channelId = splitted.at(1);
           const auto& symbolId = splitted.at(2);
-          const auto& subscriptionList = this->subscriptionListByConnectionIdChannelIdSymbolIdMap.at(wsConnection.id).at(channelId).at(symbolId);
+          const auto& subscriptionList = this->subscriptionListByConnectionIdChannelIdSymbolIdMap.at(wsConnectionPtr->id).at(channelId).at(symbolId);
           std::vector<std::string> correlationIdList;
           for (const auto& subscription : subscriptionList) {
             correlationIdList.push_back(subscription.getCorrelationId());
@@ -295,7 +295,7 @@ class MarketDataServiceBitmart : public MarketDataService {
     }
   }
 
-  std::vector<std::string> createSendStringListFromSubscriptionList(const WsConnection& wsConnection, const std::vector<Subscription>& subscriptionList,
+  std::vector<std::string> createSendStringListFromSubscriptionList(std::shared_ptr<WsConnection> wsConnectionPtr, const std::vector<Subscription>& subscriptionList,
                                                                     const TimePoint& now, const std::map<std::string, std::string>& credential) override {
     std::vector<std::string> sendStringList;
     rj::Document document;

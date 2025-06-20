@@ -274,7 +274,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
     }
   }
 
-  std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription, const TimePoint& now,
+  std::vector<std::string> createSendStringListFromSubscription(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, const TimePoint& now,
                                                                 const std::map<std::string, std::string>& credential) override {
     std::vector<std::string> sendStringList;
     rj::Document document;
@@ -356,7 +356,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
           message.setCorrelationIdList({correlationId});
           messageList.emplace_back(std::move(message));
           event.setMessageList(messageList);
-          // this->subscriptionFailedByConnectionIdCorrelationIdMap[wsConnection.id][correlationId] = true;
+          // this->subscriptionFailedByConnectionIdCorrelationIdMap[wsConnectionPtr->id][correlationId] = true;
         }
       }
       if (!event.getMessageList().empty()) {
@@ -454,7 +454,7 @@ class ExecutionManagementServiceBitmart : public ExecutionManagementService {
 
   // void onClose(wspp::connection_hdl hdl) override {
   //   WsConnection& wsConnection = this->getWsConnectionFromConnectionPtr(this->serviceContextPtr->tlsClientPtr->get_con_from_hdl(hdl));
-  //   this->subscriptionFailedByConnectionIdCorrelationIdMap.erase(wsConnection.id);
+  //   this->subscriptionFailedByConnectionIdCorrelationIdMap.erase(wsConnectionPtr->id);
   //   ExecutionManagementService::onClose(hdl);
   // }
   std::string apiMemoName;
