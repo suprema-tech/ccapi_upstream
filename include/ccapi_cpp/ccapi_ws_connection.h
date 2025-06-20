@@ -31,6 +31,8 @@ class WsConnection {
     this->setUrlParts();
   }
 
+  WsConnection(){}
+
   std::string toString() const {
     std::map<std::string, std::string> shortCredential;
     for (const auto& x : credential) {
