@@ -6,6 +6,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_gateio.h"
 
 // clang-format on
+
 namespace ccapi {
 
 class ExecutionManagementServiceGateioTest : public ::testing::Test {

@@ -181,7 +181,8 @@ class MarketDataServiceAscendex : public MarketDataService {
       Message message;
       message.setTimeReceived(timeReceived);
       std::vector<std::string> correlationIdList;
-      if (this->correlationIdListByConnectionIdChannelIdSymbolIdMap.find(wsConnectionPtr->id) != this->correlationIdListByConnectionIdChannelIdSymbolIdMap.end()) {
+      if (this->correlationIdListByConnectionIdChannelIdSymbolIdMap.find(wsConnectionPtr->id) !=
+          this->correlationIdListByConnectionIdChannelIdSymbolIdMap.end()) {
         if (this->correlationIdListByConnectionIdChannelIdSymbolIdMap.at(wsConnectionPtr->id).find(channelId) !=
             this->correlationIdListByConnectionIdChannelIdSymbolIdMap.at(wsConnectionPtr->id).end()) {
           if (this->correlationIdListByConnectionIdChannelIdSymbolIdMap.at(wsConnectionPtr->id).at(channelId).find(symbolId) !=

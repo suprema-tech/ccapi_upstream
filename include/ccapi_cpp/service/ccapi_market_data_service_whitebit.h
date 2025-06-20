@@ -102,7 +102,8 @@ class MarketDataServiceWhitebit : public MarketDataService {
         document.Accept(writer);
         std::string sendString = stringBuffer.GetString();
         sendStringList.push_back(sendString);
-        this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap[wsConnectionPtr->id][this->exchangeJsonPayloadIdByConnectionIdMap[wsConnectionPtr->id]] =
+        this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap[wsConnectionPtr->id]
+                                                                              [this->exchangeJsonPayloadIdByConnectionIdMap[wsConnectionPtr->id]] =
             exchangeSubscriptionIdList;
         this->exchangeJsonPayloadIdByConnectionIdMap[wsConnectionPtr->id] += 1;
       }
@@ -166,7 +167,8 @@ class MarketDataServiceWhitebit : public MarketDataService {
             marketDataMessage.recapType = MarketDataMessage::RecapType::NONE;
           } else {
             marketDataMessage.recapType = MarketDataMessage::RecapType::SOLICITED;
-            this->processedInitialSnapshotByConnectionIdChannelIdSymbolIdMap[wsConnectionPtr->id][CCAPI_WEBSOCKET_WHITEBIT_CHANNEL_MARKET_TRADES][symbolId] = true;
+            this->processedInitialSnapshotByConnectionIdChannelIdSymbolIdMap[wsConnectionPtr->id][CCAPI_WEBSOCKET_WHITEBIT_CHANNEL_MARKET_TRADES][symbolId] =
+                true;
           }
           MarketDataMessage::TypeForDataPoint dataPoint;
           dataPoint.emplace(MarketDataMessage::DataFieldType::PRICE, UtilString::normalizeDecimalStringView(x["price"].GetString()));
@@ -199,7 +201,8 @@ class MarketDataServiceWhitebit : public MarketDataService {
               for (const auto& exchangeSubscriptionId : this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap.at(wsConnectionPtr->id).at(id)) {
                 std::string channelId =
                     this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_CHANNEL_ID];
-                std::string symbolId = this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_SYMBOL_ID];
+                std::string symbolId =
+                    this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_SYMBOL_ID];
                 if (this->correlationIdListByConnectionIdChannelIdSymbolIdMap.at(wsConnectionPtr->id).find(channelId) !=
                     this->correlationIdListByConnectionIdChannelIdSymbolIdMap.at(wsConnectionPtr->id).end()) {
                   if (this->correlationIdListByConnectionIdChannelIdSymbolIdMap.at(wsConnectionPtr->id).at(channelId).find(symbolId) !=

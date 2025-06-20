@@ -229,8 +229,8 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
     }
   }
 
-  void convertRequestForWebsocket(rj::Document& document, rj::Document::AllocatorType& allocator, std::shared_ptr<WsConnection> wsConnectionPtr, const Request& request,
-                                  unsigned long wsRequestId, const TimePoint& now, const std::string& symbolId,
+  void convertRequestForWebsocket(rj::Document& document, rj::Document::AllocatorType& allocator, std::shared_ptr<WsConnection> wsConnectionPtr,
+                                  const Request& request, unsigned long wsRequestId, const TimePoint& now, const std::string& symbolId,
                                   const std::map<std::string, std::string>& credential) override {
     document.SetObject();
     document.AddMember("id", rj::Value(std::to_string(wsRequestId).c_str(), allocator).Move(), allocator);
@@ -353,8 +353,8 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
     // }
   }
 
-  std::vector<std::string> createSendStringListFromSubscription(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, const TimePoint& now,
-                                                                const std::map<std::string, std::string>& credential) override {
+  std::vector<std::string> createSendStringListFromSubscription(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription,
+                                                                const TimePoint& now, const std::map<std::string, std::string>& credential) override {
     std::vector<std::string> sendStringList;
     rj::Document document;
     document.SetObject();
@@ -482,8 +482,8 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
     }
   }
 
-  Event createEvent(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, const std::string& textMessageView, const rj::Document& document,
-                    const std::string& eventStr, const TimePoint& timeReceived) {
+  Event createEvent(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, const std::string& textMessageView,
+                    const rj::Document& document, const std::string& eventStr, const TimePoint& timeReceived) {
     Event event;
     std::vector<Message> messageList;
     Message message;

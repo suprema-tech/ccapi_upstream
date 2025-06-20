@@ -373,10 +373,10 @@ class MarketDataServiceBitfinex : public MarketDataService {
                 document.AddMember("freq", rj::Value("F0").Move(), allocator);
                 document.AddMember(
                     "len",
-                    rj::Value(
-                        std::to_string(this->marketDepthSubscribedToExchangeByConnectionIdChannelIdSymbolIdMap.at(wsConnectionPtr->id).at(channelId).at(symbolId))
-                            .c_str(),
-                        allocator)
+                    rj::Value(std::to_string(
+                                  this->marketDepthSubscribedToExchangeByConnectionIdChannelIdSymbolIdMap.at(wsConnectionPtr->id).at(channelId).at(symbolId))
+                                  .c_str(),
+                              allocator)
                         .Move(),
                     allocator);
               }

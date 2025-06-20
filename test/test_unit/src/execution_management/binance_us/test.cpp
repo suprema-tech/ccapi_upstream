@@ -6,6 +6,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_binance_us.h"
 
 // clang-format on
+
 namespace ccapi {
 
 class ExecutionManagementServiceBinanceUsTest : public ::testing::Test {

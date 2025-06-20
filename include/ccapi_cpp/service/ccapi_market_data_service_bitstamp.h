@@ -79,7 +79,8 @@ class MarketDataServiceBitstamp : public MarketDataService {
       Message message;
       message.setTimeReceived(timeReceived);
       std::vector<std::string> correlationIdList;
-      if (this->correlationIdListByConnectionIdChannelIdSymbolIdMap.find(wsConnectionPtr->id) != this->correlationIdListByConnectionIdChannelIdSymbolIdMap.end()) {
+      if (this->correlationIdListByConnectionIdChannelIdSymbolIdMap.find(wsConnectionPtr->id) !=
+          this->correlationIdListByConnectionIdChannelIdSymbolIdMap.end()) {
         std::string exchangeSubscriptionId = document["channel"].GetString();
         std::string channelId = this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_CHANNEL_ID];
         std::string symbolId = this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_SYMBOL_ID];

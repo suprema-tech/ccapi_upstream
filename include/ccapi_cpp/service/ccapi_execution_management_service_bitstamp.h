@@ -322,8 +322,8 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
         this->sessionOptions.httpRequestTimeoutMilliseconds);
   }
 
-  std::vector<std::string> createSendStringListFromSubscription(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, const TimePoint& now,
-                                                                const std::map<std::string, std::string>& credential) override {
+  std::vector<std::string> createSendStringListFromSubscription(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription,
+                                                                const TimePoint& now, const std::map<std::string, std::string>& credential) override {
     const auto& fieldSet = subscription.getFieldSet();
     const auto& instrumentSet = subscription.getInstrumentSet();
     std::vector<std::string> sendStringList;
@@ -340,9 +340,10 @@ class ExecutionManagementServiceBitstamp : public ExecutionManagementService {
         rj::Document::AllocatorType& allocator = document.GetAllocator();
         document.AddMember("event", rj::Value("bts:subscribe").Move(), allocator);
         rj::Value data(rj::kObjectType);
-        data.AddMember("channel",
-                       rj::Value((name + instrument + "-" + this->extraPropertyByConnectionIdMap.at(wsConnectionPtr->id).at("userId")).c_str(), allocator).Move(),
-                       allocator);
+        data.AddMember(
+            "channel",
+            rj::Value((name + instrument + "-" + this->extraPropertyByConnectionIdMap.at(wsConnectionPtr->id).at("userId")).c_str(), allocator).Move(),
+            allocator);
         data.AddMember("auth", rj::Value(this->extraPropertyByConnectionIdMap.at(wsConnectionPtr->id).at("token").c_str(), allocator).Move(), allocator);
         document.AddMember("data", data, allocator);
         rj::StringBuffer stringBuffer;

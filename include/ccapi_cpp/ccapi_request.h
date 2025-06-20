@@ -43,6 +43,7 @@ class Request {
     GET_INSTRUMENT,
     GET_INSTRUMENTS,
     GET_BBOS,
+    GET_TICKERS,
     CREATE_ORDER = CCAPI_REQUEST_OPERATION_TYPE_EXECUTION_MANAGEMENT_ORDER,
     CANCEL_ORDER,
     GET_ORDER,
@@ -100,6 +101,9 @@ class Request {
         break;
       case Operation::GET_BBOS:
         output = "GET_BBOS";
+        break;
+      case Operation::GET_TICKERS:
+        output = "GET_TICKERS";
         break;
       case Operation::CREATE_ORDER:
         output = "CREATE_ORDER";

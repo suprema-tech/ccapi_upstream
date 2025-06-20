@@ -6,6 +6,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_binance_usds_futures.h"
 
 // clang-format on
+
 namespace ccapi {
 
 class ExecutionManagementServiceBinanceUsdsFuturesTest : public ::testing::Test {

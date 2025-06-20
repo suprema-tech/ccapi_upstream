@@ -631,8 +631,8 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
     return event;
   }
 
-  void convertRequestForWebsocket(rj::Document& document, rj::Document::AllocatorType& allocator, std::shared_ptr<WsConnection> wsConnectionPtr, const Request& request,
-                                  unsigned long wsRequestId, const TimePoint& now, const std::string& symbolId,
+  void convertRequestForWebsocket(rj::Document& document, rj::Document::AllocatorType& allocator, std::shared_ptr<WsConnection> wsConnectionPtr,
+                                  const Request& request, unsigned long wsRequestId, const TimePoint& now, const std::string& symbolId,
                                   const std::map<std::string, std::string>& credential) override {
     document.SetObject();
     this->requestCorrelationIdByWsRequestIdByConnectionIdMap[wsConnectionPtr->id][wsRequestId] = request.getCorrelationId();
@@ -734,8 +734,8 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
     elementList.emplace_back(std::move(element));
   }
 
-  std::vector<std::string> createSendStringListFromSubscription(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, const TimePoint& now,
-                                                                const std::map<std::string, std::string>& credential) override {
+  std::vector<std::string> createSendStringListFromSubscription(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription,
+                                                                const TimePoint& now, const std::map<std::string, std::string>& credential) override {
     if (wsConnectionPtr->host == this->websocketOrderEntryHost) {
       auto it = credential.find(this->websocketOrderEntryApiPrivateKeyPathName);
       if (it == credential.end()) {

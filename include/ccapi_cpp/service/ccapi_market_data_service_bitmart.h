@@ -295,8 +295,9 @@ class MarketDataServiceBitmart : public MarketDataService {
     }
   }
 
-  std::vector<std::string> createSendStringListFromSubscriptionList(std::shared_ptr<WsConnection> wsConnectionPtr, const std::vector<Subscription>& subscriptionList,
-                                                                    const TimePoint& now, const std::map<std::string, std::string>& credential) override {
+  std::vector<std::string> createSendStringListFromSubscriptionList(std::shared_ptr<WsConnection> wsConnectionPtr,
+                                                                    const std::vector<Subscription>& subscriptionList, const TimePoint& now,
+                                                                    const std::map<std::string, std::string>& credential) override {
     std::vector<std::string> sendStringList;
     rj::Document document;
     document.SetObject();

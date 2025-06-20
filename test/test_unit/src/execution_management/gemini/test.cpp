@@ -6,6 +6,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_gemini.h"
 
 // clang-format on
+
 namespace ccapi {
 
 class ExecutionManagementServiceGeminiTest : public ::testing::Test {

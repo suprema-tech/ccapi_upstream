@@ -238,8 +238,8 @@ class ExecutionManagementServiceBitget : public ExecutionManagementServiceBitget
     }
   }
 
-  std::vector<std::string> createSendStringListFromSubscription(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, const TimePoint& now,
-                                                                const std::map<std::string, std::string>& credential) override {
+  std::vector<std::string> createSendStringListFromSubscription(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription,
+                                                                const TimePoint& now, const std::map<std::string, std::string>& credential) override {
     std::vector<std::string> sendStringList;
     rj::Document document;
     document.SetObject();

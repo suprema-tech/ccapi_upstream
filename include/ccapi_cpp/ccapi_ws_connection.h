@@ -13,7 +13,7 @@ namespace ccapi {
  */
 class WsConnection {
  public:
-   WsConnection(const WsConnection&) = delete;
+  WsConnection(const WsConnection&) = delete;
   WsConnection& operator=(const WsConnection&) = delete;
 
   WsConnection(std::string url, std::string group, std::vector<Subscription> subscriptionList, std::map<std::string, std::string> credential,
@@ -31,7 +31,7 @@ class WsConnection {
     this->setUrlParts();
   }
 
-  WsConnection(){}
+  WsConnection() {}
 
   std::string toString() const {
     std::map<std::string, std::string> shortCredential;

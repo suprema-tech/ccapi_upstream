@@ -6,6 +6,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_kraken_futures.h"
 
 // clang-format on
+
 namespace ccapi {
 
 class ExecutionManagementServiceKrakenFuturesTest : public ::testing::Test {

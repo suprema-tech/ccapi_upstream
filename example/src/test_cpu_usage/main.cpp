@@ -50,6 +50,11 @@ using ::ccapi::SessionOptions;
 using ::ccapi::Subscription;
 using ::ccapi::UtilSystem;
 
+struct Ticker {
+  std::string instrument;
+  double quoteVolume24h{};
+};
+
 int main(int argc, char** argv) {
   const auto& numSymbols = UtilSystem::getEnvAsInt("NUM_SYMBOLS", 25);
   bool subscribeMarketDepth = UtilSystem::getEnvAsBool("SUBSCRIBE_MARKET_DEPTH");
@@ -62,7 +67,7 @@ int main(int argc, char** argv) {
   MyEventHandler eventHandler(subscriptionDataEventPrintCount);
   Session session(sessionOptions, sessionConfigs, &eventHandler);
   std::string exchange = "okx";
-  Request request(Request::Operation::GET_INSTRUMENTS, exchange);
+  Request request(Request::Operation::GET_TICKERS, exchange);
   request.appendParam({
       {"INSTRUMENT_TYPE", "SPOT"},
   });
@@ -70,13 +75,26 @@ int main(int argc, char** argv) {
   session.sendRequest(request, &eventQueue);
   std::vector<Event> eventList = eventQueue.purge();
   const auto& message = eventList.front().getMessageList().front();
-  std::vector<Subscription> subscriptionList;
-  int i = 0;
+  std::vector<Ticker> tickers;
   for (const auto& element : message.getElementList()) {
-    if (i >= numSymbols) {
-      break;
-    }
     const auto& instrument = element.getValue("INSTRUMENT");
+    const auto& volume24h = std::stod(element.getValue("VOLUME_24H"));
+    if (volume24h > 0) {
+      const auto& averagePrice = (std::stod(element.getValue("OPEN_24H_PRICE")) + std::stod(element.getValue("HIGH_24H_PRICE")) +
+                                  std::stod(element.getValue("LOW_24H_PRICE")) + std::stod(element.getValue("LAST_PRICE"))) /
+                                 4;
+      const auto& quoteVolume24h = averagePrice * volume24h;
+      tickers.push_back({instrument, quoteVolume24h});
+    }
+  }
+  std::sort(tickers.begin(), tickers.end(), [](const Ticker& a, const Ticker& b) {
+    return a.quoteVolume24h > b.quoteVolume24h;  // descending
+  });
+  std::vector<Ticker> topNTickers;
+  topNTickers.assign(tickers.begin(), tickers.begin() + std::min(numSymbols, static_cast<int>(tickers.size())));
+  std::vector<Subscription> subscriptionList;
+  for (const auto& ticker : topNTickers) {
+    const auto& instrument = ticker.instrument;
     if (subscribeMarketDepth) {
       Subscription subscription(exchange, instrument, "MARKET_DEPTH");
       subscriptionList.push_back(subscription);
@@ -93,7 +111,6 @@ int main(int argc, char** argv) {
       Subscription subscription(exchange, instrument, "TRADE");
       subscriptionList.push_back(subscription);
     }
-    ++i;
   }
   session.subscribe(subscriptionList);
   std::this_thread::sleep_for(std::chrono::seconds(UtilSystem::getEnvAsInt("STOP_TIME_IN_SECONDS", INT_MAX)));

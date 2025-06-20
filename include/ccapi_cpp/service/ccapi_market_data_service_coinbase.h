@@ -142,7 +142,8 @@ class MarketDataServiceCoinbase : public MarketDataService {
       Message message;
       message.setTimeReceived(timeReceived);
       std::vector<std::string> correlationIdList;
-      if (this->correlationIdListByConnectionIdChannelIdSymbolIdMap.find(wsConnectionPtr->id) != this->correlationIdListByConnectionIdChannelIdSymbolIdMap.end()) {
+      if (this->correlationIdListByConnectionIdChannelIdSymbolIdMap.find(wsConnectionPtr->id) !=
+          this->correlationIdListByConnectionIdChannelIdSymbolIdMap.end()) {
         for (const auto& x : document["channels"].GetArray()) {
           std::string channelId = x["name"].GetString();
           if (this->correlationIdListByConnectionIdChannelIdSymbolIdMap.at(wsConnectionPtr->id).find(channelId) !=
@@ -275,8 +276,9 @@ class MarketDataServiceCoinbase : public MarketDataService {
     }
   }
 
-  std::vector<std::string> createSendStringListFromSubscriptionList(std::shared_ptr<WsConnection> wsConnectionPtr, const std::vector<Subscription>& subscriptionList,
-                                                                    const TimePoint& now, const std::map<std::string, std::string>& credential) override {
+  std::vector<std::string> createSendStringListFromSubscriptionList(std::shared_ptr<WsConnection> wsConnectionPtr,
+                                                                    const std::vector<Subscription>& subscriptionList, const TimePoint& now,
+                                                                    const std::map<std::string, std::string>& credential) override {
     auto instrumentGroup = wsConnectionPtr->group;
     for (const auto& subscription : wsConnectionPtr->subscriptionList) {
       auto instrument = subscription.getInstrument();

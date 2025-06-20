@@ -6,6 +6,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_erisx.h"
 
 // clang-format on
+
 namespace ccapi {
 
 class ExecutionManagementServiceErisxTest : public ::testing::Test {

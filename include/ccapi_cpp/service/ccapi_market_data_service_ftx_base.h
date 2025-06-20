@@ -232,7 +232,8 @@ class MarketDataServiceFtxBase : public MarketDataService {
       Message message;
       message.setTimeReceived(timeReceived);
       std::vector<std::string> correlationIdList;
-      if (this->correlationIdListByConnectionIdChannelIdSymbolIdMap.find(wsConnectionPtr->id) != this->correlationIdListByConnectionIdChannelIdSymbolIdMap.end()) {
+      if (this->correlationIdListByConnectionIdChannelIdSymbolIdMap.find(wsConnectionPtr->id) !=
+          this->correlationIdListByConnectionIdChannelIdSymbolIdMap.end()) {
         std::string channelId = document["channel"].GetString();
         std::string symbolId = document["market"].GetString();
         if (this->correlationIdListByConnectionIdChannelIdSymbolIdMap.at(wsConnectionPtr->id).find(channelId) !=

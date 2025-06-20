@@ -165,7 +165,8 @@ class MarketDataServiceKucoinBase : public MarketDataService {
         for (const auto& symbol : symbolList) {
           exchangeSubscriptionIdList.push_back(topic + ":" + symbol);
         }
-        this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap[wsConnectionPtr->id][this->exchangeJsonPayloadIdByConnectionIdMap[wsConnectionPtr->id]] =
+        this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap[wsConnectionPtr->id]
+                                                                              [this->exchangeJsonPayloadIdByConnectionIdMap[wsConnectionPtr->id]] =
             exchangeSubscriptionIdList;
         this->exchangeJsonPayloadIdByConnectionIdMap[wsConnectionPtr->id] += 1;
         document.AddMember("id", rj::Value(requestId.c_str(), allocator).Move(), allocator);
@@ -251,7 +252,8 @@ class MarketDataServiceKucoinBase : public MarketDataService {
             MarketDataMessage marketDataMessage;
             marketDataMessage.type = MarketDataMessage::Type::MARKET_DATA_EVENTS_MARKET_DEPTH;
             std::string exchangeSubscriptionId = document["topic"].GetString();
-            std::string channelId = this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_CHANNEL_ID];
+            std::string channelId =
+                this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_CHANNEL_ID];
             std::string symbolId = this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_SYMBOL_ID];
             const auto& optionMap = this->optionMapByConnectionIdChannelIdSymbolIdMap[wsConnectionPtr->id][channelId][symbolId];
             marketDataMessage.exchangeSubscriptionId = exchangeSubscriptionId;
@@ -285,7 +287,8 @@ class MarketDataServiceKucoinBase : public MarketDataService {
           } else if (subject == this->tickerSubject) {
             MarketDataMessage marketDataMessage;
             std::string exchangeSubscriptionId = document["topic"].GetString();
-            std::string channelId = this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_CHANNEL_ID];
+            std::string channelId =
+                this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_CHANNEL_ID];
             std::string symbolId = this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_SYMBOL_ID];
             const rj::Value& data = document["data"];
             marketDataMessage.type = MarketDataMessage::Type::MARKET_DATA_EVENTS_MARKET_DEPTH;
@@ -313,7 +316,8 @@ class MarketDataServiceKucoinBase : public MarketDataService {
           } else if (subject == this->level2Subject) {
             MarketDataMessage marketDataMessage;
             std::string exchangeSubscriptionId = document["topic"].GetString();
-            std::string channelId = this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_CHANNEL_ID];
+            std::string channelId =
+                this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_CHANNEL_ID];
             std::string symbolId = this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_SYMBOL_ID];
             auto optionMap = this->optionMapByConnectionIdChannelIdSymbolIdMap[wsConnectionPtr->id][channelId][symbolId];
             const rj::Value& data = document["data"];

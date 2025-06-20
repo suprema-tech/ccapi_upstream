@@ -94,7 +94,8 @@ class MarketDataServiceGateioBase : public MarketDataService {
         document.AddMember("payload", payload, allocator);
         // if (!this->isDerivatives) {
         document.AddMember("id", rj::Value(this->exchangeJsonPayloadIdByConnectionIdMap[wsConnectionPtr->id]).Move(), allocator);
-        this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap[wsConnectionPtr->id][this->exchangeJsonPayloadIdByConnectionIdMap[wsConnectionPtr->id]] =
+        this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap[wsConnectionPtr->id]
+                                                                              [this->exchangeJsonPayloadIdByConnectionIdMap[wsConnectionPtr->id]] =
             exchangeSubscriptionIdList;
         this->exchangeJsonPayloadIdByConnectionIdMap[wsConnectionPtr->id] += 1;
         // }

@@ -31,6 +31,7 @@ class MarketDataServiceOkx : public MarketDataService {
     this->getInstrumentTarget = "/api/v5/public/instruments";
     this->getInstrumentsTarget = "/api/v5/public/instruments";
     this->getBbosTarget = "/api/v5/market/tickers";
+    this->getTickersTarget = "/api/v5/market/tickers";
   }
 
   virtual ~MarketDataServiceOkx() {}
@@ -393,6 +394,17 @@ class MarketDataServiceOkx : public MarketDataService {
                           });
         req.target(target + "?" + queryString);
       } break;
+      case Request::Operation::GET_TICKERS: {
+        req.method(http::verb::get);
+        auto target = this->getBbosTarget;
+        std::string queryString;
+        const std::map<std::string, std::string> param = request.getFirstParamWithDefault();
+        this->appendParam(queryString, param,
+                          {
+                              {CCAPI_INSTRUMENT_TYPE, "instType"},
+                          });
+        req.target(target + "?" + queryString);
+      } break;
       default:
         this->convertRequestForRestCustom(req, request, now, symbolId, credential);
     }
@@ -528,13 +540,38 @@ class MarketDataServiceOkx : public MarketDataService {
         message.setCorrelationIdList({request.getCorrelationId()});
         event.addMessages({message});
       } break;
+      case Request::Operation::GET_TICKERS: {
+        Message message;
+        message.setTimeReceived(timeReceived);
+        message.setType(this->requestOperationToMessageTypeMap.at(request.getOperation()));
+        std::vector<Element> elementList;
+        for (const auto& x : document["data"].GetArray()) {
+          Element element;
+          element.insert(CCAPI_INSTRUMENT, x["instId"].GetString());
+          element.insert(CCAPI_BEST_BID_N_PRICE, x["bidPx"].GetString());
+          element.insert(CCAPI_BEST_BID_N_SIZE, x["bidSz"].GetString());
+          element.insert(CCAPI_BEST_ASK_N_PRICE, x["askPx"].GetString());
+          element.insert(CCAPI_BEST_ASK_N_SIZE, x["askSz"].GetString());
+          element.insert(CCAPI_LAST_PRICE, x["last"].GetString());
+          element.insert(CCAPI_LAST_SIZE, x["lastSz"].GetString());
+          element.insert(CCAPI_OPEN_24H_PRICE, x["open24h"].GetString());
+          element.insert(CCAPI_HIGH_24H_PRICE, x["high24h"].GetString());
+          element.insert(CCAPI_LOW_24H_PRICE, x["low24h"].GetString());
+          element.insert(CCAPI_VOLUME_24H, x["vol24h"].GetString());
+          elementList.push_back(element);
+        }
+        message.setElementList(elementList);
+        message.setCorrelationIdList({request.getCorrelationId()});
+        event.addMessages({message});
+      } break;
       default:
         CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);
     }
   }
 
-  std::vector<std::string> createSendStringListFromSubscriptionList(std::shared_ptr<WsConnection> wsConnectionPtr, const std::vector<Subscription>& subscriptionList,
-                                                                    const TimePoint& now, const std::map<std::string, std::string>& credential) override {
+  std::vector<std::string> createSendStringListFromSubscriptionList(std::shared_ptr<WsConnection> wsConnectionPtr,
+                                                                    const std::vector<Subscription>& subscriptionList, const TimePoint& now,
+                                                                    const std::map<std::string, std::string>& credential) override {
     std::vector<std::string> sendStringList;
     rj::Document document;
     document.SetObject();

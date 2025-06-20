@@ -1454,7 +1454,8 @@ class Service : public std::enable_shared_from_this<Service> {
     WsConnection& wsConnection = *wsConnectionPtr;
     if (wsConnectionPtr->status == WsConnection::Status::OPEN) {
       if (this->pingTimerByMethodByConnectionIdMap.find(wsConnectionPtr->id) != this->pingTimerByMethodByConnectionIdMap.end() &&
-          this->pingTimerByMethodByConnectionIdMap.at(wsConnectionPtr->id).find(method) != this->pingTimerByMethodByConnectionIdMap.at(wsConnectionPtr->id).end()) {
+          this->pingTimerByMethodByConnectionIdMap.at(wsConnectionPtr->id).find(method) !=
+              this->pingTimerByMethodByConnectionIdMap.at(wsConnectionPtr->id).end()) {
         this->pingTimerByMethodByConnectionIdMap.at(wsConnectionPtr->id).at(method)->cancel();
       }
       TimerPtr timerPtr(
@@ -1493,7 +1494,8 @@ class Service : public std::enable_shared_from_this<Service> {
                       if (that->lastPongTpByMethodByConnectionIdMap.find(wsConnectionPtr->id) != that->lastPongTpByMethodByConnectionIdMap.end() &&
                           that->lastPongTpByMethodByConnectionIdMap.at(wsConnectionPtr->id).find(method) !=
                               that->lastPongTpByMethodByConnectionIdMap.at(wsConnectionPtr->id).end() &&
-                          std::chrono::duration_cast<std::chrono::milliseconds>(now - that->lastPongTpByMethodByConnectionIdMap.at(wsConnectionPtr->id).at(method))
+                          std::chrono::duration_cast<std::chrono::milliseconds>(now -
+                                                                                that->lastPongTpByMethodByConnectionIdMap.at(wsConnectionPtr->id).at(method))
                                   .count() >= pongTimeoutMilliseconds) {
                         auto thisWsConnectionPtr = wsConnectionPtr;
                         ErrorCode ec;

@@ -79,6 +79,7 @@ class Message {
     GET_INSTRUMENT,
     GET_INSTRUMENTS,
     GET_BBOS,
+    GET_TICKERS,
     RESPONSE_ERROR,
     REQUEST_FAILURE,
     GENERIC_ERROR,
@@ -203,6 +204,9 @@ class Message {
         break;
       case Type::GET_BBOS:
         output = "GET_BBOS";
+        break;
+      case Type::GET_TICKERS:
+        output = "GET_TICKERS";
         break;
       case Type::RESPONSE_ERROR:
         output = "RESPONSE_ERROR";

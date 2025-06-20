@@ -6,6 +6,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_okx.h"
 
 // clang-format on
+
 namespace ccapi {
 
 class ExecutionManagementServiceOkxTest : public ::testing::Test {

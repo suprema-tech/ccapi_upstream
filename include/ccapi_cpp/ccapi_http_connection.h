@@ -12,7 +12,7 @@ class HttpConnection {
    * This class represents a TCP socket connection for the REST API.
    */
  public:
- HttpConnection(const HttpConnection&) = delete;
+  HttpConnection(const HttpConnection&) = delete;
   HttpConnection& operator=(const HttpConnection&) = delete;
 
   HttpConnection(std::string host, std::string port, std::shared_ptr<beast::ssl_stream<beast::tcp_stream>> streamPtr)

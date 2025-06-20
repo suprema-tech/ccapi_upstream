@@ -271,7 +271,7 @@ class MarketDataServiceBitgetBase : public MarketDataService {
       } break;
       case Request::Operation::GET_BBOS: {
         req.method(http::verb::get);
-        auto target = (symbolId.empty()) ? this->getBboTarget : this->getBbosTarget;
+        auto target = (symbolId.empty()) ? this->getBbosTarget : this->getBbosTarget;
         std::string queryString;
         const std::map<std::string, std::string> param = request.getFirstParamWithDefault();
         this->appendParam(queryString, param,

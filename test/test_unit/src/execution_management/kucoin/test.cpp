@@ -6,6 +6,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_kucoin.h"
 
 // clang-format on
+
 namespace ccapi {
 
 class ExecutionManagementServiceKucoinTest : public ::testing::Test {

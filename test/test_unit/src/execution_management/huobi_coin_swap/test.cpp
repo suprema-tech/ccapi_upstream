@@ -6,6 +6,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_huobi_coin_swap.h"
 
 // clang-format on
+
 namespace ccapi {
 
 class ExecutionManagementServiceHuobiCoinSwapTest : public ::testing::Test {

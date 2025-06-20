@@ -93,7 +93,8 @@ class MarketDataServiceBinanceBase : public MarketDataService {
     }
     document.AddMember("params", params, allocator);
     document.AddMember("id", rj::Value(this->exchangeJsonPayloadIdByConnectionIdMap[wsConnectionPtr->id]).Move(), allocator);
-    this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap[wsConnectionPtr->id][this->exchangeJsonPayloadIdByConnectionIdMap[wsConnectionPtr->id]] =
+    this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap[wsConnectionPtr->id]
+                                                                          [this->exchangeJsonPayloadIdByConnectionIdMap[wsConnectionPtr->id]] =
         exchangeSubscriptionIdList;
     this->exchangeJsonPayloadIdByConnectionIdMap[wsConnectionPtr->id] += 1;
     rj::StringBuffer stringBuffer;
@@ -117,14 +118,16 @@ class MarketDataServiceBinanceBase : public MarketDataService {
       Message message;
       message.setTimeReceived(timeReceived);
       std::vector<std::string> correlationIdList;
-      if (this->correlationIdListByConnectionIdChannelIdSymbolIdMap.find(wsConnectionPtr->id) != this->correlationIdListByConnectionIdChannelIdSymbolIdMap.end()) {
+      if (this->correlationIdListByConnectionIdChannelIdSymbolIdMap.find(wsConnectionPtr->id) !=
+          this->correlationIdListByConnectionIdChannelIdSymbolIdMap.end()) {
         int id = std::stoi(document["id"].GetString());
         if (this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap.find(wsConnectionPtr->id) !=
                 this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap.end() &&
             this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap.at(wsConnectionPtr->id).find(id) !=
                 this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap.at(wsConnectionPtr->id).end()) {
           for (const auto& exchangeSubscriptionId : this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap.at(wsConnectionPtr->id).at(id)) {
-            std::string channelId = this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_CHANNEL_ID];
+            std::string channelId =
+                this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_CHANNEL_ID];
             std::string symbolId = this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnectionPtr->id][exchangeSubscriptionId][CCAPI_SYMBOL_ID];
             if (this->correlationIdListByConnectionIdChannelIdSymbolIdMap.at(wsConnectionPtr->id).find(channelId) !=
                 this->correlationIdListByConnectionIdChannelIdSymbolIdMap.at(wsConnectionPtr->id).end()) {

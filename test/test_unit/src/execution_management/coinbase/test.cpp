@@ -6,6 +6,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_coinbase.h"
 
 // clang-format on
+
 namespace ccapi {
 
 class ExecutionManagementServiceCoinbaseTest : public ::testing::Test {
