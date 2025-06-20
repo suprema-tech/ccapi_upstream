@@ -94,7 +94,7 @@ class EventDispatcher {
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
 
-  size_t numDispatcherThreads;
+  size_t numDispatcherThreads{};
   std::atomic<bool> shouldContinue{};
   std::vector<std::thread> dispatcherThreads;
   std::mutex lock;

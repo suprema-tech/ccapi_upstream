@@ -143,7 +143,7 @@ class WsConnection {
 
   beast::flat_buffer readMessageBuffer;
   std::array<char, CCAPI_WEBSOCKET_WRITE_BUFFER_SIZE> writeMessageBuffer;
-  size_t writeMessageBufferWrittenLength;
+  size_t writeMessageBufferWrittenLength{};
   std::vector<size_t> writeMessageBufferBoundary;
 };
 

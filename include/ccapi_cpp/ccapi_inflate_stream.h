@@ -1,7 +1,7 @@
 #ifndef INCLUDE_CCAPI_CPP_CCAPI_INFLATE_STREAM_H_
 #define INCLUDE_CCAPI_CPP_CCAPI_INFLATE_STREAM_H_
 #ifndef CCAPI_DECOMPRESS_BUFFER_SIZE
-#define CCAPI_DECOMPRESS_BUFFER_SIZE 1 << 20
+#define CCAPI_DECOMPRESS_BUFFER_SIZE (1 << 20)
 #endif
 #include "zlib.h"
 
@@ -91,12 +91,12 @@ class InflateStream {
 
  private:
 #endif
-  int windowBits;
-  int windowBitsOverride;
-  bool initialized;
-  std::unique_ptr<unsigned char[]> buffer;
+  int windowBits{};
+  int windowBitsOverride{};
+  bool initialized{};
+  std::unique_ptr<unsigned char[]> buffer{nullptr};
   z_stream istate;
-  size_t decompressBufferSize;
+  size_t decompressBufferSize{};
 };
 
 } /* namespace ccapi */

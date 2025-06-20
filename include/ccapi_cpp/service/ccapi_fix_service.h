@@ -2,10 +2,10 @@
 #define INCLUDE_CCAPI_CPP_SERVICE_CCAPI_FIX_SERVICE_H_
 #ifdef CCAPI_ENABLE_SERVICE_FIX
 #ifndef CCAPI_FIX_READ_BUFFER_SIZE
-#define CCAPI_FIX_READ_BUFFER_SIZE 1 << 20
+#define CCAPI_FIX_READ_BUFFER_SIZE (1 << 20)
 #endif
 #ifndef CCAPI_FIX_WRITE_BUFFER_SIZE
-#define CCAPI_FIX_WRITE_BUFFER_SIZE 1 << 20
+#define CCAPI_FIX_WRITE_BUFFER_SIZE (1 << 20)
 #endif
 #include "ccapi_cpp/service/ccapi_service.h"
 #include "hffix.hpp"

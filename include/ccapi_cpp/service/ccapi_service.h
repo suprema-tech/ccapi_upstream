@@ -23,7 +23,7 @@
 #define RAPIDJSON_PARSE_ERROR_NORETURN(parseErrorCode, offset) throw std::runtime_error(#parseErrorCode)
 #endif
 #ifndef CCAPI_WEBSOCKET_WRITE_BUFFER_SIZE
-#define CCAPI_WEBSOCKET_WRITE_BUFFER_SIZE 1 << 20
+#define CCAPI_WEBSOCKET_WRITE_BUFFER_SIZE (1 << 20)
 #endif
 #include <regex>
 
@@ -1158,6 +1158,7 @@ class Service : public std::enable_shared_from_this<Service> {
     auto& writeMessageBufferWrittenLength = wsConnectionPtr->writeMessageBufferWrittenLength;
     auto& writeMessageBufferBoundary = wsConnectionPtr->writeMessageBufferBoundary;
     size_t n = writeMessageBufferWrittenLength;
+    CCAPI_LOGGER_TRACE("connectionId = " + connectionId);
     memcpy(writeMessageBuffer.data() + n, data, dataSize);
     writeMessageBufferBoundary.push_back(dataSize);
     n += dataSize;
