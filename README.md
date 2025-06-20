@@ -316,6 +316,8 @@ class MyEventHandler : public EventHandler {
       for (const auto& message : event.getMessageList()) {
         std::cout << std::string("Best bid and ask at ") + UtilTime::getISOTimestamp(message.getTime()) + " are:" << std::endl;
         for (const auto& element : message.getElementList()) {
+          // They key std::string_view is created from a string literal and therefore is safe, because string
+          // literals have static storage duration, meaning they live for the entire duration of the program.
           const std::map<std::string_view, std::string>& elementNameValueMap = element.getNameValueMap();
           std::cout << "  " + toString(elementNameValueMap) << std::endl;
         }
@@ -1020,7 +1022,6 @@ sessionPtr->setTimer(
 ## Performance Tuning
 * Turn on compiler optimization flags (e.g. `cmake -DCMAKE_BUILD_TYPE=Release ...`).
 * Enable link time optimization (e.g. in CMakeLists.txt `set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)` before a target is created). Note that link time optimization is only applicable to static linking.
-* Shorten constant strings used as key names in the returned `Element` (e.g. in CmakeLists.txt `add_compile_definitions(CCAPI_BEST_BID_N_PRICE="b")`).
 * Only enable the services and exchanges that you need.
 * Handle events in ["batching" mode](#handle-events-in-immediate-vs-batching-mode) if your application (e.g. market data archiver) isn't latency sensitive.
 

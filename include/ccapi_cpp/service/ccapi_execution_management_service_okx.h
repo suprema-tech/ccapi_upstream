@@ -664,7 +664,6 @@ class ExecutionManagementServiceOkx : public ExecutionManagementService {
     return event;
   }
 
-  std::string apiPassphraseName;
   std::string apiXSimulatedTradingName;
 };
 

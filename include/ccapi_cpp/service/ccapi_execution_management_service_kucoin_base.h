@@ -488,7 +488,6 @@ class ExecutionManagementServiceKucoinBase : public ExecutionManagementService {
     return event;
   }
 
-  std::string apiPassphraseName;
   bool isDerivatives{};
   std::string topicTradeOrders;
   std::string createOrderMarginTarget;

@@ -65,8 +65,6 @@ class FixServiceCoinbase : public FixService<beast::ssl_stream<beast::tcp_stream
     }
     return param;
   }
-
-  std::string apiPassphraseName;
 };
 
 } /* namespace ccapi */

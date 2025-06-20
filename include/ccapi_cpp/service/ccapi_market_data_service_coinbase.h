@@ -16,6 +16,10 @@ class MarketDataServiceCoinbase : public MarketDataService {
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
     this->setHostWsFromUrlWs(this->baseUrlWs);
+    this->apiKeyName = CCAPI_COINBASE_API_KEY;
+    this->apiSecretName = CCAPI_COINBASE_API_SECRET;
+    this->apiPassphraseName = CCAPI_COINBASE_API_PASSPHRASE;
+    this->setupCredential({this->apiKeyName, this->apiSecretName, this->apiPassphraseName});
     this->getRecentTradesTarget = "/products/<product-id>/trades";
     this->getInstrumentTarget = "/products/<product-id>";
     this->getInstrumentsTarget = "/products";
@@ -215,6 +219,7 @@ class MarketDataServiceCoinbase : public MarketDataService {
 
   void extractInstrumentInfo(Element& element, const rj::Value& x) {
     element.insert(CCAPI_INSTRUMENT, x["id"].GetString());
+    element.insert(CCAPI_INSTRUMENT_STATUS, x["status"].GetString());
     element.insert(CCAPI_BASE_ASSET, x["base_currency"].GetString());
     element.insert(CCAPI_QUOTE_ASSET, x["quote_currency"].GetString());
     element.insert(CCAPI_ORDER_PRICE_INCREMENT, x["quote_increment"].GetString());
@@ -268,6 +273,69 @@ class MarketDataServiceCoinbase : public MarketDataService {
       default:
         CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);
     }
+  }
+
+  std::vector<std::string> createSendStringListFromSubscriptionList(const WsConnection& wsConnection, const std::vector<Subscription>& subscriptionList,
+                                                                    const TimePoint& now, const std::map<std::string, std::string>& credential) override {
+    auto instrumentGroup = wsConnection.group;
+    for (const auto& subscription : wsConnection.subscriptionList) {
+      auto instrument = subscription.getInstrument();
+      this->subscriptionStatusByInstrumentGroupInstrumentMap[instrumentGroup][instrument] = Subscription::Status::SUBSCRIBING;
+      if (subscription.getField() == CCAPI_GENERIC_PUBLIC_SUBSCRIPTION) {
+        this->correlationIdByConnectionIdMap.insert({wsConnection.id, subscription.getCorrelationId()});
+      } else {
+        this->prepareSubscription(wsConnection, subscription);
+      }
+    }
+
+    auto apiKey = mapGetWithDefault(credential, this->apiKeyName);
+    auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
+    auto apiPassphrase = mapGetWithDefault(credential, this->apiPassphraseName);
+    auto timestamp = std::to_string(std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count());
+    auto preSignedText = timestamp;
+    preSignedText += "GET";
+    preSignedText += "/users/self/verify";
+    auto signature = UtilAlgorithm::base64Encode(Hmac::hmac(Hmac::ShaVersion::SHA256, UtilAlgorithm::base64Decode(apiSecret), preSignedText));
+    std::vector<std::string> sendStringList;
+    rj::Document document;
+    document.SetObject();
+    rj::Document::AllocatorType& allocator = document.GetAllocator();
+    document.AddMember("type", rj::Value("subscribe").Move(), allocator);
+    rj::Value channels(rj::kArrayType);
+    for (const auto& subscriptionListByChannelIdSymbolId : this->subscriptionListByConnectionIdChannelIdSymbolIdMap.at(wsConnection.id)) {
+      auto channelId = subscriptionListByChannelIdSymbolId.first;
+      rj::Value channel(rj::kObjectType);
+      rj::Value symbolIds(rj::kArrayType);
+      for (const auto& subscriptionListBySymbolId : subscriptionListByChannelIdSymbolId.second) {
+        std::string symbolId = subscriptionListBySymbolId.first;
+        symbolIds.PushBack(rj::Value(symbolId.c_str(), allocator).Move(), allocator);
+        std::string exchangeSubscriptionId = channelId + "|" + symbolId;
+        this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnection.id][exchangeSubscriptionId][CCAPI_CHANNEL_ID] = channelId;
+        this->channelIdSymbolIdByConnectionIdExchangeSubscriptionIdMap[wsConnection.id][exchangeSubscriptionId][CCAPI_SYMBOL_ID] = symbolId;
+      }
+      channel.AddMember("name", rj::Value(channelId.c_str(), allocator).Move(), allocator);
+      channel.AddMember("product_ids", symbolIds, allocator);
+      channels.PushBack(channel, allocator);
+      rj::Value heartbeatChannel(rj::kObjectType);
+      heartbeatChannel.AddMember("name", rj::Value("heartbeat").Move(), allocator);
+      rj::Value heartbeatSymbolIds(rj::kArrayType);
+      for (const auto& subscriptionListBySymbolId : subscriptionListByChannelIdSymbolId.second) {
+        heartbeatSymbolIds.PushBack(rj::Value(subscriptionListBySymbolId.first.c_str(), allocator).Move(), allocator);
+      }
+      heartbeatChannel.AddMember("product_ids", heartbeatSymbolIds, allocator);
+      channels.PushBack(heartbeatChannel, allocator);
+    }
+    document.AddMember("channels", channels, allocator);
+    document.AddMember("signature", rj::Value(signature.c_str(), allocator).Move(), allocator);
+    document.AddMember("key", rj::Value(apiKey.c_str(), allocator).Move(), allocator);
+    document.AddMember("passphrase", rj::Value(apiPassphrase.c_str(), allocator).Move(), allocator);
+    document.AddMember("timestamp", rj::Value(timestamp.c_str(), allocator).Move(), allocator);
+    rj::StringBuffer stringBuffer;
+    rj::Writer<rj::StringBuffer> writer(stringBuffer);
+    document.Accept(writer);
+    std::string sendString = stringBuffer.GetString();
+    sendStringList.push_back(sendString);
+    return sendStringList;
   }
 };
 

@@ -650,7 +650,6 @@ class MarketDataServiceKucoinBase : public MarketDataService {
   std::string klineSubject;
   std::string recentTradesTimeKey;
   std::string level2Subject;
-  std::string apiPassphraseName;
 };
 
 } /* namespace ccapi */

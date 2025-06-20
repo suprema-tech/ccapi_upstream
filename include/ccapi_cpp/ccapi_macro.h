@@ -1244,7 +1244,7 @@
 
 // start: exchange FIX urls
 #ifndef CCAPI_COINBASE_URL_FIX_BASE
-#define CCAPI_COINBASE_URL_FIX_BASE "tcp+ssl://fix.exchange.coinbase.com:4198"
+#define CCAPI_COINBASE_URL_FIX_BASE "tcp+ssl://fix-ord.exchange.coinbase.com:6121"
 #endif
 
 #ifndef CCAPI_GEMINI_URL_FIX_HOST

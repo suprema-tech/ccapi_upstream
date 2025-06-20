@@ -396,7 +396,6 @@ class ExecutionManagementServiceCoinbase : public ExecutionManagementService {
     return event;
   }
 
-  std::string apiPassphraseName;
   std::set<std::string> websocketFullChannelTypeSet{"received", "open", "done", "match", "change", "activate"};
 };
 

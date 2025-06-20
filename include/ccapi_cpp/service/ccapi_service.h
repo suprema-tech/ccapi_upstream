@@ -1081,6 +1081,8 @@ class Service : public std::enable_shared_from_this<Service> {
     CCAPI_LOGGER_FUNCTION_ENTER;
     CCAPI_LOGGER_TRACE("n = " + toString(n));
     auto now = UtilTime::now();
+    auto& connectionId = wsConnectionPtr->id;
+    auto& readMessageBuffer = wsConnectionPtr->readMessageBuffer;
     if (ec) {
       if (ec == beast::error::timeout) {
         CCAPI_LOGGER_TRACE("timeout, connection closed");
@@ -1093,21 +1095,20 @@ class Service : public std::enable_shared_from_this<Service> {
       message.setType(Message::Type::SESSION_CONNECTION_DOWN);
       message.setCorrelationIdList(wsConnectionPtr->correlationIdList);
       Element element;
-      auto& connectionId = wsConnectionPtr->id;
       element.insert(CCAPI_CONNECTION_ID, connectionId);
       element.insert(CCAPI_CONNECTION_URL, wsConnectionPtr->url);
       message.setElementList({element});
       event.setMessageList({message});
       this->eventHandler(event, nullptr);
       this->onFail(wsConnectionPtr);
+      readMessageBuffer.consume(readMessageBuffer.size());
       return;
     }
     if (wsConnectionPtr->status != WsConnection::Status::OPEN) {
       CCAPI_LOGGER_WARN("should not process remaining message on closing");
+      readMessageBuffer.consume(readMessageBuffer.size());
       return;
     }
-    auto& connectionId = wsConnectionPtr->id;
-    auto& readMessageBuffer = wsConnectionPtr->readMessageBuffer;
     this->onMessage(wsConnectionPtr, (const char*)readMessageBuffer.data().data(), readMessageBuffer.size());
     readMessageBuffer.consume(readMessageBuffer.size());
     this->startReadWs(wsConnectionPtr);
@@ -1533,6 +1534,7 @@ class Service : public std::enable_shared_from_this<Service> {
   bool hostHttpHeaderValueIgnorePort{};
   std::string apiKeyName;
   std::string apiSecretName;
+  std::string apiPassphraseName;
   std::string exchangeName;
   std::string baseUrlWs;
   std::string baseUrlWsOrderEntry;

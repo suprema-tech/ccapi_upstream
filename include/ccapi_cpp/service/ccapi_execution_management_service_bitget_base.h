@@ -78,8 +78,6 @@ class ExecutionManagementServiceBitgetBase : public ExecutionManagementService {
     auto apiPassphrase = mapGetWithDefault(credential, this->apiPassphraseName);
     req.set("ACCESS-PASSPHRASE", apiPassphrase);
   }
-
-  std::string apiPassphraseName;
 };
 
 } /* namespace ccapi */
