@@ -413,7 +413,7 @@ class MarketDataServiceOkx : public MarketDataService {
     element.insert(CCAPI_UNDERLYING_SYMBOL, x["uly"].GetString());
     element.insert(CCAPI_CONTRACT_SIZE, x["ctVal"].GetString());
     element.insert(CCAPI_CONTRACT_MULTIPLIER, x["ctMult"].GetString());
-    element.insert(CCAPI_ICCAPI_INSTRUMENT_STATUSNSTUM, x["state"].GetString());
+    element.insert(CCAPI_INSTRUMENT_STATUS, x["state"].GetString());
   }
 
   void convertTextMessageToMarketDataMessage(const Request& request, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
