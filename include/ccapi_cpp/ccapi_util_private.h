@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <array>
+#include <charconv>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -28,7 +29,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "boost/multiprecision/cpp_dec_float.hpp"
 #include "ccapi_cpp/ccapi_macro.h"
 #include "ccapi_cpp/ccapi_util.h"
 #include "openssl/evp.h"
@@ -938,47 +938,317 @@ class UtilSystem {
   }
 };
 
-using Decimal = boost::multiprecision::number<boost::multiprecision::cpp_dec_float<CCAPI_DECIMAL_SCALE>>;
+/**
+ * This class provides a numeric type for representing an arbitrary precision decimal number. It is minimalistic for the purpose of high performance.
+ * Furthermore, unlike double, it is suitable for being used as the key of a map. boost::multiprecision::cpp_dec_float can also be used, but based on
+ * test it does lead to nearly 100% increase in cpu usage!
+ */
+class Decimal {
+ public:
+  Decimal() {}
 
-template <typename T>
-struct GetCppDecFloatDigits;
+  explicit Decimal(std::string_view originalValue, bool keepTrailingZero = false) {
+    if (originalValue.empty()) {
+      throw std::invalid_argument("Decimal constructor input value cannot be empty");
+    }
+    if (originalValue.at(0) == '-') {
+      this->sign = false;
+    }
+    auto foundE = originalValue.find('E');
+    if (foundE != std::string::npos || originalValue.find('e') != std::string::npos) {
+      if (foundE == std::string::npos) {
+        foundE = originalValue.find('e');
+      }
+      std::string fixedPointValue = std::string(originalValue.substr(this->sign ? 0 : 1, this->sign ? foundE : foundE - 1));
+      auto foundDot = fixedPointValue.find('.');
+      if (foundDot != std::string::npos) {
+        fixedPointValue.erase(fixedPointValue.find_last_not_of('0') + 1);
+        fixedPointValue.erase(fixedPointValue.find_last_not_of('.') + 1);
+      }
+      std::string exponent = std::string(originalValue.substr(foundE + 1));
+      if (exponent.at(0) == '+') {
+        exponent.erase(0, 1);
+      }
+      exponent.erase(0, exponent.find_first_not_of('0'));
+      if (exponent.empty()) {
+        exponent = "0";
+      }
+      if (exponent != "0") {
+        foundDot = fixedPointValue.find('.');
+        if (foundDot != std::string::npos) {
+          if (exponent.at(0) != '-') {
+            if (std::stoi(exponent) < fixedPointValue.substr(foundDot + 1).length()) {
+              fixedPointValue = fixedPointValue.substr(0, foundDot) + fixedPointValue.substr(foundDot + 1).substr(0, std::stoi(exponent)) + "." +
+                                fixedPointValue.substr(foundDot + 1).substr(std::stoi(exponent));
+            } else {
+              fixedPointValue = fixedPointValue.substr(0, foundDot) + fixedPointValue.substr(foundDot + 1) +
+                                std::string(std::stoi(exponent) - fixedPointValue.substr(foundDot + 1).length(), '0');
+            }
+          } else {
+            fixedPointValue = "0." + std::string(-std::stoi(exponent) - 1, '0') + fixedPointValue.substr(0, foundDot) + fixedPointValue.substr(foundDot + 1);
+          }
+        } else {
+          if (exponent.at(0) != '-') {
+            fixedPointValue += std::string(std::stoi(exponent), '0');
+          } else {
+            fixedPointValue = "0." + std::string(-std::stoi(exponent) - 1, '0') + fixedPointValue;
+          }
+        }
+      }
+      foundDot = fixedPointValue.find('.');
+      std::string numPart = fixedPointValue.substr(0, foundDot);
+      auto [_, ec] = std::from_chars(numPart.data(), numPart.data() + numPart.size(), this->before);
+      if (ec != std::errc()) {
+        throw std::invalid_argument("Invalid numeric input: " + std::string(numPart));
+      }
+      if (foundDot != std::string::npos) {
+        this->frac = fixedPointValue.substr(foundDot + 1);
+        if (!keepTrailingZero) {
+          this->frac.erase(this->frac.find_last_not_of('0') + 1);
+        }
+      }
+    } else {
+      auto found = originalValue.find('.');
+      std::string numPart = std::string(originalValue.substr(this->sign ? 0 : 1, found));
+      auto [_, ec] = std::from_chars(numPart.data(), numPart.data() + numPart.size(), this->before);
+      if (ec != std::errc()) {
+        throw std::invalid_argument("Invalid numeric input: " + std::string(numPart));
+      }
+      if (found != std::string::npos) {
+        this->frac = originalValue.substr(found + 1);
+        if (!keepTrailingZero) {
+          this->frac.erase(this->frac.find_last_not_of('0') + 1);
+        }
+      }
+    }
+  }
 
-template <unsigned Digits10, typename ExponentType, typename Allocator>
-struct GetCppDecFloatDigits<boost::multiprecision::cpp_dec_float<Digits10, ExponentType, Allocator>> {
-  static constexpr unsigned value = Digits10;
+  std::string toString() const {
+    std::string stringValue;
+    if (!this->sign) {
+      stringValue += "-";
+    }
+    stringValue += std::to_string(this->before);
+    if (!this->frac.empty()) {
+      stringValue += ".";
+      stringValue += this->frac;
+    }
+    return stringValue;
+  }
+
+  double toDouble() const { return std::stod(this->toString()); }
+
+  friend bool operator<(const Decimal& l, const Decimal& r) {
+    if (l.sign && r.sign) {
+      if (l.before < r.before) {
+        return true;
+      } else if (l.before > r.before) {
+        return false;
+      } else {
+        return l.frac < r.frac;
+      }
+    } else if (l.sign && !r.sign) {
+      return false;
+    } else if (!l.sign && r.sign) {
+      if (l.before == 0 && l.frac.empty() && r.before == 0 && r.frac.empty()) {
+        return false;
+      } else {
+        return true;
+      }
+    } else {
+      Decimal nl = l;
+      nl.sign = true;
+      Decimal nr = r;
+      nr.sign = true;
+      return nl > nr;
+    }
+  }
+
+  friend bool operator>(const Decimal& l, const Decimal& r) { return r < l; }
+
+  friend bool operator<=(const Decimal& l, const Decimal& r) { return !(l > r); }
+
+  friend bool operator>=(const Decimal& l, const Decimal& r) { return !(l < r); }
+
+  friend bool operator==(const Decimal& l, const Decimal& r) { return !(l > r) && !(l < r); }
+
+  friend bool operator!=(const Decimal& l, const Decimal& r) { return !(l == r); }
+
+  /* ----------  Arithmetic operators  ---------- */
+
+  // unary ––––––––––––––––––––––––––––––––––––––
+  ///  -x   (flip the sign)
+  Decimal operator-() const {
+    Decimal tmp = *this;
+    if (!(tmp.before == 0 && tmp.frac.empty())) {  // keep “–0” positive
+      tmp.sign = !tmp.sign;
+    }
+    return tmp;
+  }
+
+  // binary –––––––––––––––––––––––––––––––––––––
+  ///  x + y
+  friend Decimal operator+(const Decimal& lhs, const Decimal& rhs) {
+    return lhs.add(rhs);  // reuse the pre-existing logic
+  }
+
+  ///  x - y
+  friend Decimal operator-(const Decimal& lhs, const Decimal& rhs) {
+    return lhs.subtract(rhs);  // reuse the pre-existing logic
+  }
+
+  // compound-assignment ––––––––––––––––––––––––
+  Decimal& operator+=(const Decimal& rhs) {
+    *this = *this + rhs;
+    return *this;
+  }
+
+  Decimal& operator-=(const Decimal& rhs) {
+    *this = *this - rhs;
+    return *this;
+  }
+
+#ifndef CCAPI_EXPOSE_INTERNAL
+
+ private:
+#endif
+  Decimal negate() const {
+    Decimal o;
+    o.before = this->before;
+    o.frac = this->frac;
+    o.sign = !this->sign;
+    return o;
+  }
+
+  Decimal add(const Decimal& x) const {
+    if (this->sign && x.sign) {
+      Decimal o;
+      o.sign = true;
+      o.before = this->before + x.before;
+      if (this->frac.empty()) {
+        o.frac = x.frac;
+      } else if (x.frac.empty()) {
+        o.frac = this->frac;
+      } else {
+        auto l1 = this->frac.length();
+        auto l2 = x.frac.length();
+        if (l1 > l2) {
+          auto a = std::to_string(std::stoull(this->frac) + std::stoull(UtilString::rightPadTo(x.frac, l1, '0')));
+          if (a.length() < l1) {
+            a = UtilString::leftPadTo(a, l1, '0');
+          }
+          if (a.length() == l1) {
+            o.frac = UtilString::rtrim(a, "0");
+          } else {
+            o.frac = UtilString::rtrim(a.substr(a.length() - l1), "0");
+            o.before += std::stoull(a.substr(0, a.length() - l1));
+          }
+        } else if (l1 < l2) {
+          auto a = std::to_string(std::stoull(UtilString::rightPadTo(this->frac, l2, '0')) + std::stoull(x.frac));
+          if (a.length() < l2) {
+            a = UtilString::leftPadTo(a, l2, '0');
+          }
+          if (a.length() == l2) {
+            o.frac = UtilString::rtrim(a, "0");
+          } else {
+            o.frac = UtilString::rtrim(a.substr(a.length() - l2), "0");
+            o.before += std::stoull(a.substr(0, a.length() - l2));
+          }
+        } else {
+          auto a = std::to_string(std::stoull(this->frac) + std::stoull(x.frac));
+          if (a.length() < l1) {
+            a = UtilString::leftPadTo(a, l1, '0');
+          }
+          if (a.length() == l1) {
+            o.frac = UtilString::rtrim(a, "0");
+          } else {
+            o.frac = UtilString::rtrim(a.substr(a.length() - l1), "0");
+            o.before += std::stoull(a.substr(0, a.length() - l1));
+          }
+        }
+      }
+      return o;
+    } else if (!this->sign && x.sign) {
+      return x.subtract(this->negate());
+    } else if (this->sign && !x.sign) {
+      return this->subtract(x.negate());
+    } else {
+      return (this->negate().add(x.negate())).negate();
+    }
+  }
+
+  Decimal subtract(const Decimal& x) const {
+    if (this->sign && x.sign) {
+      if (*this >= x) {
+        Decimal o;
+        o.sign = true;
+        if (this->frac >= x.frac) {
+          o.before = this->before - x.before;
+        } else {
+          o.before = this->before - 1 - x.before;
+        }
+        auto l1 = this->frac.length();
+        auto l2 = x.frac.length();
+        auto lmax = std::max(l1, l2);
+        auto a = lmax > 0 ? std::to_string(std::stoull(UtilString::rightPadTo(this->frac, lmax, '0')) +
+                                           (this->frac >= x.frac ? (unsigned)0 : std::stoull(UtilString::rightPadTo("1", 1 + lmax, '0'))) -
+                                           std::stoull(UtilString::rightPadTo(x.frac, lmax, '0')))
+                          : "";
+        if (a.length() < lmax) {
+          a = UtilString::leftPadTo(a, lmax, '0');
+        }
+        o.frac = UtilString::rtrim(a, "0");
+        return o;
+      } else {
+        return x.subtract(*this).negate();
+      }
+    } else if (!this->sign && x.sign) {
+      return x.subtract(this->negate());
+    } else if (this->sign && !x.sign) {
+      return this->subtract(x.negate());
+    } else {
+      return x.negate().subtract(this->negate());
+    }
+  }
+
+  // {-}bbbb.aaaa
+  unsigned long long before{};
+  std::string frac;
+  // false means negative sign needed
+  bool sign{true};
 };
 
 inline std::string ConvertDecimalToString(const Decimal& input, bool normalize = true) {
-  constexpr unsigned precision = GetCppDecFloatDigits<Decimal::backend_type>::value;
+  //   constexpr unsigned precision = GetCppDecFloatDigits<Decimal::backend_type>::value;
 
-  // Always generate fixed-format string
-  std::string s = input.str(precision, std::ios_base::fixed);
+  //   // Always generate fixed-format string
+  //   std::string s = input.str(precision, std::ios_base::fixed);
 
-  // Fast path: normalization is OFF
-  if (!normalize) {
-    return s;
-  }
+  //   // Fast path: normalization is OFF
+  //   if (!normalize) {
+  //     return s;
+  //   }
 
-  // Fast trimming: remove trailing zeros after the decimal
-  const std::size_t dot_pos = s.find('.');
-  if (dot_pos == std::string::npos) {
-    return s;  // No decimal point
-  }
+  //   // Fast trimming: remove trailing zeros after the decimal
+  //   const std::size_t dot_pos = s.find('.');
+  //   if (dot_pos == std::string::npos) {
+  //     return s;  // No decimal point
+  //   }
 
-  std::size_t end = s.size();
+  //   std::size_t end = s.size();
 
-  // Find last non-zero character after the decimal
-  while (end > dot_pos + 1 && s[end - 1] == '0') {
-    --end;
-  }
+  //   // Find last non-zero character after the decimal
+  //   while (end > dot_pos + 1 && s[end - 1] == '0') {
+  //     --end;
+  //   }
 
-  // Remove decimal point if it's the last remaining character
-  if (end == dot_pos + 1) {
-    --end;
-  }
+  //   // Remove decimal point if it's the last remaining character
+  //   if (end == dot_pos + 1) {
+  //     --end;
+  //   }
 
-  s.resize(end);
-  return s;
+  //   s.resize(end);
+  return input.toString();
 }
 
 inline std::string size_tToString(const size_t& t) {
@@ -1134,10 +1404,10 @@ typename std::enable_if<std::is_same<T, std::string_view>::value, std::string>::
   return std::string(t);
 }
 
-template <typename T>
-typename std::enable_if<std::is_same<T, Decimal>::value, std::string>::type toString(const T& t) {
-  return ConvertDecimalToString(t);
-}
+// template <typename T>
+// typename std::enable_if<std::is_same<T, Decimal>::value, std::string>::type toString(const T& t) {
+//   return ConvertDecimalToString(t);
+// }
 
 template <typename T>
 typename std::enable_if<std::is_same<T, std::string>::value, std::string>::type toStringPretty(const T& t, const int space = 2, const int leftToIndent = 0,

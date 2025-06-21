@@ -1,6 +1,6 @@
-# Some breaking changes introduced
-* The return type of `EventHandler::processEvent` has been changed from `bool` to `void`.
-* Please read [Handle events in "immediate" vs. "batching" mode](#handle-events-in-immediate-vs-batching-mode).
+# Notice
+* Class `Decimal` (which is NOT part of the public API) has been moved into `include/ccapi_cpp/ccapi_util_private.h`.
+* New release has 15% reduction in cpu usage.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -8,7 +8,7 @@
 
 <!---toc start-->
 
-* [Some breaking changes introduced](#some-breaking-changes-introduced)
+* [Notice](#notice)
 * [ccapi](#ccapi)
   * [Branches](#branches)
   * [Build](#build)
@@ -56,6 +56,7 @@
 <!---toc end-->
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 
 
