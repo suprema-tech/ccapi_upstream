@@ -944,7 +944,6 @@ class Service : public std::enable_shared_from_this<Service> {
   }
 
   void close(std::shared_ptr<WsConnection> wsConnectionPtr, beast::websocket::close_code const code, beast::websocket::close_reason reason, ErrorCode& ec) {
-    WsConnection& wsConnection = *wsConnectionPtr;
     if (wsConnectionPtr->status == WsConnection::Status::CLOSING) {
       CCAPI_LOGGER_WARN("websocket connection is already in the state of closing");
       return;
@@ -959,7 +958,6 @@ class Service : public std::enable_shared_from_this<Service> {
 
   virtual void connect(std::shared_ptr<WsConnection> wsConnectionPtr) {
     CCAPI_LOGGER_FUNCTION_ENTER;
-    WsConnection& wsConnection = *wsConnectionPtr;
     wsConnectionPtr->status = WsConnection::Status::CONNECTING;
     CCAPI_LOGGER_DEBUG("connection initialization on id " + wsConnectionPtr->id);
     std::string url = wsConnectionPtr->url;
@@ -1071,7 +1069,6 @@ class Service : public std::enable_shared_from_this<Service> {
   void startReadWs(std::shared_ptr<WsConnection> wsConnectionPtr) {
     auto& stream = *wsConnectionPtr->streamPtr;
     CCAPI_LOGGER_TRACE("before async_read");
-    auto& connectionId = wsConnectionPtr->id;
     auto& readMessageBuffer = wsConnectionPtr->readMessageBuffer;
     stream.async_read(readMessageBuffer, beast::bind_front_handler(&Service::onReadWs, shared_from_this(), wsConnectionPtr));
     CCAPI_LOGGER_TRACE("after async_read");
