@@ -72,12 +72,23 @@ TEST(DecimalTest, integer_4) {
 TEST(DecimalTest, positiveNegativeZero) {
   Decimal a("+0");
   Decimal b("-0");
-  EXPECT_EQ(a, b);
+  Decimal c("0");
+  EXPECT_EQ(a.sign, true);
+  EXPECT_EQ(a.before, 0);
+  EXPECT_EQ(a.frac, "");
+  EXPECT_EQ(a, c);
+  EXPECT_EQ(b.sign, true);
+  EXPECT_EQ(b.before, 0);
+  EXPECT_EQ(b.frac, "");
+  EXPECT_EQ(b, c);
 }
 
 TEST(DecimalTest, zero) {
   Decimal a("0");
   EXPECT_EQ(a.toString(), "0");
+  EXPECT_EQ(a.sign, true);
+  EXPECT_EQ(a.before, 0);
+  EXPECT_EQ(a.frac, "");
 }
 
 TEST(DecimalTest, compare) {

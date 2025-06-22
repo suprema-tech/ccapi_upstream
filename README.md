@@ -1,5 +1,4 @@
 # Notice
-* Class `Decimal` (which is NOT part of the public API) has been moved into `include/ccapi_cpp/ccapi_util_private.h`.
 * New release has 15% reduction in cpu usage.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -51,11 +50,11 @@
       * [Set timer](#set-timer)
   * [Performance Tuning](#performance-tuning)
   * [Known Issues and Workarounds](#known-issues-and-workarounds)
-  * [Contributing](#contributing)
 
 <!---toc end-->
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 
 
@@ -1028,8 +1027,3 @@ sessionPtr->setTimer(
 
 ## Known Issues and Workarounds
 * Kraken invalid nonce errors. Give the API key a nonce window (https://support.kraken.com/hc/en-us/articles/360001148023-What-is-a-nonce-window-). We use unix timestamp with microsecond resolution as nonce and therefore a nonce window of 500000 translates to a tolerance of 0.5 second.
-
-## Contributing
-* (Required) Create a new branch from the `develop` branch and submit a pull request to the `develop` branch.
-* (Optional) C++ code style: https://google.github.io/styleguide/cppguide.html. See file [.clang-format](.clang-format).
-* (Optional) Commit message format: https://conventionalcommits.org.

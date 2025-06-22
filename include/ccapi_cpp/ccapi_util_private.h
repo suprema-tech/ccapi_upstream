@@ -1027,6 +1027,12 @@ class Decimal {
         }
       }
     }
+
+    if (!this->sign && this->before == 0 &&
+        ((keepTrailingZero && std::all_of(this->frac.begin(), this->frac.end(), [](char c) { return c == '0'; })) ||
+         (!keepTrailingZero && this->frac.empty()))) {
+      this->sign = true;
+    }
   }
 
   std::string toString() const {
@@ -1056,11 +1062,7 @@ class Decimal {
     } else if (l.sign && !r.sign) {
       return false;
     } else if (!l.sign && r.sign) {
-      if (l.before == 0 && l.frac.empty() && r.before == 0 && r.frac.empty()) {
-        return false;
-      } else {
-        return true;
-      }
+      return true;
     } else {
       Decimal nl = l;
       nl.sign = true;
@@ -1217,11 +1219,11 @@ class Decimal {
     }
   }
 
+  // false means negative sign needed
+  bool sign{true};
   // {-}bbbb.aaaa
   uint64_t before{};
   std::string frac;
-  // false means negative sign needed
-  bool sign{true};
 };
 
 inline std::string ConvertDecimalToString(const Decimal& input, bool normalize = true) {
