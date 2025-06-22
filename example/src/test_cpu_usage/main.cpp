@@ -63,6 +63,7 @@ int main(int argc, char** argv) {
   bool subscribeTrade = UtilSystem::getEnvAsBool("SUBSCRIBE_TRADE");
   size_t subscriptionDataEventPrintCount = UtilSystem::getEnvAsInt("SUBSCRIPTION_DATA_EVENT_PRINT_COUNT", 10000);
   SessionOptions sessionOptions;
+  sessionOptions.enableCheckOrderBookChecksum = true;
   SessionConfigs sessionConfigs;
   MyEventHandler eventHandler(subscriptionDataEventPrintCount);
   Session session(sessionOptions, sessionConfigs, &eventHandler);

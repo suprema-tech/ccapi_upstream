@@ -69,10 +69,15 @@ TEST(DecimalTest, integer_4) {
   EXPECT_EQ(ConvertDecimalToString(bid_1), "0");
 }
 
-TEST(DecimalTest, zero) {
+TEST(DecimalTest, positiveNegativeZero) {
   Decimal a("+0");
   Decimal b("-0");
   EXPECT_EQ(a, b);
+}
+
+TEST(DecimalTest, zero) {
+  Decimal a("0");
+  EXPECT_EQ(a.toString(), "0");
 }
 
 TEST(DecimalTest, compare) {

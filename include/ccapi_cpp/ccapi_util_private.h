@@ -997,6 +997,9 @@ class Decimal {
       }
       foundDot = fixedPointValue.find('.');
       std::string numPart = fixedPointValue.substr(0, foundDot);
+      if (!numPart.empty() && numPart[0] == '+') {
+        numPart.erase(0, 1);
+      }
       auto [_, ec] = std::from_chars(numPart.data(), numPart.data() + numPart.size(), this->before);
       if (ec != std::errc()) {
         throw std::invalid_argument("Invalid numeric input: " + std::string(numPart));
@@ -1010,6 +1013,9 @@ class Decimal {
     } else {
       auto found = originalValue.find('.');
       std::string numPart = std::string(originalValue.substr(this->sign ? 0 : 1, found));
+      if (!numPart.empty() && numPart[0] == '+') {
+        numPart.erase(0, 1);
+      }
       auto [_, ec] = std::from_chars(numPart.data(), numPart.data() + numPart.size(), this->before);
       if (ec != std::errc()) {
         throw std::invalid_argument("Invalid numeric input: " + std::string(numPart));
@@ -1212,7 +1218,7 @@ class Decimal {
   }
 
   // {-}bbbb.aaaa
-  unsigned long long before{};
+  uint64_t before{};
   std::string frac;
   // false means negative sign needed
   bool sign{true};
