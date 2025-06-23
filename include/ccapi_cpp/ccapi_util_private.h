@@ -1126,6 +1126,22 @@ class Decimal {
     return *this;
   }
 
+  template <typename T, std::enable_if_t<std::is_integral_v<T>, int> = 0>
+  friend Decimal operator*(const Decimal& lhs, T rhs) {
+    return lhs.multiply(rhs);
+  }
+
+  template <typename T, std::enable_if_t<std::is_integral_v<T>, int> = 0>
+  friend Decimal operator*(T lhs, const Decimal& rhs) {
+    return rhs.multiply(lhs);
+  }
+
+  template <typename T, std::enable_if_t<std::is_integral_v<T>, int> = 0>
+  Decimal& operator*=(T x) {
+    *this = this->multiply(x);
+    return *this;
+  }
+
 #ifndef CCAPI_EXPOSE_INTERNAL
 
  private:
@@ -1272,6 +1288,54 @@ class Decimal {
 
     /* both negative: (-a)-(-b) = b-a */
     return x.negate().subtract(this->negate());
+  }
+
+  template <typename T, std::enable_if_t<std::is_integral_v<T>, int> = 0>
+  Decimal multiply(T x) const {
+    Decimal result;
+
+    if (x == 0) return result;  // default constructed Decimal = 0
+
+    result.sign = (this->sign == (x >= 0));  // XOR logic for sign
+    T abs_x = x < 0 ? -x : x;
+
+    // Integer part multiplication
+    result.before = this->before * static_cast<uint64_t>(abs_x);
+
+    if (!this->frac.empty()) {
+      std::string paddedFrac = this->frac;
+      std::size_t fracLen = paddedFrac.length();
+
+      // Pad to avoid truncation
+      std::string_view fracPart = paddedFrac;
+
+      // Convert frac string to integer
+      uint64_t fracVal = 0;
+      auto [p, ec] = std::from_chars(fracPart.data(), fracPart.data() + fracPart.size(), fracVal);
+      if (ec != std::errc()) {
+        throw std::invalid_argument("Decimal::multiply - fractional overflow");
+      }
+
+      // Multiply
+      uint64_t prod = fracVal * static_cast<uint64_t>(abs_x);
+
+      // Total fractional scale: keep `fracLen` digits
+      std::string s = std::to_string(prod);
+
+      if (s.length() <= fracLen) {
+        s.insert(0, fracLen - s.length(), '0');  // left pad
+        result.frac = UtilString::rtrim(s, "0");
+      } else {
+        // overflow into integer part
+        std::string over = s.substr(0, s.length() - fracLen);
+        std::string fracOnly = s.substr(s.length() - fracLen);
+
+        result.before += std::stoull(over);
+        result.frac = UtilString::rtrim(fracOnly, "0");
+      }
+    }
+
+    return result;
   }
 
   // false means negative sign needed

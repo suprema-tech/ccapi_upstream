@@ -230,4 +230,95 @@ TEST(DecimalTest, NegateTwice) {
   EXPECT_EQ(-(-x), x);
 }
 
+TEST(DecimalTest, MultiplyAssignOperatorIntegral) {
+  // Original cases
+  Decimal d("2.5");
+  d *= 4;
+  EXPECT_EQ(ConvertDecimalToString(d), "10");
+
+  Decimal d2("-0.25");
+  d2 *= -8;
+  EXPECT_EQ(ConvertDecimalToString(d2), "2");
+
+  Decimal d3("100.00001");
+  d3 *= 1;
+  EXPECT_EQ(ConvertDecimalToString(d3), "100.00001");
+
+  Decimal d4("123456.789");
+  d4 *= 0;
+  EXPECT_EQ(ConvertDecimalToString(d4), "0");
+
+  // Additional cases
+
+  // Multiplying by -1
+  Decimal d5("123.456");
+  d5 *= -1;
+  EXPECT_EQ(ConvertDecimalToString(d5), "-123.456");
+
+  // Multiplying negative by negative
+  Decimal d6("-123.456");
+  d6 *= -2;
+  EXPECT_EQ(ConvertDecimalToString(d6), "246.912");
+
+  // Multiplying negative by positive
+  Decimal d7("-1.5");
+  d7 *= 3;
+  EXPECT_EQ(ConvertDecimalToString(d7), "-4.5");
+
+  // Multiplying very small decimal by large integer
+  Decimal d8("0.0000002");
+  d8 *= 3500000;
+  EXPECT_EQ(ConvertDecimalToString(d8), "0.7");
+
+  // Multiplying very large decimal by small integer
+  Decimal d9("999999999.999999");
+  d9 *= 2;
+  EXPECT_EQ(ConvertDecimalToString(d9), "1999999999.999998");
+
+  // Multiplying 0 by any number
+  Decimal d10("0");
+  d10 *= 123456789;
+  EXPECT_EQ(ConvertDecimalToString(d10), "0");
+
+  // Multiplying by 0 with negative number
+  Decimal d11("-999.99");
+  d11 *= 0;
+  EXPECT_EQ(ConvertDecimalToString(d11), "0");
+
+  // Multiplying whole number
+  Decimal d12("50");
+  d12 *= 2;
+  EXPECT_EQ(ConvertDecimalToString(d12), "100");
+
+  // Multiplying very small negative by negative
+  Decimal d13("-0.000001");
+  d13 *= -1000000;
+  EXPECT_EQ(ConvertDecimalToString(d13), "1");
+
+  // Multiplying repeating decimal
+  Decimal d14("0.3333");
+  d14 *= 3;
+  EXPECT_EQ(ConvertDecimalToString(d14), "0.9999");
+
+  // Multiplying very large integer
+  Decimal d15("1");
+  d15 *= 1000000000000000LL;
+  EXPECT_EQ(ConvertDecimalToString(d15), "1000000000000000");
+
+  // Multiplying high-precision decimal
+  Decimal d16("0.123456789123456789");
+  d16 *= 10;
+  EXPECT_EQ(ConvertDecimalToString(d16), "1.23456789123456789");
+
+  // Multiplying by 1 (should be no change)
+  Decimal d17("8888.8888");
+  d17 *= 1;
+  EXPECT_EQ(ConvertDecimalToString(d17), "8888.8888");
+
+  // Multiplying negative decimal by 1
+  Decimal d18("-42.42");
+  d18 *= 1;
+  EXPECT_EQ(ConvertDecimalToString(d18), "-42.42");
+}
+
 } /* namespace ccapi */
