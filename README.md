@@ -1,5 +1,5 @@
 # Notice
-* New release has 15% reduction in cpu usage.
+* New release has about 20% reduction in cpu usage.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 
