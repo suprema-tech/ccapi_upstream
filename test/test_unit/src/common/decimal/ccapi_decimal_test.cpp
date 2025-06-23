@@ -316,9 +316,63 @@ TEST(DecimalTest, MultiplyAssignOperatorIntegral) {
   EXPECT_EQ(ConvertDecimalToString(d17), "8888.8888");
 
   // Multiplying negative decimal by 1
-  Decimal d18("-42.42");
+  Decimal d18("42.42");
   d18 *= 1;
-  EXPECT_EQ(ConvertDecimalToString(d18), "-42.42");
+  EXPECT_EQ(ConvertDecimalToString(d18), "42.42");
+
+  // Multiplying negative decimal by -1
+  Decimal d19("42.42");
+  d19 *= -1;
+  EXPECT_EQ(ConvertDecimalToString(d19), "-42.42");
+}
+
+TEST(DecimalTest, AbsZeroVariants) {
+  EXPECT_EQ(ConvertDecimalToString(Decimal("0").abs()), "0");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("-0").abs()), "0");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("-0.0").abs()), "0");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("0.000").abs()), "0");
+}
+
+TEST(DecimalTest, AbsPositiveIntegers) {
+  EXPECT_EQ(ConvertDecimalToString(Decimal("1").abs()), "1");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("42").abs()), "42");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("999999999").abs()), "999999999");
+}
+
+TEST(DecimalTest, AbsNegativeIntegers) {
+  EXPECT_EQ(ConvertDecimalToString(Decimal("-1").abs()), "1");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("-42").abs()), "42");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("-999999999").abs()), "999999999");
+}
+
+TEST(DecimalTest, AbsPositiveDecimals) {
+  EXPECT_EQ(ConvertDecimalToString(Decimal("3.14").abs()), "3.14");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("0.0001").abs()), "0.0001");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("123.456000").abs()), "123.456");
+}
+
+TEST(DecimalTest, AbsNegativeDecimals) {
+  EXPECT_EQ(ConvertDecimalToString(Decimal("-3.14").abs()), "3.14");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("-0.0001").abs()), "0.0001");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("-123.456000").abs()), "123.456");
+}
+
+TEST(DecimalTest, AbsVeryLargeNumbers) {
+  EXPECT_EQ(ConvertDecimalToString(Decimal("-999999999.999999").abs()), "999999999.999999");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("18446744073709551615").abs()), "18446744073709551615");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("-18446744073709551615").abs()), "18446744073709551615");
+}
+
+TEST(DecimalTest, AbsWithLeadingZeros) {
+  EXPECT_EQ(ConvertDecimalToString(Decimal("000123.45000").abs()), "123.45");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("-000123.45000").abs()), "123.45");
+}
+
+TEST(DecimalTest, AbsScientificNotationStyleInputs) {
+  EXPECT_EQ(ConvertDecimalToString(Decimal("1.23e3").abs()), "1230");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("-1.23e3").abs()), "1230");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("1.23e-3").abs()), "0.00123");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("-1.23e-3").abs()), "0.00123");
 }
 
 } /* namespace ccapi */
