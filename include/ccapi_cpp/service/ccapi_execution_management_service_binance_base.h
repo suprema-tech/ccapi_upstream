@@ -6,6 +6,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceBinanceBase : public ExecutionManagementService {
  public:
   ExecutionManagementServiceBinanceBase(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -59,7 +60,8 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
             if (statusCode / 100 == 2) {
               std::string urlWebsocketBase;
               try {
-                rj::Document document;
+                that->jsonDocumentAllocator.Clear();
+                rj::Document document(&that->jsonDocumentAllocator);
                 document.Parse<rj::kParseNumbersAsStringsFlag>(body.c_str());
                 std::string listenKey = document["listenKey"].GetString();
                 std::string url = that->baseUrlWs + "/" + listenKey;
@@ -328,7 +330,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
 
   void extractOrderInfoFromRequest(std::vector<Element>& elementList, const Request& request, const Request::Operation operation,
                                    const rj::Document& document) override {
-    std::map<std::string, std::pair<std::string, JsonDataType>> extractionFieldNameMap = {
+    std::map<std::string_view, std::pair<std::string_view, JsonDataType>> extractionFieldNameMap = {
         {CCAPI_EM_ORDER_ID, std::make_pair("orderId", JsonDataType::INTEGER)},
         {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_QUANTITY, std::make_pair("origQty", JsonDataType::STRING)},
@@ -340,9 +342,9 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
         {CCAPI_LAST_UPDATED_TIME_SECONDS, std::make_pair("updateTime", JsonDataType::STRING)},
     };
     if (operation == Request::Operation::CANCEL_ORDER || operation == Request::Operation::CANCEL_OPEN_ORDERS) {
-      extractionFieldNameMap.insert({CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("origClientOrderId", JsonDataType::STRING)});
+      extractionFieldNameMap.emplace(CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("origClientOrderId", JsonDataType::STRING));
     } else {
-      extractionFieldNameMap.insert({CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("clientOrderId", JsonDataType::STRING)});
+      extractionFieldNameMap.emplace(CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("clientOrderId", JsonDataType::STRING));
     }
     if (document.IsObject()) {
       Element element;
@@ -386,9 +388,9 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
             for (const auto& x : document["userAssets"].GetArray()) {
               Element element;
               element.insert(CCAPI_EM_ASSET, x["asset"].GetString());
-              element.insert(CCAPI_EM_QUANTITY_TOTAL, Decimal(x["free"].GetString()).add(Decimal(x["locked"].GetString())).toString());
+              element.insert(CCAPI_EM_QUANTITY_TOTAL, ConvertDecimalToString(Decimal(x["free"].GetString()) + (Decimal(x["locked"].GetString()))));
               element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, x["free"].GetString());
-              element.insert(CCAPI_EM_QUANTITY_LIABILITY, Decimal(x["borrowed"].GetString()).add(Decimal(x["interest"].GetString())).toString());
+              element.insert(CCAPI_EM_QUANTITY_LIABILITY, ConvertDecimalToString(Decimal(x["borrowed"].GetString()) + (Decimal(x["interest"].GetString()))));
               elementList.emplace_back(std::move(element));
             }
           } else if (marginType == CCAPI_EM_MARGIN_TYPE_ISOLATED_MARGIN) {
@@ -399,9 +401,9 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
                 Element element;
                 element.insert(CCAPI_EM_INSTRUMENT, symbol);
                 element.insert(CCAPI_EM_ASSET, y["asset"].GetString());
-                element.insert(CCAPI_EM_QUANTITY_TOTAL, Decimal(y["free"].GetString()).add(Decimal(y["locked"].GetString())).toString());
+                element.insert(CCAPI_EM_QUANTITY_TOTAL, ConvertDecimalToString(Decimal(y["free"].GetString()) + (Decimal(y["locked"].GetString()))));
                 element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, y["free"].GetString());
-                element.insert(CCAPI_EM_QUANTITY_LIABILITY, Decimal(y["borrowed"].GetString()).add(Decimal(y["interest"].GetString())).toString());
+                element.insert(CCAPI_EM_QUANTITY_LIABILITY, ConvertDecimalToString(Decimal(y["borrowed"].GetString()) + (Decimal(y["interest"].GetString()))));
                 elementList.emplace_back(std::move(element));
               }
               {
@@ -409,9 +411,9 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
                 Element element;
                 element.insert(CCAPI_EM_INSTRUMENT, symbol);
                 element.insert(CCAPI_EM_ASSET, y["asset"].GetString());
-                element.insert(CCAPI_EM_QUANTITY_TOTAL, Decimal(y["free"].GetString()).add(Decimal(y["locked"].GetString())).toString());
+                element.insert(CCAPI_EM_QUANTITY_TOTAL, ConvertDecimalToString(Decimal(y["free"].GetString()) + (Decimal(y["locked"].GetString()))));
                 element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, y["free"].GetString());
-                element.insert(CCAPI_EM_QUANTITY_LIABILITY, Decimal(y["borrowed"].GetString()).add(Decimal(y["interest"].GetString())).toString());
+                element.insert(CCAPI_EM_QUANTITY_LIABILITY, ConvertDecimalToString(Decimal(y["borrowed"].GetString()) + (Decimal(y["interest"].GetString()))));
                 elementList.emplace_back(std::move(element));
               }
             }
@@ -419,7 +421,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
             for (const auto& x : document["balances"].GetArray()) {
               Element element;
               element.insert(CCAPI_EM_ASSET, x["asset"].GetString());
-              element.insert(CCAPI_EM_QUANTITY_TOTAL, Decimal(x["free"].GetString()).add(Decimal(x["locked"].GetString())).toString());
+              element.insert(CCAPI_EM_QUANTITY_TOTAL, ConvertDecimalToString(Decimal(x["free"].GetString()) + (Decimal(x["locked"].GetString()))));
               element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, x["free"].GetString());
               elementList.emplace_back(std::move(element));
             }
@@ -433,9 +435,9 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
 
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
-    std::string textMessage(textMessageView);
-    rj::Document document;
-    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+    this->jsonDocumentAllocator.Clear();
+    rj::Document document(&this->jsonDocumentAllocator);
+    document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
     Event event = this->createEvent(wsConnectionPtr, subscription, textMessageView, document, timeReceived);
     if (!event.getMessageList().empty()) {
       this->eventHandler(event, nullptr);
@@ -444,8 +446,6 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
 
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const TimePoint& timeReceived) {
-    std::string textMessage(textMessageView);
-
     Event event;
     std::vector<Message> messageList;
     if (wsConnectionPtr->host == this->websocketOrderEntryHost) {
@@ -462,7 +462,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
           Element element;
           element.insert(CCAPI_CONNECTION_ID, wsConnectionPtr->id);
           element.insert(CCAPI_CONNECTION_URL, wsConnectionPtr->url);
-          element.insert(CCAPI_INFO_MESSAGE, textMessage);
+          element.insert(CCAPI_INFO_MESSAGE, textMessageView);
           message.setElementList({element});
         } else {
           event.setType(Event::Type::AUTHORIZATION_STATUS);
@@ -470,7 +470,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
           Element element;
           element.insert(CCAPI_CONNECTION_ID, wsConnectionPtr->id);
           element.insert(CCAPI_CONNECTION_URL, wsConnectionPtr->url);
-          element.insert(CCAPI_ERROR_MESSAGE, textMessage);
+          element.insert(CCAPI_ERROR_MESSAGE, textMessageView);
           message.setElementList({element});
         }
       } else if (UtilString::startsWith(id, this->websocketOrderEntryCreateOrderJsonIdPrefix) ||
@@ -488,7 +488,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
         if (!success) {
           message.setType(Message::Type::RESPONSE_ERROR);
           Element element;
-          element.insert(CCAPI_ERROR_MESSAGE, textMessage);
+          element.insert(CCAPI_ERROR_MESSAGE, textMessageView);
           message.setElementList({element});
           message.setCorrelationIdList({requestCorrelationId});
         } else {
@@ -523,24 +523,24 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
             message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_PRIVATE_TRADE);
             std::vector<Element> elementList;
             Element element;
-            element.insert(CCAPI_TRADE_ID, std::string(data["t"].GetString()));
-            element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, std::string(data["L"].GetString()));
-            element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, std::string(data["l"].GetString()));
-            element.insert(CCAPI_EM_ORDER_SIDE, std::string(data["S"].GetString()) == "BUY" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
+            element.insert(CCAPI_TRADE_ID, data["t"].GetString());
+            element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, data["L"].GetString());
+            element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, data["l"].GetString());
+            element.insert(CCAPI_EM_ORDER_SIDE, std::string_view(data["S"].GetString()) == "BUY" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
             element.insert(CCAPI_IS_MAKER, data["m"].GetBool() ? "1" : "0");
-            element.insert(CCAPI_EM_ORDER_ID, std::string(data["i"].GetString()));
-            element.insert(CCAPI_EM_CLIENT_ORDER_ID, std::string(data["c"].GetString()));
+            element.insert(CCAPI_EM_ORDER_ID, data["i"].GetString());
+            element.insert(CCAPI_EM_CLIENT_ORDER_ID, data["c"].GetString());
             element.insert(CCAPI_EM_ORDER_INSTRUMENT, instrument);
             {
               auto it = data.FindMember("n");
               if (it != data.MemberEnd() && !it->value.IsNull()) {
-                element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, std::string(it->value.GetString()));
+                element.insert(CCAPI_EM_ORDER_FEE_QUANTITY, it->value.GetString());
               }
             }
             {
               auto it = data.FindMember("N");
               if (it != data.MemberEnd() && !it->value.IsNull()) {
-                element.insert(CCAPI_EM_ORDER_FEE_ASSET, std::string(it->value.GetString()));
+                element.insert(CCAPI_EM_ORDER_FEE_ASSET, it->value.GetString());
               }
             }
             elementList.emplace_back(std::move(element));
@@ -553,7 +553,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
             message.setCorrelationIdList({subscription.getCorrelationId()});
             message.setTime(TimePoint(std::chrono::milliseconds(std::stoll((this->isDerivatives ? document : data)["E"].GetString()))));
             message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_ORDER_UPDATE);
-            const std::map<std::string, std::pair<std::string, JsonDataType>>& extractionFieldNameMap = {
+            const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
                 {CCAPI_EM_ORDER_ID, std::make_pair("i", JsonDataType::INTEGER)},
                 {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("c", JsonDataType::STRING)},
                 {CCAPI_EM_ORDER_SIDE, std::make_pair("S", JsonDataType::STRING)},
@@ -575,8 +575,9 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
             {
               auto it = data.FindMember("ap");
               if (it != data.MemberEnd() && !it->value.IsNull()) {
-                info.insert(CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
-                            Decimal(UtilString::printDoubleScientific(std::stod(it->value.GetString()) * std::stod(data["z"].GetString()))).toString());
+                info.insert(
+                    CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
+                    ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(it->value.GetString()) * std::stod(data["z"].GetString())))));
               }
             }
             std::vector<Element> elementList;
@@ -630,11 +631,11 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
     return event;
   }
 
-  void convertRequestForWebsocket(rj::Document& document, rj::Document::AllocatorType& allocator, const WsConnection& wsConnection, const Request& request,
-                                  unsigned long wsRequestId, const TimePoint& now, const std::string& symbolId,
+  void convertRequestForWebsocket(rj::Document& document, rj::Document::AllocatorType& allocator, std::shared_ptr<WsConnection> wsConnectionPtr,
+                                  const Request& request, unsigned long wsRequestId, const TimePoint& now, const std::string& symbolId,
                                   const std::map<std::string, std::string>& credential) override {
     document.SetObject();
-    this->requestCorrelationIdByWsRequestIdByConnectionIdMap[wsConnection.id][wsRequestId] = request.getCorrelationId();
+    this->requestCorrelationIdByWsRequestIdByConnectionIdMap[wsConnectionPtr->id][wsRequestId] = request.getCorrelationId();
     Request::Operation operation = request.getOperation();
     switch (operation) {
       case Request::Operation::CREATE_ORDER: {
@@ -687,7 +688,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
         document.AddMember("params", params, allocator);
       } break;
       default:
-        this->convertRequestForWebsocketCustom(document, allocator, wsConnection, request, wsRequestId, now, symbolId, credential);
+        this->convertRequestForWebsocketCustom(document, allocator, wsConnectionPtr, request, wsRequestId, now, symbolId, credential);
     }
   }
 
@@ -712,7 +713,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
   }
 
   virtual void extractOrderInfoFromResponse(std::vector<Element>& elementList, const rj::Document& document) {
-    std::map<std::string, std::pair<std::string, JsonDataType>> extractionFieldNameMap = {
+    std::map<std::string_view, std::pair<std::string_view, JsonDataType>> extractionFieldNameMap = {
         {CCAPI_EM_ORDER_ID, std::make_pair("orderId", JsonDataType::INTEGER)},
         {CCAPI_EM_ORDER_SIDE, std::make_pair("side", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_QUANTITY, std::make_pair("origQty", JsonDataType::STRING)},
@@ -733,9 +734,9 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
     elementList.emplace_back(std::move(element));
   }
 
-  std::vector<std::string> createSendStringListFromSubscription(const WsConnection& wsConnection, const Subscription& subscription, const TimePoint& now,
-                                                                const std::map<std::string, std::string>& credential) override {
-    if (wsConnection.host == this->websocketOrderEntryHost) {
+  std::vector<std::string> createSendStringListFromSubscription(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription,
+                                                                const TimePoint& now, const std::map<std::string, std::string>& credential) override {
+    if (wsConnectionPtr->host == this->websocketOrderEntryHost) {
       auto it = credential.find(this->websocketOrderEntryApiPrivateKeyPathName);
       if (it == credential.end()) {
         throw std::runtime_error("Missing credential: " + this->websocketOrderEntryApiPrivateKeyPathName);

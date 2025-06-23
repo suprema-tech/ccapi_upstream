@@ -2,16 +2,17 @@
 #define INCLUDE_CCAPI_CPP_SERVICE_CCAPI_FIX_SERVICE_H_
 #ifdef CCAPI_ENABLE_SERVICE_FIX
 #ifndef CCAPI_FIX_READ_BUFFER_SIZE
-#define CCAPI_FIX_READ_BUFFER_SIZE 1 << 20
+#define CCAPI_FIX_READ_BUFFER_SIZE (1 << 20)
 #endif
 #ifndef CCAPI_FIX_WRITE_BUFFER_SIZE
-#define CCAPI_FIX_WRITE_BUFFER_SIZE 1 << 20
+#define CCAPI_FIX_WRITE_BUFFER_SIZE (1 << 20)
 #endif
 #include "ccapi_cpp/service/ccapi_service.h"
 #include "hffix.hpp"
 namespace hff = hffix;
 
 namespace ccapi {
+
 /**
  * Defines a service which provides access to exchange API and normalizes them. This is a base class that implements generic functionalities for dealing with
  * exchange FIX APIs. The Session object is responsible for routing requests and subscriptions to the desired concrete service.
@@ -639,6 +640,7 @@ inline void FixService<beast::tcp_stream>::onConnect_3(std::shared_ptr<FixConnec
   beast::tcp_stream& stream = *fixConnectionPtr->streamPtr;
   this->start(fixConnectionPtr, now);
 }
+
 } /* namespace ccapi */
 #endif
 #endif  // INCLUDE_CCAPI_CPP_SERVICE_CCAPI_FIX_SERVICE_H_

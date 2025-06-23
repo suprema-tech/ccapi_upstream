@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_gateio_base.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceGateio : public ExecutionManagementServiceGateioBase {
  public:
   ExecutionManagementServiceGateio(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -33,6 +34,7 @@ class ExecutionManagementServiceGateio : public ExecutionManagementServiceGateio
 
   virtual ~ExecutionManagementServiceGateio() {}
 };
+
 } /* namespace ccapi */
 #endif
 #endif

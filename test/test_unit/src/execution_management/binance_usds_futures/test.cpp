@@ -6,7 +6,9 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_binance_usds_futures.h"
 
 // clang-format on
+
 namespace ccapi {
+
 class ExecutionManagementServiceBinanceUsdsFuturesTest : public ::testing::Test {
  public:
   typedef Service::ServiceContextPtr ServiceContextPtr;
@@ -122,7 +124,8 @@ TEST_F(ExecutionManagementServiceBinanceUsdsFuturesTest, createEventExecutionTyp
   rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
 #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  auto messageList = this->service->createEvent(WsConnection(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now).getMessageList();
+  auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now)
+                         .getMessageList();
 #else
   auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), subscription, textMessage, document, this->now).getMessageList();
 #endif
@@ -292,7 +295,8 @@ TEST_F(ExecutionManagementServiceBinanceUsdsFuturesTest, createEventExecutionTyp
   rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
 #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  auto messageList = this->service->createEvent(WsConnection(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now).getMessageList();
+  auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now)
+                         .getMessageList();
 #else
   auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), subscription, textMessage, document, this->now).getMessageList();
 #endif
@@ -459,6 +463,7 @@ TEST_F(ExecutionManagementServiceBinanceUsdsFuturesTest, convertTextMessageToMes
   EXPECT_DOUBLE_EQ(std::stod(element.getValue(CCAPI_EM_POSITION_ENTRY_PRICE)), 0);
   EXPECT_EQ(element.getValue(CCAPI_EM_POSITION_LEVERAGE), "100");
 }
+
 } /* namespace ccapi */
 #endif
 #endif

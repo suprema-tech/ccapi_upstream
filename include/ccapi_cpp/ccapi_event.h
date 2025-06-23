@@ -6,6 +6,7 @@
 #include "ccapi_cpp/ccapi_message.h"
 
 namespace ccapi {
+
 /**
 ** A single event resulting from a subscription or a request. Event objects are created by the API and passed to the application either through a registered
 *EventHandler or EventQueue. Event objects contain Message objects which can be accessed using the getMessageList() function. The Event object is a handle to an
@@ -108,5 +109,6 @@ class Event {
   Type type{Type::UNKNOWN};
   std::vector<Message> messageList;
 };
+
 } /* namespace ccapi */
 #endif  // INCLUDE_CCAPI_CPP_CCAPI_EVENT_H_

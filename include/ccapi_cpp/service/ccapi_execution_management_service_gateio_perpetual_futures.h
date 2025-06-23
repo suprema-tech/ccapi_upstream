@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_gateio_base.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceGateioPerpetualFutures : public ExecutionManagementServiceGateioBase {
  public:
   ExecutionManagementServiceGateioPerpetualFutures(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions,
@@ -65,8 +66,9 @@ class ExecutionManagementServiceGateioPerpetualFutures : public ExecutionManagem
           Element element;
           element.insert(CCAPI_INSTRUMENT, x["contract"].GetString());
           element.insert(CCAPI_EM_POSITION_QUANTITY, x["size"].GetString());
-          element.insert(CCAPI_EM_POSITION_COST,
-                         Decimal(UtilString::printDoubleScientific(std::stod(x["entry_price"].GetString()) * std::stod(x["size"].GetString()))).toString());
+          element.insert(
+              CCAPI_EM_POSITION_COST,
+              ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(x["entry_price"].GetString()) * std::stod(x["size"].GetString())))));
           elementList.emplace_back(std::move(element));
         }
       } break;
@@ -117,6 +119,7 @@ class ExecutionManagementServiceGateioPerpetualFutures : public ExecutionManagem
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
 };
+
 } /* namespace ccapi */
 #endif
 #endif

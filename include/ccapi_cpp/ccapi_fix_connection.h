@@ -7,6 +7,7 @@
 namespace beast = boost::beast;
 
 namespace ccapi {
+
 /**
  * This class represents a TCP socket connection for the FIX API.
  */
@@ -70,5 +71,6 @@ class FixConnection {
   Status status{Status::UNKNOWN};
   std::shared_ptr<T> streamPtr;
 };
+
 } /* namespace ccapi */
 #endif  // INCLUDE_CCAPI_CPP_CCAPI_FIX_CONNECTION_H_

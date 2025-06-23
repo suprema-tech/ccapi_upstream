@@ -6,6 +6,7 @@
 #include "ccapi_cpp/service/ccapi_fix_service_ftx_base.h"
 
 namespace ccapi {
+
 class FixServiceFtxUs : public FixServiceFtxBase {
  public:
   FixServiceFtxUs(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -29,6 +30,7 @@ class FixServiceFtxUs : public FixServiceFtxBase {
 
   virtual ~FixServiceFtxUs() {}
 };
+
 } /* namespace ccapi */
 #endif
 #endif

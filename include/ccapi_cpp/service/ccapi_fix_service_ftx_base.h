@@ -6,6 +6,7 @@
 #include "ccapi_cpp/service/ccapi_fix_service.h"
 
 namespace ccapi {
+
 class FixServiceFtxBase : public FixService<beast::ssl_stream<beast::tcp_stream>> {
  public:
   FixServiceFtxBase(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -54,6 +55,7 @@ class FixServiceFtxBase : public FixService<beast::ssl_stream<beast::tcp_stream>
 
   std::string apiSubaccountName;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

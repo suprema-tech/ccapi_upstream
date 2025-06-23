@@ -7,6 +7,7 @@
 #include "ccapi_cpp/ccapi_util_private.h"
 
 namespace ccapi {
+
 /**
  * This class contains the options which the user can specify when creating a session. To use non-default options on a Session, create a SessionOptions instance
  * and set the required options and then supply it when creating a Session.
@@ -58,5 +59,6 @@ class SessionOptions {
   bool enableOneHttpConnectionPerRequest{};  // create a new http connection for each request
   long websocketConnectTimeoutMilliseconds{10000};
 };
+
 } /* namespace ccapi */
 #endif  // INCLUDE_CCAPI_CPP_CCAPI_SESSION_OPTIONS_H_

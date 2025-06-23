@@ -7,6 +7,7 @@
 #include "ccapi_cpp/ccapi_util_private.h"
 
 namespace ccapi {
+
 /**
  * This class represents a url.
  */
@@ -117,5 +118,6 @@ class Url {
   std::string port;
   std::string target;  // should be url-encoded
 };
+
 } /* namespace ccapi */
 #endif  // INCLUDE_CCAPI_CPP_CCAPI_URL_H_

@@ -10,6 +10,7 @@
 #include "ccapi_cpp/ccapi_util_private.h"
 
 namespace ccapi {
+
 /**
  * This class contains the configs when creating a session. It loads and maintains exchange information. Most of the values shouldn't be changed. To use
  * non-default configs on a Session, create a SessionConfigs instance and set the required configs and then supply it when creating a Session.
@@ -432,5 +433,6 @@ class SessionConfigs {
   std::map<std::string, int> initialSequenceByExchangeMap;
   std::map<std::string, std::string> credential;
 };
+
 } /* namespace ccapi */
 #endif  // INCLUDE_CCAPI_CPP_CCAPI_SESSION_CONFIGS_H_

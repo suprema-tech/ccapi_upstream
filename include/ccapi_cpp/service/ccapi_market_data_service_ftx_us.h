@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_market_data_service_ftx_base.h"
 
 namespace ccapi {
+
 class MarketDataServiceFtxUs : public MarketDataServiceFtxBase {
  public:
   MarketDataServiceFtxUs(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -30,6 +31,7 @@ class MarketDataServiceFtxUs : public MarketDataServiceFtxBase {
 
   virtual ~MarketDataServiceFtxUs() {}
 };
+
 } /* namespace ccapi */
 #endif
 #endif

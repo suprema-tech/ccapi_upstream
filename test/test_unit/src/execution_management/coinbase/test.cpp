@@ -6,7 +6,9 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_coinbase.h"
 
 // clang-format on
+
 namespace ccapi {
+
 class ExecutionManagementServiceCoinbaseTest : public ::testing::Test {
  public:
   typedef Service::ServiceContextPtr ServiceContextPtr;
@@ -446,7 +448,8 @@ TEST_F(ExecutionManagementServiceCoinbaseTest, createEventMatchTaker) {
   rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
 #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  auto messageList = this->service->createEvent(WsConnection(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now).getMessageList();
+  auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now)
+                         .getMessageList();
 #else
   auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), subscription, textMessage, document, this->now).getMessageList();
 #endif
@@ -490,7 +493,8 @@ TEST_F(ExecutionManagementServiceCoinbaseTest, createEventMatchMaker) {
   rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
 #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  auto messageList = this->service->createEvent(WsConnection(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now).getMessageList();
+  auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now)
+                         .getMessageList();
 #else
   auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), subscription, textMessage, document, this->now).getMessageList();
 #endif
@@ -530,7 +534,8 @@ TEST_F(ExecutionManagementServiceCoinbaseTest, createEventReceived) {
   rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
 #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  auto messageList = this->service->createEvent(WsConnection(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now).getMessageList();
+  auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now)
+                         .getMessageList();
 #else
   auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), subscription, textMessage, document, this->now).getMessageList();
 #endif
@@ -568,7 +573,8 @@ TEST_F(ExecutionManagementServiceCoinbaseTest, createEventReceivedMarketOrder) {
   rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
 #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  auto messageList = this->service->createEvent(WsConnection(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now).getMessageList();
+  auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now)
+                         .getMessageList();
 #else
   auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), subscription, textMessage, document, this->now).getMessageList();
 #endif
@@ -604,7 +610,8 @@ TEST_F(ExecutionManagementServiceCoinbaseTest, createEventOpen) {
   rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
 #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  auto messageList = this->service->createEvent(WsConnection(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now).getMessageList();
+  auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now)
+                         .getMessageList();
 #else
   auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), subscription, textMessage, document, this->now).getMessageList();
 #endif
@@ -643,7 +650,8 @@ TEST_F(ExecutionManagementServiceCoinbaseTest, createEventDoneFilled) {
   rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
 #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  auto messageList = this->service->createEvent(WsConnection(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now).getMessageList();
+  auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now)
+                         .getMessageList();
 #else
   auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), subscription, textMessage, document, this->now).getMessageList();
 #endif
@@ -682,7 +690,8 @@ TEST_F(ExecutionManagementServiceCoinbaseTest, createEventChange) {
   rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
 #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  auto messageList = this->service->createEvent(WsConnection(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now).getMessageList();
+  auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now)
+                         .getMessageList();
 #else
   auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), subscription, textMessage, document, this->now).getMessageList();
 #endif
@@ -722,7 +731,8 @@ TEST_F(ExecutionManagementServiceCoinbaseTest, createEventActivate) {
   rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
 #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  auto messageList = this->service->createEvent(WsConnection(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now).getMessageList();
+  auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now)
+                         .getMessageList();
 #else
   auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), subscription, textMessage, document, this->now).getMessageList();
 #endif
@@ -739,6 +749,7 @@ TEST_F(ExecutionManagementServiceCoinbaseTest, createEventActivate) {
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_STATUS), "activate");
   EXPECT_EQ(element.getValue(CCAPI_EM_ORDER_INSTRUMENT), "test-product");
 }
+
 } /* namespace ccapi */
 #endif
 #endif

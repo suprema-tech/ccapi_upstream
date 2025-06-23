@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_fix_service.h"
 
 namespace ccapi {
+
 class FixServiceGemini : public FixService<beast::tcp_stream> {
  public:
   FixServiceGemini(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -51,6 +52,7 @@ class FixServiceGemini : public FixService<beast::tcp_stream> {
     return param;
   }
 };
+
 } /* namespace ccapi */
 #endif
 #endif

@@ -18,6 +18,7 @@
 #define CCAPI_REQUEST_OPERATION_TYPE_EXECUTION_MANAGEMENT_ACCOUNT 0x700
 
 namespace ccapi {
+
 /**
  * A single request. Request objects are created using Request constructors. They are used with Session::sendRequest() or Session::sendRequestByWebsocket() or
  * Session::sendRequestByFix(). The Request object contains the parameters for a single request. Once a Request has been created its fields can be further
@@ -42,6 +43,7 @@ class Request {
     GET_INSTRUMENT,
     GET_INSTRUMENTS,
     GET_BBOS,
+    GET_TICKERS,
     CREATE_ORDER = CCAPI_REQUEST_OPERATION_TYPE_EXECUTION_MANAGEMENT_ORDER,
     CANCEL_ORDER,
     GET_ORDER,
@@ -99,6 +101,9 @@ class Request {
         break;
       case Operation::GET_BBOS:
         output = "GET_BBOS";
+        break;
+      case Operation::GET_TICKERS:
+        output = "GET_TICKERS";
         break;
       case Operation::CREATE_ORDER:
         output = "CREATE_ORDER";
@@ -274,5 +279,6 @@ class Request {
   std::string host;
   std::string port;
 };
+
 } /* namespace ccapi */
 #endif  // INCLUDE_CCAPI_CPP_CCAPI_REQUEST_H_

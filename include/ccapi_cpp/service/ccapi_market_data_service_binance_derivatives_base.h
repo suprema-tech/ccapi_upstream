@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_market_data_service_binance_base.h"
 
 namespace ccapi {
+
 class MarketDataServiceBinanceDerivativesBase : public MarketDataServiceBinanceBase {
  public:
   MarketDataServiceBinanceDerivativesBase(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -18,7 +19,7 @@ class MarketDataServiceBinanceDerivativesBase : public MarketDataServiceBinanceB
 
  protected:
 #endif
-  void prepareSubscriptionDetail(std::string& channelId, std::string& symbolId, const std::string& field, const WsConnection& wsConnection,
+  void prepareSubscriptionDetail(std::string& channelId, std::string& symbolId, const std::string& field, std::shared_ptr<WsConnection> wsConnectionPtr,
                                  const Subscription& subscription, const std::map<std::string, std::string> optionMap) override {
     auto marketDepthRequested = std::stoi(optionMap.at(CCAPI_MARKET_DEPTH_MAX));
     auto conflateIntervalMilliseconds = std::stoi(optionMap.at(CCAPI_CONFLATE_INTERVAL_MILLISECONDS));
@@ -38,7 +39,7 @@ class MarketDataServiceBinanceDerivativesBase : public MarketDataServiceBinanceB
         if (!updateSpeed.empty()) {
           channelId += "&UPDATE_SPEED=" + updateSpeed;
         }
-        this->marketDepthSubscribedToExchangeByConnectionIdChannelIdSymbolIdMap[wsConnection.id][channelId][symbolId] = marketDepthSubscribedToExchange;
+        this->marketDepthSubscribedToExchangeByConnectionIdChannelIdSymbolIdMap[wsConnectionPtr->id][channelId][symbolId] = marketDepthSubscribedToExchange;
       }
     } else if (field == CCAPI_CANDLESTICK) {
       std::string interval =
@@ -102,17 +103,18 @@ class MarketDataServiceBinanceDerivativesBase : public MarketDataServiceBinanceB
     }
   }
 
-  void convertTextMessageToMarketDataMessage(const Request& request, const std::string& textMessage, const TimePoint& timeReceived, Event& event,
+  void convertTextMessageToMarketDataMessage(const Request& request, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
                                              std::vector<MarketDataMessage>& marketDataMessageList) override {
     switch (request.getOperation()) {
       case Request::Operation::GET_INSTRUMENT: {
-        rj::Document document;
-        document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+        this->jsonDocumentAllocator.Clear();
+        rj::Document document(&this->jsonDocumentAllocator);
+        document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
         Message message;
         message.setTimeReceived(timeReceived);
         message.setType(this->requestOperationToMessageTypeMap.at(request.getOperation()));
         for (const auto& x : document["symbols"].GetArray()) {
-          if (std::string(x["symbol"].GetString()) == request.getInstrument()) {
+          if (std::string_view(x["symbol"].GetString()) == request.getInstrument()) {
             Element element;
             this->extractInstrumentInfo(element, x);
             message.setElementList({element});
@@ -123,8 +125,9 @@ class MarketDataServiceBinanceDerivativesBase : public MarketDataServiceBinanceB
         event.addMessages({message});
       } break;
       case Request::Operation::GET_INSTRUMENTS: {
-        rj::Document document;
-        document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
+        this->jsonDocumentAllocator.Clear();
+        rj::Document document(&this->jsonDocumentAllocator);
+        document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());
         Message message;
         message.setTimeReceived(timeReceived);
         message.setType(this->requestOperationToMessageTypeMap.at(request.getOperation()));
@@ -139,10 +142,11 @@ class MarketDataServiceBinanceDerivativesBase : public MarketDataServiceBinanceB
         event.addMessages({message});
       } break;
       default:
-        MarketDataServiceBinanceBase::convertTextMessageToMarketDataMessage(request, textMessage, timeReceived, event, marketDataMessageList);
+        MarketDataServiceBinanceBase::convertTextMessageToMarketDataMessage(request, textMessageView, timeReceived, event, marketDataMessageList);
     }
   }
 };
+
 } /* namespace ccapi */
 #endif
 #endif

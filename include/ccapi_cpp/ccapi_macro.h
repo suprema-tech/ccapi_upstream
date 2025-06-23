@@ -1,5 +1,6 @@
 #ifndef INCLUDE_CCAPI_CPP_CCAPI_MACRO_H_
 #define INCLUDE_CCAPI_CPP_CCAPI_MACRO_H_
+
 #ifndef CCAPI_PRINT_DOUBLE_PRECISION_DEFAULT
 #define CCAPI_PRINT_DOUBLE_PRECISION_DEFAULT 10
 #endif
@@ -281,6 +282,26 @@
 
 #ifndef CCAPI_QUOTE_VOLUME
 #define CCAPI_QUOTE_VOLUME "QUOTE_VOLUME"
+#endif
+
+#ifndef CCAPI_OPEN_24H_PRICE
+#define CCAPI_OPEN_24H_PRICE "OPEN_24H_PRICE"
+#endif
+
+#ifndef CCAPI_HIGH_24H_PRICE
+#define CCAPI_HIGH_24H_PRICE "HIGH_24H_PRICE"
+#endif
+
+#ifndef CCAPI_LOW_24H_PRICE
+#define CCAPI_LOW_24H_PRICE "LOW_24H_PRICE"
+#endif
+
+#ifndef CCAPI_VOLUME_24H
+#define CCAPI_VOLUME_24H "VOLUME_24H"
+#endif
+
+#ifndef CCAPI_QUOTE_VOLUME_24H
+#define CCAPI_QUOTE_VOLUME_24H "QUOTE_VOLUME_24H"
 #endif
 
 #ifndef CCAPI_LIMIT
@@ -1239,7 +1260,7 @@
 
 // start: exchange FIX urls
 #ifndef CCAPI_COINBASE_URL_FIX_BASE
-#define CCAPI_COINBASE_URL_FIX_BASE "tcp+ssl://fix.exchange.coinbase.com:4198"
+#define CCAPI_COINBASE_URL_FIX_BASE "tcp+ssl://fix-ord.exchange.coinbase.com:6121"
 #endif
 
 #ifndef CCAPI_GEMINI_URL_FIX_HOST
