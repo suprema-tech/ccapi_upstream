@@ -1153,7 +1153,7 @@ class Service : public std::enable_shared_from_this<Service> {
     auto& writeMessageBufferWrittenLength = wsConnectionPtr->writeMessageBufferWrittenLength;
     auto& writeMessageBufferBoundary = wsConnectionPtr->writeMessageBufferBoundary;
     size_t n = writeMessageBufferWrittenLength;
-    const auto& connectionId = wsConnectionPtr->id;
+    [[maybe_unused]] const auto& connectionId = wsConnectionPtr->id;
     CCAPI_LOGGER_TRACE("connectionId = " + connectionId);
     memcpy(writeMessageBuffer.data() + n, data, dataSize);
     writeMessageBufferBoundary.push_back(dataSize);

@@ -344,7 +344,7 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
 
   Event createEvent(const std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                     const rj::Document& document, const TimePoint& timeReceived) {
-    const Event event;
+    Event event;
     std::vector<Message> messageList;
     Message message;
     message.setTimeReceived(timeReceived);
