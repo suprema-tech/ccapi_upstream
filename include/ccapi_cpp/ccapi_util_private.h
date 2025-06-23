@@ -18,6 +18,7 @@
 #include <iterator>
 #include <map>
 #include <numeric>
+#include <optional>
 #include <random>
 #include <regex>
 #include <set>
@@ -947,7 +948,7 @@ class Decimal {
  public:
   Decimal() {}
 
-  explicit Decimal(std::string_view originalValue, bool keepTrailingZero = false) {
+  explicit Decimal(std::string_view originalValue) {
     if (originalValue.empty()) {
       throw std::invalid_argument("Decimal constructor input value cannot be empty");
     }
@@ -1006,9 +1007,9 @@ class Decimal {
       }
       if (foundDot != std::string::npos) {
         this->frac = fixedPointValue.substr(foundDot + 1);
-        if (!keepTrailingZero) {
-          this->frac.erase(this->frac.find_last_not_of('0') + 1);
-        }
+        // if (!keepTrailingZero) {
+        this->frac.erase(this->frac.find_last_not_of('0') + 1);
+        // }
       }
     } else {
       auto found = originalValue.find('.');
@@ -1022,33 +1023,42 @@ class Decimal {
       }
       if (found != std::string::npos) {
         this->frac = originalValue.substr(found + 1);
-        if (!keepTrailingZero) {
-          this->frac.erase(this->frac.find_last_not_of('0') + 1);
-        }
+        // if (!keepTrailingZero) {
+        this->frac.erase(this->frac.find_last_not_of('0') + 1);
+        // }
       }
     }
 
-    if (!this->sign && this->before == 0 &&
-        ((keepTrailingZero && std::all_of(this->frac.begin(), this->frac.end(), [](char c) { return c == '0'; })) ||
-         (!keepTrailingZero && this->frac.empty()))) {
+    if (!this->sign && this->before == 0 && this->frac.empty()
+        // ((keepTrailingZero && std::all_of(this->frac.begin(), this->frac.end(), [](char c) { return c == '0'; })) ||
+        //  (!keepTrailingZero && this->frac.empty()))
+    ) {
       this->sign = true;
     }
   }
 
   std::string toString() const {
-    std::string stringValue;
-    if (!this->sign) {
-      stringValue += "-";
+    if (!this->cachedToString) {
+      std::string stringValue;
+      if (!this->sign) {
+        stringValue += "-";
+      }
+      stringValue += std::to_string(this->before);
+      if (!this->frac.empty()) {
+        stringValue += ".";
+        stringValue += this->frac;
+      }
+      cachedToString.emplace(stringValue);
     }
-    stringValue += std::to_string(this->before);
-    if (!this->frac.empty()) {
-      stringValue += ".";
-      stringValue += this->frac;
-    }
-    return stringValue;
+    return *this->cachedToString;
   }
 
-  double toDouble() const { return std::stod(this->toString()); }
+  double toDouble() const {
+    if (!this->cachedToDouble) {
+      cachedToDouble.emplace(std::stod(this->toString()));
+    }
+    return *this->cachedToDouble;
+  }
 
   friend bool operator<(const Decimal& l, const Decimal& r) {
     if (l.sign && r.sign) {
@@ -1129,94 +1139,139 @@ class Decimal {
   }
 
   Decimal add(const Decimal& x) const {
+    /* ----------------  Same-sign fast path  ---------------- */
     if (this->sign && x.sign) {
       Decimal o;
-      o.sign = true;
-      o.before = this->before + x.before;
-      if (this->frac.empty()) {
-        o.frac = x.frac;
-      } else if (x.frac.empty()) {
-        o.frac = this->frac;
-      } else {
-        auto l1 = this->frac.length();
-        auto l2 = x.frac.length();
-        if (l1 > l2) {
-          auto a = std::to_string(std::stoull(this->frac) + std::stoull(UtilString::rightPadTo(x.frac, l1, '0')));
-          if (a.length() < l1) {
-            a = UtilString::leftPadTo(a, l1, '0');
-          }
-          if (a.length() == l1) {
-            o.frac = UtilString::rtrim(a, "0");
-          } else {
-            o.frac = UtilString::rtrim(a.substr(a.length() - l1), "0");
-            o.before += std::stoull(a.substr(0, a.length() - l1));
-          }
-        } else if (l1 < l2) {
-          auto a = std::to_string(std::stoull(UtilString::rightPadTo(this->frac, l2, '0')) + std::stoull(x.frac));
-          if (a.length() < l2) {
-            a = UtilString::leftPadTo(a, l2, '0');
-          }
-          if (a.length() == l2) {
-            o.frac = UtilString::rtrim(a, "0");
-          } else {
-            o.frac = UtilString::rtrim(a.substr(a.length() - l2), "0");
-            o.before += std::stoull(a.substr(0, a.length() - l2));
-          }
-        } else {
-          auto a = std::to_string(std::stoull(this->frac) + std::stoull(x.frac));
-          if (a.length() < l1) {
-            a = UtilString::leftPadTo(a, l1, '0');
-          }
-          if (a.length() == l1) {
-            o.frac = UtilString::rtrim(a, "0");
-          } else {
-            o.frac = UtilString::rtrim(a.substr(a.length() - l1), "0");
-            o.before += std::stoull(a.substr(0, a.length() - l1));
-          }
-        }
+      o.sign = true;                       // result always positive here
+      o.before = this->before + x.before;  // integer parts
+
+      // === Fractional part ===
+      std::string_view f1 = this->frac;
+      std::string_view f2 = x.frac;
+      if (f1.empty()) {  // 0.xxx + 0
+        o.frac = f2;
+        return o;
       }
+      if (f2.empty()) {  // 0 + 0.xxx
+        o.frac = f1;
+        return o;
+      }
+
+      std::size_t l1 = f1.size();
+      std::size_t l2 = f2.size();
+      std::size_t lmax = std::max(l1, l2);
+
+      /* ---- pad to same length (stack buffer, max 64 digits) ---- */
+      char buf1[64]{}, buf2[64]{};
+      std::memcpy(buf1, f1.data(), l1);
+      std::fill(buf1 + l1, buf1 + lmax, '0');
+      std::memcpy(buf2, f2.data(), l2);
+      std::fill(buf2 + l2, buf2 + lmax, '0');
+
+      /* ---- convert to integers ---- */
+      uint64_t n1 = 0, n2 = 0;
+      auto [p1, ec1] = std::from_chars(buf1, buf1 + lmax, n1);
+      auto [p2, ec2] = std::from_chars(buf2, buf2 + lmax, n2);
+      if (ec1 != std::errc() || ec2 != std::errc()) {
+        throw std::invalid_argument("Decimal::add – fractional overflow");
+      }
+
+      uint64_t sum = n1 + n2;
+      bool carry = sum >= static_cast<uint64_t>(std::pow(10, lmax));
+
+      if (carry) {
+        sum -= static_cast<uint64_t>(std::pow(10, lmax));
+        ++o.before;  // propagate carry to integer part
+      }
+
+      /* ---- build fractional string ---- */
+      std::string frac = std::to_string(sum);
+      if (frac.length() < lmax) {  // left-pad with zeros
+        frac.insert(0, lmax - frac.length(), '0');
+      }
+      frac.erase(frac.find_last_not_of('0') + 1);  // trim trailing zeros
+      o.frac = frac;
+
       return o;
-    } else if (!this->sign && x.sign) {
-      return x.subtract(this->negate());
-    } else if (this->sign && !x.sign) {
-      return this->subtract(x.negate());
-    } else {
-      return (this->negate().add(x.negate())).negate();
     }
+
+    /* ----------------  Mixed-sign cases  ---------------- */
+    if (this->sign && !x.sign) return this->subtract(x.negate());
+    if (!this->sign && x.sign) return x.subtract(this->negate());
+    /* both negative */
+    return (this->negate().add(x.negate())).negate();
   }
 
   Decimal subtract(const Decimal& x) const {
+    /* ------------------------------------------------
+       Case 1: both operands positive
+       ------------------------------------------------ */
     if (this->sign && x.sign) {
       if (*this >= x) {
         Decimal o;
         o.sign = true;
-        if (this->frac >= x.frac) {
-          o.before = this->before - x.before;
+
+        /* ---- Prep integer difference (may be adjusted by borrow) ---- */
+        o.before = this->before - x.before;
+
+        /* ---- Fast exit if no fractional digits at all ---- */
+        if (this->frac.empty() && x.frac.empty()) return o;
+
+        /* ---- Determine max fractional length ---- */
+        std::string_view f1 = this->frac;
+        std::string_view f2 = x.frac;
+        const std::size_t l1 = f1.size();
+        const std::size_t l2 = f2.size();
+        const std::size_t lmax = std::max(l1, l2);
+
+        /* ---- Ensure temporary buffer big enough ---- */
+        std::vector<char> buf1(lmax, '0');
+        std::vector<char> buf2(lmax, '0');
+
+        std::memcpy(buf1.data(), f1.data(), l1);
+        std::memcpy(buf2.data(), f2.data(), l2);
+
+        /* ---- Parse to integers with from_chars ---- */
+        uint64_t n1 = 0, n2 = 0;
+        auto [p1, ec1] = std::from_chars(buf1.data(), buf1.data() + lmax, n1);
+        auto [p2, ec2] = std::from_chars(buf2.data(), buf2.data() + lmax, n2);
+        if (ec1 != std::errc() || ec2 != std::errc()) {
+          throw std::invalid_argument("Decimal::subtract – fractional overflow");
+        }
+
+        /* ---- Borrow logic ---- */
+        uint64_t base = 1;
+        for (std::size_t i = 0; i < lmax; ++i) base *= 10;  // 10^lmax
+
+        uint64_t diff;
+        if (n1 >= n2) {
+          diff = n1 - n2;
         } else {
-          o.before = this->before - 1 - x.before;
+          diff = base + n1 - n2;
+          --o.before;  // borrow 1 from integer part
         }
-        auto l1 = this->frac.length();
-        auto l2 = x.frac.length();
-        auto lmax = std::max(l1, l2);
-        auto a = lmax > 0 ? std::to_string(std::stoull(UtilString::rightPadTo(this->frac, lmax, '0')) +
-                                           (this->frac >= x.frac ? (unsigned)0 : std::stoull(UtilString::rightPadTo("1", 1 + lmax, '0'))) -
-                                           std::stoull(UtilString::rightPadTo(x.frac, lmax, '0')))
-                          : "";
-        if (a.length() < lmax) {
-          a = UtilString::leftPadTo(a, lmax, '0');
-        }
-        o.frac = UtilString::rtrim(a, "0");
+
+        /* ---- Build normalized fractional string ---- */
+        std::string frac = std::to_string(diff);
+        if (frac.length() < lmax) frac.insert(0, lmax - frac.length(), '0');  // left-pad
+        frac.erase(frac.find_last_not_of('0') + 1);                           // trim trailing zeros
+        o.frac = std::move(frac);
+
         return o;
-      } else {
-        return x.subtract(*this).negate();
       }
-    } else if (!this->sign && x.sign) {
-      return x.subtract(this->negate());
-    } else if (this->sign && !x.sign) {
-      return this->subtract(x.negate());
-    } else {
-      return x.negate().subtract(this->negate());
+
+      /*  if *this < x  ->  -(x - *this)  */
+      return x.subtract(*this).negate();
     }
+
+    /* ------------------------------------------------
+       Mixed sign cases re-use add()/negate()
+       ------------------------------------------------ */
+    if (!this->sign && x.sign) return this->negate().add(x).negate();  // (-a)-(+b) = -(a+b)
+    if (this->sign && !x.sign) return this->add(x.negate());           // (+a)-(-b) = a+b
+
+    /* both negative: (-a)-(-b) = b-a */
+    return x.negate().subtract(this->negate());
   }
 
   // false means negative sign needed
@@ -1224,6 +1279,9 @@ class Decimal {
   // {-}bbbb.aaaa
   uint64_t before{};
   std::string frac;
+
+  mutable std::optional<std::string> cachedToString;
+  mutable std::optional<double> cachedToDouble;
 };
 
 inline std::string ConvertDecimalToString(const Decimal& input, bool normalize = true) {

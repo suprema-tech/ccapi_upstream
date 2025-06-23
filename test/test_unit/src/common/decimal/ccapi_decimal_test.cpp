@@ -95,6 +95,8 @@ TEST(DecimalTest, compare) {
   EXPECT_TRUE(Decimal("1") == Decimal("1.0"));
   EXPECT_TRUE(Decimal("1.1") < Decimal("1.12"));
   EXPECT_TRUE(Decimal("9") < Decimal("10"));
+  EXPECT_TRUE(Decimal("1") > Decimal("0"));
+  EXPECT_TRUE(Decimal("-1") < Decimal("0"));
 }
 
 TEST(DecimalTest, subtract_0) { EXPECT_EQ(ConvertDecimalToString(Decimal("0.000000549410817836") - (Decimal("0"))), "0.000000549410817836"); }
@@ -138,5 +140,94 @@ TEST(DecimalTest, subtract_52) { EXPECT_EQ(ConvertDecimalToString(Decimal("42839
 TEST(DecimalTest, subtract_61) { EXPECT_EQ(ConvertDecimalToString(Decimal("0.0135436") - (Decimal("0.0135436"))), "0"); }
 
 TEST(DecimalTest, subtract_62) { EXPECT_EQ(ConvertDecimalToString(Decimal("1") - (Decimal("1"))), "0"); }
+
+// -----------------------------------------------------------------------------
+//  Negate (unary minus)
+// -----------------------------------------------------------------------------
+TEST(DecimalTest, NegateSmall) {
+  EXPECT_EQ(ConvertDecimalToString(-Decimal("0.0001")), "-0.0001");
+  EXPECT_EQ(ConvertDecimalToString(-Decimal("-0.0001")), "0.0001");
+  EXPECT_EQ(ConvertDecimalToString(-Decimal("0")), "0");  // -0 → 0
+}
+
+TEST(DecimalTest, NegateLarge) {
+  EXPECT_EQ(ConvertDecimalToString(-Decimal("123456789012345.6789")), "-123456789012345.6789");
+  EXPECT_EQ(ConvertDecimalToString(-Decimal("-987654321.000")), "987654321");
+}
+
+// -----------------------------------------------------------------------------
+//  Addition corner‑cases
+// -----------------------------------------------------------------------------
+TEST(DecimalTest, AddDifferentScales) {
+  EXPECT_EQ(ConvertDecimalToString(Decimal("0.1") + Decimal("0.02")), "0.12");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("1.999") + Decimal("0.001")), "2");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("100") + Decimal("0.0001")), "100.0001");
+}
+
+TEST(DecimalTest, AddSigns) {
+  EXPECT_EQ(ConvertDecimalToString(Decimal("5") + Decimal("-2")), "3");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("-5") + Decimal("2")), "-3");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("-5") + Decimal("-2")), "-7");
+}
+
+TEST(DecimalTest, AddCarryAcrossInteger) {
+  EXPECT_EQ(ConvertDecimalToString(Decimal("9.999") + Decimal("0.001")), "10");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("-9.999") + Decimal("-0.001")), "-10");
+}
+
+// -----------------------------------------------------------------------------
+//  Subtraction corner‑cases
+// -----------------------------------------------------------------------------
+TEST(DecimalTest, SubtractDifferentScales) {
+  EXPECT_EQ(ConvertDecimalToString(Decimal("0.12") - Decimal("0.02")), "0.1");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("2") - Decimal("1.999")), "0.001");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("100.0001") - Decimal("0.0001")), "100");
+}
+
+TEST(DecimalTest, SubtractSigns) {
+  EXPECT_EQ(ConvertDecimalToString(Decimal("5") - Decimal("-2")), "7");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("-5") - Decimal("2")), "-7");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("-5") - Decimal("-2")), "-3");
+}
+
+TEST(DecimalTest, SubtractBorrowAcrossInteger) {
+  EXPECT_EQ(ConvertDecimalToString(Decimal("10") - Decimal("0.001")), "9.999");
+  EXPECT_EQ(ConvertDecimalToString(Decimal("-10") - Decimal("-0.001")), "-9.999");
+}
+
+// -----------------------------------------------------------------------------
+//  Large‑magnitude checks (> 1e18 total digits)
+// -----------------------------------------------------------------------------
+TEST(DecimalTest, AddVeryLarge) {
+  Decimal a("12345678901234567890.123456789");
+  Decimal b("0.876543211");
+  EXPECT_EQ(ConvertDecimalToString(a + b), "12345678901234567891");
+}
+
+TEST(DecimalTest, SubtractVeryLarge) {
+  Decimal a("12345678901234567891");
+  Decimal b("0.876543211");
+  EXPECT_EQ(ConvertDecimalToString(a - b), "12345678901234567890.123456789");
+}
+
+// -----------------------------------------------------------------------------
+//  Identity & zero properties
+// -----------------------------------------------------------------------------
+TEST(DecimalTest, AddZero) {
+  Decimal x("123.456");
+  EXPECT_EQ(x + Decimal("0"), x);
+  EXPECT_EQ(Decimal("0") + x, x);
+}
+
+TEST(DecimalTest, SubtractZero) {
+  Decimal x("-789.012");
+  EXPECT_EQ(x - Decimal("0"), x);
+  EXPECT_EQ(ConvertDecimalToString(Decimal("0") - x), "789.012");
+}
+
+TEST(DecimalTest, NegateTwice) {
+  Decimal x("987.65");
+  EXPECT_EQ(-(-x), x);
+}
 
 } /* namespace ccapi */
