@@ -6,7 +6,9 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service_bitmex.h"
 
 // clang-format on
+
 namespace ccapi {
+
 class ExecutionManagementServiceBitmexTest : public ::testing::Test {
  public:
   typedef Service::ServiceContextPtr ServiceContextPtr;
@@ -767,7 +769,8 @@ TEST_F(ExecutionManagementServiceBitmexTest, createEventPrivateTrade) {
   rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
 #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  auto messageList = this->service->createEvent(WsConnection(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now).getMessageList();
+  auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now)
+                         .getMessageList();
 #else
   auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), subscription, textMessage, document, this->now).getMessageList();
 #endif
@@ -837,7 +840,8 @@ TEST_F(ExecutionManagementServiceBitmexTest, createEventOrderUpdate) {
   rj::Document document;
   document.Parse<rj::kParseNumbersAsStringsFlag>(textMessage.c_str());
 #ifdef CCAPI_LEGACY_USE_WEBSOCKETPP
-  auto messageList = this->service->createEvent(WsConnection(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now).getMessageList();
+  auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), wspp::lib::weak_ptr<void>(), subscription, textMessage, document, this->now)
+                         .getMessageList();
 #else
   auto messageList = this->service->createEvent(std::make_shared<WsConnection>(), subscription, textMessage, document, this->now).getMessageList();
 #endif

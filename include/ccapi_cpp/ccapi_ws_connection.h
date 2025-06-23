@@ -7,11 +7,15 @@
 #include "ccapi_cpp/ccapi_subscription.h"
 
 namespace ccapi {
+
 /**
  * This class represents a TCP socket connection for the websocket API.
  */
 class WsConnection {
  public:
+  WsConnection(const WsConnection&) = delete;
+  WsConnection& operator=(const WsConnection&) = delete;
+
   WsConnection(std::string url, std::string group, std::vector<Subscription> subscriptionList, std::map<std::string, std::string> credential,
                std::shared_ptr<beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>> streamPtr)
       : url(url), group(group), subscriptionList(subscriptionList), credential(credential), streamPtr(streamPtr) {
@@ -136,10 +140,13 @@ class WsConnection {
   std::string path;
   std::string host;
   std::string port;
-#ifndef CCAPI_EXPOSE_INTERNAL
- private:
-#endif
+
+  beast::flat_buffer readMessageBuffer;
+  std::array<char, CCAPI_WEBSOCKET_WRITE_BUFFER_SIZE> writeMessageBuffer;
+  size_t writeMessageBufferWrittenLength{};
+  std::vector<size_t> writeMessageBufferBoundary;
 };
+
 } /* namespace ccapi */
 
 #endif  // INCLUDE_CCAPI_CPP_CCAPI_WS_CONNECTION_H_

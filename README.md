@@ -1,6 +1,5 @@
-# Some breaking changes introduced
-* The return type of `EventHandler::processEvent` has been changed from `bool` to `void`.
-* Please read [Handle events in "immediate" vs. "batching" mode](#handle-events-in-immediate-vs-batching-mode).
+# Notice
+* New release has about 20% reduction in cpu usage.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -8,7 +7,7 @@
 
 <!---toc start-->
 
-* [Some breaking changes introduced](#some-breaking-changes-introduced)
+* [Notice](#notice)
 * [ccapi](#ccapi)
   * [Branches](#branches)
   * [Build](#build)
@@ -51,11 +50,13 @@
       * [Set timer](#set-timer)
   * [Performance Tuning](#performance-tuning)
   * [Known Issues and Workarounds](#known-issues-and-workarounds)
-  * [Contributing](#contributing)
 
 <!---toc end-->
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
+
 
 
 
@@ -66,8 +67,8 @@
 * Code closely follows Bloomberg's API: https://www.bloomberg.com/professional/support/api-library/.
 * It is ultra fast thanks to very careful optimizations: move semantics, regex optimization, locality of reference, lock contention minimization, etc.
 * Supported exchanges:
-  * Market Data: ascendex, binance, binance-usds-futures, binance-coin-futures, bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, bybit, coinbase, cryptocom, deribit, erisx (Cboe Digital), gateio, gateio-perpetual-futures, gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, mexc-futures, okx, whitebit.
-  * Execution Management: ascendex, binance, binance-usds-futures, binance-coin-futures, bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, bybit, coinbase, cryptocom, deribit, erisx (Cboe Digital), gateio, gateio-perpetual-futures, gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, okx.
+  * Market Data: ascendex, [binance](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-usds-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-coin-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, [bybit](https://www.bybit.com/invite?ref=XNYP2K), coinbase, [cryptocom](https://crypto.com/exch/tqj4b8x48w), deribit, erisx (Cboe Digital), [gateio](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), [gateio-perpetual-futures](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, mexc-futures, [okx](https://www.okx.com/join/47636709), whitebit.
+  * Execution Management: ascendex, [binance](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-usds-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-coin-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, [bybit](https://www.bybit.com/invite?ref=XNYP2K), coinbase, [cryptocom](https://crypto.com/exch/tqj4b8x48w), deribit, erisx (Cboe Digital), [gateio](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), [gateio-perpetual-futures](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, [okx](https://www.okx.com/join/47636709).
   * FIX: coinbase, gemini.
 * Join us on Discord https://discord.gg/b5EKcp9s8T and Medium https://cryptochassis.medium.com.
 
@@ -134,6 +135,7 @@ cmake --build .
 
 ## Constants
 [`include/ccapi_cpp/ccapi_macro.h`](include/ccapi_cpp/ccapi_macro.h)
+* For most cryptocurrencies, the default value of `CCAPI_DECIMAL_SCALE` is sufficient. You can override it if you need more.
 
 ## Examples
 [C++](example)
@@ -224,6 +226,7 @@ For a specific exchange and instrument, get recents trades.
 #include "ccapi_cpp/ccapi_session.h"
 
 namespace ccapi {
+
 Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
@@ -232,6 +235,7 @@ class MyEventHandler : public EventHandler {
     std::cout << "Received an event:\n" + event.toStringPretty(2, 2) << std::endl;
   }
 };
+
 } /* namespace ccapi */
 
 using ::ccapi::MyEventHandler;
@@ -300,6 +304,7 @@ For a specific exchange and instrument, whenever the best bid's or ask's price o
 #include "ccapi_cpp/ccapi_session.h"
 
 namespace ccapi {
+
 Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
@@ -311,13 +316,16 @@ class MyEventHandler : public EventHandler {
       for (const auto& message : event.getMessageList()) {
         std::cout << std::string("Best bid and ask at ") + UtilTime::getISOTimestamp(message.getTime()) + " are:" << std::endl;
         for (const auto& element : message.getElementList()) {
-          const std::map<std::string, std::string>& elementNameValueMap = element.getNameValueMap();
+          // They key std::string_view is created from a string literal and therefore is safe, because string
+          // literals have static storage duration, meaning they live for the entire duration of the program.
+          const std::map<std::string_view, std::string>& elementNameValueMap = element.getNameValueMap();
           std::cout << "  " + toString(elementNameValueMap) << std::endl;
         }
       }
     }
   }
 };
+
 } /* namespace ccapi */
 
 using ::ccapi::MyEventHandler;
@@ -491,6 +499,7 @@ For a specific exchange and instrument, submit a simple limit order.
 #include "ccapi_cpp/ccapi_session.h"
 
 namespace ccapi {
+
 Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
@@ -499,6 +508,7 @@ class MyEventHandler : public EventHandler {
     std::cout << "Received an event:\n" + event.toStringPretty(2, 2) << std::endl;
   }
 };
+
 } /* namespace ccapi */
 
 using ::ccapi::MyEventHandler;
@@ -588,6 +598,7 @@ For a specific exchange and instrument, receive order updates.
 #include "ccapi_cpp/ccapi_session.h"
 
 namespace ccapi {
+
 Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
@@ -611,6 +622,7 @@ class MyEventHandler : public EventHandler {
     }
   }
 };
+
 } /* namespace ccapi */
 
 using ::ccapi::MyEventHandler;
@@ -832,6 +844,7 @@ For a specific exchange and instrument, submit a simple limit order.
 ```
 #include "ccapi_cpp/ccapi_session.h"
 namespace ccapi {
+
 Logger* Logger::logger = nullptr;  // This line is needed.
 class MyEventHandler : public EventHandler {
  public:
@@ -858,6 +871,7 @@ class MyEventHandler : public EventHandler {
     }
   }
 };
+
 } /* namespace ccapi */
 using ::ccapi::MyEventHandler;
 using ::ccapi::Session;
@@ -963,6 +977,7 @@ An example can be found [here](example/src/market_data_advanced_subscription/mai
 
 #### Thread safety
 * The following methods are implemented to be thread-safe: `Session::sendRequest`, `Session::subscribe`, `Session::sendRequestByFix`, `Session::subscribeByFix`, `Session::setTimer`, all public methods in `Queue`.
+* If you choose to inject an external `boost::asio::io_context` to `ServiceContext`, the `boost::asio::io_context` has to run on a single thread to ensure thread safety.
 
 #### Enable library logging
 
@@ -971,6 +986,7 @@ An example can be found [here](example/src/market_data_advanced_subscription/mai
 Extend a subclass, e.g. `MyLogger`, from class `Logger` and override method `logMessage`. Assign a `MyLogger` pointer to `Logger::logger`. Add one of the following macros in the compiler command line: `CCAPI_ENABLE_LOG_TRACE`, `CCAPI_ENABLE_LOG_DEBUG`, `CCAPI_ENABLE_LOG_INFO`, `CCAPI_ENABLE_LOG_WARN`, `CCAPI_ENABLE_LOG_ERROR`, `CCAPI_ENABLE_LOG_FATAL`. Enable logging if you'd like to inspect raw responses/messages from the exchange for troubleshooting purposes.
 ```
 namespace ccapi {
+
 class MyLogger final : public Logger {
  public:
   void logMessage(const std::string& severity, const std::string& threadId, const std::string& timeISO, const std::string& fileName,
@@ -985,6 +1001,7 @@ class MyLogger final : public Logger {
 
 MyLogger myLogger;
 Logger* Logger::logger = &myLogger;
+
 } /* namespace ccapi */
 ```
 
@@ -1005,14 +1022,8 @@ sessionPtr->setTimer(
 ## Performance Tuning
 * Turn on compiler optimization flags (e.g. `cmake -DCMAKE_BUILD_TYPE=Release ...`).
 * Enable link time optimization (e.g. in CMakeLists.txt `set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)` before a target is created). Note that link time optimization is only applicable to static linking.
-* Shorten constant strings used as key names in the returned `Element` (e.g. in CmakeLists.txt `add_compile_definitions(CCAPI_BEST_BID_N_PRICE="b")`).
 * Only enable the services and exchanges that you need.
 * Handle events in ["batching" mode](#handle-events-in-immediate-vs-batching-mode) if your application (e.g. market data archiver) isn't latency sensitive.
 
 ## Known Issues and Workarounds
 * Kraken invalid nonce errors. Give the API key a nonce window (https://support.kraken.com/hc/en-us/articles/360001148023-What-is-a-nonce-window-). We use unix timestamp with microsecond resolution as nonce and therefore a nonce window of 500000 translates to a tolerance of 0.5 second.
-
-## Contributing
-* (Required) Create a new branch from the `develop` branch and submit a pull request to the `develop` branch.
-* (Optional) C++ code style: https://google.github.io/styleguide/cppguide.html. See file [.clang-format](.clang-format).
-* (Optional) Commit message format: https://conventionalcommits.org.

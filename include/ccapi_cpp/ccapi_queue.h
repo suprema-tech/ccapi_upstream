@@ -6,6 +6,7 @@
 #include "ccapi_cpp/ccapi_logger.h"
 
 namespace ccapi {
+
 /**
  * This class represents a generic FIFO queue.
  */
@@ -84,5 +85,6 @@ class Queue {
   mutable std::mutex m;
   size_t maxSize{};
 };
+
 } /* namespace ccapi */
 #endif  // INCLUDE_CCAPI_CPP_CCAPI_QUEUE_H_

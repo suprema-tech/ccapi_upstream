@@ -4,6 +4,7 @@
 #include <string>
 
 namespace ccapi {
+
 /**
  * This class is used for retrying http requests for the REST API.
  */

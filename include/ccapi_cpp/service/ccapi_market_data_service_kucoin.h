@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_market_data_service_kucoin_base.h"
 
 namespace ccapi {
+
 class MarketDataServiceKucoin : public MarketDataServiceKucoinBase {
  public:
   MarketDataServiceKucoin(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -54,6 +55,7 @@ class MarketDataServiceKucoin : public MarketDataServiceKucoinBase {
     element.insert(CCAPI_ORDER_QUOTE_QUANTITY_MIN, x["quoteMinSize"].GetString());
   }
 };
+
 } /* namespace ccapi */
 #endif
 #endif

@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <array>
+#include <charconv>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -17,12 +18,14 @@
 #include <iterator>
 #include <map>
 #include <numeric>
+#include <optional>
 #include <random>
 #include <regex>
 #include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -33,6 +36,7 @@
 #include "openssl/pem.h"
 
 namespace ccapi {
+
 /**
  * Utilities.
  */
@@ -244,6 +248,12 @@ class UtilString {
     return str;
   }
 
+  static std::string_view rtrim(std::string_view str, char c) {
+    std::size_t end = str.find_last_not_of(c);
+    if (end == std::string_view::npos) return {};  // All characters were 'c' — return empty view
+    return str.substr(0, end + 1);
+  }
+
   static void rtrimInPlace(std::string& str, const std::string& chars = "\t\n\v\f\r ") { str.erase(str.find_last_not_of(chars) + 1); }
 
   static void rtrimInPlace(std::string& str, char c) { str.erase(str.find_last_not_of(c) + 1); }
@@ -281,13 +291,33 @@ class UtilString {
     }
   }
 
-  static std::string normalizeDecimalString(const char* data) {
-    std::string str(data);
-    if (str.find('.') != std::string::npos) {
-      rtrimInPlace(str, "0");
-      rtrimInPlace(str, ".");
+  //   static std::string normalizeDecimalStringView(const char* data) {
+  //     std::string str(data);
+  //     if (str.find('.') != std::string::npos) {
+  //       rtrimInPlace(str, "0");
+  //       rtrimInPlace(str, ".");
+  //     }
+  //     return str;
+  //   }
+
+  static std::string_view normalizeDecimalStringView(std::string_view input) {
+    // Quick check for dot
+    size_t dotPos = input.find('.');
+    if (dotPos == std::string_view::npos) return input;
+
+    size_t end = input.size();
+
+    // Remove trailing '0's
+    while (end > dotPos && input[end - 1] == '0') {
+      --end;
     }
-    return str;
+
+    // Remove trailing '.' if all decimals were zeros
+    if (end > dotPos && input[end - 1] == '.') {
+      --end;
+    }
+
+    return input.substr(0, end);
   }
 
   static std::string leftPadTo(const std::string& str, const size_t padToLength, const char paddingChar) {
@@ -848,7 +878,7 @@ class UtilSystem {
   static bool getEnvAsBool(const std::string variableName, const bool defaultValue = false) {
     const char* env_p = std::getenv(variableName.c_str());
     if (env_p) {
-      return UtilString::toLower(std::string(env_p)) == "true";
+      return UtilString::toLower(env_p) == "true";
     } else {
       return defaultValue;
     }
@@ -908,6 +938,448 @@ class UtilSystem {
     }
   }
 };
+
+/**
+ * This class provides a numeric type for representing an arbitrary precision decimal number. It is minimalistic for the purpose of high performance.
+ * Furthermore, unlike double, it is suitable for being used as the key of a map. boost::multiprecision::cpp_dec_float can also be used, but based on
+ * test it does lead to nearly 100% increase in cpu usage!
+ */
+class Decimal {
+ public:
+  Decimal() {}
+
+  explicit Decimal(std::string_view originalValue) {
+    if (originalValue.empty()) {
+      throw std::invalid_argument("Decimal constructor input value cannot be empty");
+    }
+    if (originalValue.at(0) == '-') {
+      this->sign = false;
+    }
+    auto foundE = originalValue.find('E');
+    if (foundE != std::string::npos || originalValue.find('e') != std::string::npos) {
+      if (foundE == std::string::npos) {
+        foundE = originalValue.find('e');
+      }
+      std::string fixedPointValue = std::string(originalValue.substr(this->sign ? 0 : 1, this->sign ? foundE : foundE - 1));
+      auto foundDot = fixedPointValue.find('.');
+      if (foundDot != std::string::npos) {
+        fixedPointValue.erase(fixedPointValue.find_last_not_of('0') + 1);
+        fixedPointValue.erase(fixedPointValue.find_last_not_of('.') + 1);
+      }
+      std::string exponent = std::string(originalValue.substr(foundE + 1));
+      if (exponent.at(0) == '+') {
+        exponent.erase(0, 1);
+      }
+      exponent.erase(0, exponent.find_first_not_of('0'));
+      if (exponent.empty()) {
+        exponent = "0";
+      }
+      if (exponent != "0") {
+        foundDot = fixedPointValue.find('.');
+        if (foundDot != std::string::npos) {
+          if (exponent.at(0) != '-') {
+            if (std::stoi(exponent) < fixedPointValue.substr(foundDot + 1).length()) {
+              fixedPointValue = fixedPointValue.substr(0, foundDot) + fixedPointValue.substr(foundDot + 1).substr(0, std::stoi(exponent)) + "." +
+                                fixedPointValue.substr(foundDot + 1).substr(std::stoi(exponent));
+            } else {
+              fixedPointValue = fixedPointValue.substr(0, foundDot) + fixedPointValue.substr(foundDot + 1) +
+                                std::string(std::stoi(exponent) - fixedPointValue.substr(foundDot + 1).length(), '0');
+            }
+          } else {
+            fixedPointValue = "0." + std::string(-std::stoi(exponent) - 1, '0') + fixedPointValue.substr(0, foundDot) + fixedPointValue.substr(foundDot + 1);
+          }
+        } else {
+          if (exponent.at(0) != '-') {
+            fixedPointValue += std::string(std::stoi(exponent), '0');
+          } else {
+            fixedPointValue = "0." + std::string(-std::stoi(exponent) - 1, '0') + fixedPointValue;
+          }
+        }
+      }
+      foundDot = fixedPointValue.find('.');
+      std::string numPart = fixedPointValue.substr(0, foundDot);
+      if (!numPart.empty() && numPart[0] == '+') {
+        numPart.erase(0, 1);
+      }
+      auto [_, ec] = std::from_chars(numPart.data(), numPart.data() + numPart.size(), this->before);
+      if (ec != std::errc()) {
+        throw std::invalid_argument("Invalid numeric input: " + std::string(numPart));
+      }
+      if (foundDot != std::string::npos) {
+        this->frac = fixedPointValue.substr(foundDot + 1);
+        // if (!keepTrailingZero) {
+        this->frac.erase(this->frac.find_last_not_of('0') + 1);
+        // }
+      }
+    } else {
+      auto found = originalValue.find('.');
+      std::string numPart = std::string(originalValue.substr(this->sign ? 0 : 1, found));
+      if (!numPart.empty() && numPart[0] == '+') {
+        numPart.erase(0, 1);
+      }
+      auto [_, ec] = std::from_chars(numPart.data(), numPart.data() + numPart.size(), this->before);
+      if (ec != std::errc()) {
+        throw std::invalid_argument("Invalid numeric input: " + std::string(numPart));
+      }
+      if (found != std::string::npos) {
+        this->frac = originalValue.substr(found + 1);
+        // if (!keepTrailingZero) {
+        this->frac.erase(this->frac.find_last_not_of('0') + 1);
+        // }
+      }
+    }
+
+    if (!this->sign && this->before == 0 && this->frac.empty()
+        // ((keepTrailingZero && std::all_of(this->frac.begin(), this->frac.end(), [](char c) { return c == '0'; })) ||
+        //  (!keepTrailingZero && this->frac.empty()))
+    ) {
+      this->sign = true;
+    }
+  }
+
+  std::string toString() const {
+    if (!this->cachedToString) {
+      std::string stringValue;
+      if (!this->sign) {
+        stringValue += "-";
+      }
+      stringValue += std::to_string(this->before);
+      if (!this->frac.empty()) {
+        stringValue += ".";
+        stringValue += this->frac;
+      }
+      cachedToString.emplace(stringValue);
+    }
+    return *this->cachedToString;
+  }
+
+  double toDouble() const {
+    if (!this->cachedToDouble) {
+      cachedToDouble.emplace(std::stod(this->toString()));
+    }
+    return *this->cachedToDouble;
+  }
+
+  friend bool operator<(const Decimal& l, const Decimal& r) {
+    if (l.sign && r.sign) {
+      if (l.before < r.before) {
+        return true;
+      } else if (l.before > r.before) {
+        return false;
+      } else {
+        return l.frac < r.frac;
+      }
+    } else if (l.sign && !r.sign) {
+      return false;
+    } else if (!l.sign && r.sign) {
+      return true;
+    } else {
+      Decimal nl = l;
+      nl.sign = true;
+      Decimal nr = r;
+      nr.sign = true;
+      return nl > nr;
+    }
+  }
+
+  friend bool operator>(const Decimal& l, const Decimal& r) { return r < l; }
+
+  friend bool operator<=(const Decimal& l, const Decimal& r) { return !(l > r); }
+
+  friend bool operator>=(const Decimal& l, const Decimal& r) { return !(l < r); }
+
+  friend bool operator==(const Decimal& l, const Decimal& r) { return !(l > r) && !(l < r); }
+
+  friend bool operator!=(const Decimal& l, const Decimal& r) { return !(l == r); }
+
+  /* ----------  Arithmetic operators  ---------- */
+
+  // unary ––––––––––––––––––––––––––––––––––––––
+  ///  -x   (flip the sign)
+  Decimal operator-() const {
+    Decimal tmp = *this;
+    if (!(tmp.before == 0 && tmp.frac.empty())) {  // keep “–0” positive
+      tmp.sign = !tmp.sign;
+    }
+    return tmp;
+  }
+
+  // binary –––––––––––––––––––––––––––––––––––––
+  ///  x + y
+  friend Decimal operator+(const Decimal& lhs, const Decimal& rhs) {
+    return lhs.add(rhs);  // reuse the pre-existing logic
+  }
+
+  ///  x - y
+  friend Decimal operator-(const Decimal& lhs, const Decimal& rhs) {
+    return lhs.subtract(rhs);  // reuse the pre-existing logic
+  }
+
+  // compound-assignment ––––––––––––––––––––––––
+  Decimal& operator+=(const Decimal& rhs) {
+    *this = *this + rhs;
+    return *this;
+  }
+
+  Decimal& operator-=(const Decimal& rhs) {
+    *this = *this - rhs;
+    return *this;
+  }
+
+  template <typename T, std::enable_if_t<std::is_integral_v<T>, int> = 0>
+  friend Decimal operator*(const Decimal& lhs, T rhs) {
+    return lhs.multiply(rhs);
+  }
+
+  template <typename T, std::enable_if_t<std::is_integral_v<T>, int> = 0>
+  friend Decimal operator*(T lhs, const Decimal& rhs) {
+    return rhs.multiply(lhs);
+  }
+
+  template <typename T, std::enable_if_t<std::is_integral_v<T>, int> = 0>
+  Decimal& operator*=(T x) {
+    *this = this->multiply(x);
+    return *this;
+  }
+
+#ifndef CCAPI_EXPOSE_INTERNAL
+
+ private:
+#endif
+  Decimal negate() const {
+    Decimal o;
+    o.before = this->before;
+    o.frac = this->frac;
+    o.sign = !this->sign;
+    return o;
+  }
+
+  Decimal add(const Decimal& x) const {
+    /* ----------------  Same-sign fast path  ---------------- */
+    if (this->sign && x.sign) {
+      Decimal o;
+      o.sign = true;                       // result always positive here
+      o.before = this->before + x.before;  // integer parts
+
+      // === Fractional part ===
+      std::string_view f1 = this->frac;
+      std::string_view f2 = x.frac;
+      if (f1.empty()) {  // 0.xxx + 0
+        o.frac = f2;
+        return o;
+      }
+      if (f2.empty()) {  // 0 + 0.xxx
+        o.frac = f1;
+        return o;
+      }
+
+      std::size_t l1 = f1.size();
+      std::size_t l2 = f2.size();
+      std::size_t lmax = std::max(l1, l2);
+
+      /* ---- pad to same length (stack buffer, max 64 digits) ---- */
+      char buf1[64]{}, buf2[64]{};
+      std::memcpy(buf1, f1.data(), l1);
+      std::fill(buf1 + l1, buf1 + lmax, '0');
+      std::memcpy(buf2, f2.data(), l2);
+      std::fill(buf2 + l2, buf2 + lmax, '0');
+
+      /* ---- convert to integers ---- */
+      uint64_t n1 = 0, n2 = 0;
+      auto [p1, ec1] = std::from_chars(buf1, buf1 + lmax, n1);
+      auto [p2, ec2] = std::from_chars(buf2, buf2 + lmax, n2);
+      if (ec1 != std::errc() || ec2 != std::errc()) {
+        throw std::invalid_argument("Decimal::add – fractional overflow");
+      }
+
+      uint64_t sum = n1 + n2;
+      bool carry = sum >= static_cast<uint64_t>(std::pow(10, lmax));
+
+      if (carry) {
+        sum -= static_cast<uint64_t>(std::pow(10, lmax));
+        ++o.before;  // propagate carry to integer part
+      }
+
+      /* ---- build fractional string ---- */
+      std::string frac = std::to_string(sum);
+      if (frac.length() < lmax) {  // left-pad with zeros
+        frac.insert(0, lmax - frac.length(), '0');
+      }
+      frac.erase(frac.find_last_not_of('0') + 1);  // trim trailing zeros
+      o.frac = frac;
+
+      return o;
+    }
+
+    /* ----------------  Mixed-sign cases  ---------------- */
+    if (this->sign && !x.sign) return this->subtract(x.negate());
+    if (!this->sign && x.sign) return x.subtract(this->negate());
+    /* both negative */
+    return (this->negate().add(x.negate())).negate();
+  }
+
+  Decimal subtract(const Decimal& x) const {
+    /* ------------------------------------------------
+       Case 1: both operands positive
+       ------------------------------------------------ */
+    if (this->sign && x.sign) {
+      if (*this >= x) {
+        Decimal o;
+        o.sign = true;
+
+        /* ---- Prep integer difference (may be adjusted by borrow) ---- */
+        o.before = this->before - x.before;
+
+        /* ---- Fast exit if no fractional digits at all ---- */
+        if (this->frac.empty() && x.frac.empty()) return o;
+
+        /* ---- Determine max fractional length ---- */
+        std::string_view f1 = this->frac;
+        std::string_view f2 = x.frac;
+        const std::size_t l1 = f1.size();
+        const std::size_t l2 = f2.size();
+        const std::size_t lmax = std::max(l1, l2);
+
+        /* ---- Ensure temporary buffer big enough ---- */
+        std::vector<char> buf1(lmax, '0');
+        std::vector<char> buf2(lmax, '0');
+
+        std::memcpy(buf1.data(), f1.data(), l1);
+        std::memcpy(buf2.data(), f2.data(), l2);
+
+        /* ---- Parse to integers with from_chars ---- */
+        uint64_t n1 = 0, n2 = 0;
+        auto [p1, ec1] = std::from_chars(buf1.data(), buf1.data() + lmax, n1);
+        auto [p2, ec2] = std::from_chars(buf2.data(), buf2.data() + lmax, n2);
+        if (ec1 != std::errc() || ec2 != std::errc()) {
+          throw std::invalid_argument("Decimal::subtract – fractional overflow");
+        }
+
+        /* ---- Borrow logic ---- */
+        uint64_t base = 1;
+        for (std::size_t i = 0; i < lmax; ++i) base *= 10;  // 10^lmax
+
+        uint64_t diff;
+        if (n1 >= n2) {
+          diff = n1 - n2;
+        } else {
+          diff = base + n1 - n2;
+          --o.before;  // borrow 1 from integer part
+        }
+
+        /* ---- Build normalized fractional string ---- */
+        std::string frac = std::to_string(diff);
+        if (frac.length() < lmax) frac.insert(0, lmax - frac.length(), '0');  // left-pad
+        frac.erase(frac.find_last_not_of('0') + 1);                           // trim trailing zeros
+        o.frac = std::move(frac);
+
+        return o;
+      }
+
+      /*  if *this < x  ->  -(x - *this)  */
+      return x.subtract(*this).negate();
+    }
+
+    /* ------------------------------------------------
+       Mixed sign cases re-use add()/negate()
+       ------------------------------------------------ */
+    if (!this->sign && x.sign) return this->negate().add(x).negate();  // (-a)-(+b) = -(a+b)
+    if (this->sign && !x.sign) return this->add(x.negate());           // (+a)-(-b) = a+b
+
+    /* both negative: (-a)-(-b) = b-a */
+    return x.negate().subtract(this->negate());
+  }
+
+  template <typename T, std::enable_if_t<std::is_integral_v<T>, int> = 0>
+  Decimal multiply(T x) const {
+    Decimal result;
+
+    if (x == 0) return result;  // default constructed Decimal = 0
+
+    result.sign = (this->sign == (x >= 0));  // XOR logic for sign
+    T abs_x = x < 0 ? -x : x;
+
+    // Integer part multiplication
+    result.before = this->before * static_cast<uint64_t>(abs_x);
+
+    if (!this->frac.empty()) {
+      std::string paddedFrac = this->frac;
+      std::size_t fracLen = paddedFrac.length();
+
+      // Pad to avoid truncation
+      std::string_view fracPart = paddedFrac;
+
+      // Convert frac string to integer
+      uint64_t fracVal = 0;
+      auto [p, ec] = std::from_chars(fracPart.data(), fracPart.data() + fracPart.size(), fracVal);
+      if (ec != std::errc()) {
+        throw std::invalid_argument("Decimal::multiply - fractional overflow");
+      }
+
+      // Multiply
+      uint64_t prod = fracVal * static_cast<uint64_t>(abs_x);
+
+      // Total fractional scale: keep `fracLen` digits
+      std::string s = std::to_string(prod);
+
+      if (s.length() <= fracLen) {
+        s.insert(0, fracLen - s.length(), '0');  // left pad
+        result.frac = UtilString::rtrim(s, "0");
+      } else {
+        // overflow into integer part
+        std::string over = s.substr(0, s.length() - fracLen);
+        std::string fracOnly = s.substr(s.length() - fracLen);
+
+        result.before += std::stoull(over);
+        result.frac = UtilString::rtrim(fracOnly, "0");
+      }
+    }
+
+    return result;
+  }
+
+  // false means negative sign needed
+  bool sign{true};
+  // {-}bbbb.aaaa
+  uint64_t before{};
+  std::string frac;
+
+  mutable std::optional<std::string> cachedToString;
+  mutable std::optional<double> cachedToDouble;
+};
+
+inline std::string ConvertDecimalToString(const Decimal& input, bool normalize = true) {
+  //   constexpr unsigned precision = GetCppDecFloatDigits<Decimal::backend_type>::value;
+
+  //   // Always generate fixed-format string
+  //   std::string s = input.str(precision, std::ios_base::fixed);
+
+  //   // Fast path: normalization is OFF
+  //   if (!normalize) {
+  //     return s;
+  //   }
+
+  //   // Fast trimming: remove trailing zeros after the decimal
+  //   const std::size_t dot_pos = s.find('.');
+  //   if (dot_pos == std::string::npos) {
+  //     return s;  // No decimal point
+  //   }
+
+  //   std::size_t end = s.size();
+
+  //   // Find last non-zero character after the decimal
+  //   while (end > dot_pos + 1 && s[end - 1] == '0') {
+  //     --end;
+  //   }
+
+  //   // Remove decimal point if it's the last remaining character
+  //   if (end == dot_pos + 1) {
+  //     --end;
+  //   }
+
+  //   s.resize(end);
+  return input.toString();
+}
 
 inline std::string size_tToString(const size_t& t) {
   std::stringstream ss;
@@ -1058,10 +1530,28 @@ typename std::enable_if<std::is_same<T, std::string>::value, std::string>::type 
 }
 
 template <typename T>
+typename std::enable_if<std::is_same<T, std::string_view>::value, std::string>::type toString(const T& t) {
+  return std::string(t);
+}
+
+// template <typename T>
+// typename std::enable_if<std::is_same<T, Decimal>::value, std::string>::type toString(const T& t) {
+//   return ConvertDecimalToString(t);
+// }
+
+template <typename T>
 typename std::enable_if<std::is_same<T, std::string>::value, std::string>::type toStringPretty(const T& t, const int space = 2, const int leftToIndent = 0,
                                                                                                const bool indentFirstLine = true) {
   std::string sl(leftToIndent, ' ');
   std::string output = (indentFirstLine ? sl : "") + t;
+  return output;
+}
+
+template <typename T>
+typename std::enable_if<std::is_same<T, std::string_view>::value, std::string>::type toStringPretty(const T& t, const int space = 2, const int leftToIndent = 0,
+                                                                                                    const bool indentFirstLine = true) {
+  std::string sl(leftToIndent, ' ');
+  std::string output = (indentFirstLine ? sl : "") + std::string(t);
   return output;
 }
 

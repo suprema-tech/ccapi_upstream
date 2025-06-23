@@ -6,6 +6,7 @@
 #include "ccapi_cpp/service/ccapi_fix_service.h"
 
 namespace ccapi {
+
 class FixServiceCoinbase : public FixService<beast::ssl_stream<beast::tcp_stream>> {
  public:
   FixServiceCoinbase(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -64,9 +65,8 @@ class FixServiceCoinbase : public FixService<beast::ssl_stream<beast::tcp_stream
     }
     return param;
   }
-
-  std::string apiPassphraseName;
 };
+
 } /* namespace ccapi */
 #endif
 #endif

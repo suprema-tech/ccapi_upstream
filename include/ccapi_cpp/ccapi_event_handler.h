@@ -3,6 +3,7 @@
 #include "ccapi_cpp/ccapi_event.h"
 
 namespace ccapi {
+
 class Session;
 
 /**
@@ -24,5 +25,6 @@ class EventHandler {
   // freed.
   // Note: no exceptions are thrown
 };
+
 } /* namespace ccapi */
 #endif  // INCLUDE_CCAPI_CPP_CCAPI_EVENT_HANDLER_H_

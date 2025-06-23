@@ -5,6 +5,7 @@
 #include "ccapi_cpp/service/ccapi_execution_management_service.h"
 
 namespace ccapi {
+
 class ExecutionManagementServiceHuobiBase : public ExecutionManagementService {
  public:
   ExecutionManagementServiceHuobiBase(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
@@ -132,6 +133,7 @@ class ExecutionManagementServiceHuobiBase : public ExecutionManagementService {
 
   bool isDerivatives{};
 };
+
 } /* namespace ccapi */
 #endif
 #endif

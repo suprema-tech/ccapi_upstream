@@ -1,6 +1,7 @@
 #include "ccapi_cpp/ccapi_session.h"
 
 namespace ccapi {
+
 Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
@@ -12,13 +13,16 @@ class MyEventHandler : public EventHandler {
       for (const auto& message : event.getMessageList()) {
         std::cout << std::string("Best bid and ask at ") + UtilTime::getISOTimestamp(message.getTime()) + " are:" << std::endl;
         for (const auto& element : message.getElementList()) {
-          const std::map<std::string, std::string>& elementNameValueMap = element.getNameValueMap();
+          // They key std::string_view is created from a string literal and therefore is safe, because string
+          // literals have static storage duration, meaning they live for the entire duration of the program.
+          const std::map<std::string_view, std::string>& elementNameValueMap = element.getNameValueMap();
           std::cout << "  " + toString(elementNameValueMap) << std::endl;
         }
       }
     }
   }
 };
+
 } /* namespace ccapi */
 
 using ::ccapi::MyEventHandler;
