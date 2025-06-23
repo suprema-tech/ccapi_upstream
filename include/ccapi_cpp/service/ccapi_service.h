@@ -1116,7 +1116,6 @@ class Service : public std::enable_shared_from_this<Service> {
   virtual void onOpen(std::shared_ptr<WsConnection> wsConnectionPtr) {
     CCAPI_LOGGER_FUNCTION_ENTER;
     auto now = UtilTime::now();
-    WsConnection& wsConnection = *wsConnectionPtr;
     wsConnectionPtr->status = WsConnection::Status::OPEN;
     CCAPI_LOGGER_INFO("connection " + toString(*wsConnectionPtr) + " established");
     auto urlBase = UtilString::split(wsConnectionPtr->url, "?").at(0);
@@ -1150,11 +1149,11 @@ class Service : public std::enable_shared_from_this<Service> {
       CCAPI_LOGGER_WARN("should write no more messages");
       return;
     }
-    auto& connectionId = wsConnectionPtr->id;
     auto& writeMessageBuffer = wsConnectionPtr->writeMessageBuffer;
     auto& writeMessageBufferWrittenLength = wsConnectionPtr->writeMessageBufferWrittenLength;
     auto& writeMessageBufferBoundary = wsConnectionPtr->writeMessageBufferBoundary;
     size_t n = writeMessageBufferWrittenLength;
+    const auto& connectionId = wsConnectionPtr->id;
     CCAPI_LOGGER_TRACE("connectionId = " + connectionId);
     memcpy(writeMessageBuffer.data() + n, data, dataSize);
     writeMessageBufferBoundary.push_back(dataSize);
@@ -1203,7 +1202,6 @@ class Service : public std::enable_shared_from_this<Service> {
       this->onFail(wsConnectionPtr);
       return;
     }
-    auto& connectionId = wsConnectionPtr->id;
     auto& writeMessageBuffer = wsConnectionPtr->writeMessageBuffer;
     auto& writeMessageBufferWrittenLength = wsConnectionPtr->writeMessageBufferWrittenLength;
     auto& writeMessageBufferBoundary = wsConnectionPtr->writeMessageBufferBoundary;
@@ -1220,7 +1218,6 @@ class Service : public std::enable_shared_from_this<Service> {
   }
 
   virtual void onFail_(std::shared_ptr<WsConnection> wsConnectionPtr) {
-    WsConnection& wsConnection = *wsConnectionPtr;
     wsConnectionPtr->status = WsConnection::Status::FAILED;
     this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE_DUE_TO_CONNECTION_FAILURE,
                   "connection " + toString(*wsConnectionPtr) + " has failed before opening", wsConnectionPtr->correlationIdList);
@@ -1277,7 +1274,6 @@ class Service : public std::enable_shared_from_this<Service> {
   }
 
   virtual void clearStates(std::shared_ptr<WsConnection> wsConnectionPtr) {
-    WsConnection& wsConnection = *wsConnectionPtr;
     CCAPI_LOGGER_INFO("clear states for wsConnection " + toString(*wsConnectionPtr));
     this->shouldProcessRemainingMessageOnClosingByConnectionIdMap.erase(wsConnectionPtr->id);
     this->lastPongTpByMethodByConnectionIdMap.erase(wsConnectionPtr->id);
@@ -1305,7 +1301,6 @@ class Service : public std::enable_shared_from_this<Service> {
   virtual void onClose(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode ec) {
     CCAPI_LOGGER_FUNCTION_ENTER;
     auto now = UtilTime::now();
-    WsConnection& wsConnection = *wsConnectionPtr;
     wsConnectionPtr->status = WsConnection::Status::CLOSED;
     CCAPI_LOGGER_INFO("connection " + toString(*wsConnectionPtr) + " is closed");
     std::stringstream s;
@@ -1343,7 +1338,6 @@ class Service : public std::enable_shared_from_this<Service> {
 
   void onMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const char* data, size_t dataSize) {
     auto now = UtilTime::now();
-    WsConnection& wsConnection = *wsConnectionPtr;
     CCAPI_LOGGER_DEBUG("received a message from connection " + toString(*wsConnectionPtr));
     if (wsConnectionPtr->status != WsConnection::Status::OPEN && !this->shouldProcessRemainingMessageOnClosingByConnectionIdMap[wsConnectionPtr->id]) {
       CCAPI_LOGGER_WARN("should not process remaining message on closing");
@@ -1449,7 +1443,6 @@ class Service : public std::enable_shared_from_this<Service> {
     if (pingIntervalMilliseconds <= pongTimeoutMilliseconds) {
       return;
     }
-    WsConnection& wsConnection = *wsConnectionPtr;
     if (wsConnectionPtr->status == WsConnection::Status::OPEN) {
       if (this->pingTimerByMethodByConnectionIdMap.find(wsConnectionPtr->id) != this->pingTimerByMethodByConnectionIdMap.end() &&
           this->pingTimerByMethodByConnectionIdMap.at(wsConnectionPtr->id).find(method) !=
@@ -1459,7 +1452,6 @@ class Service : public std::enable_shared_from_this<Service> {
       TimerPtr timerPtr(
           new net::steady_timer(*this->serviceContextPtr->ioContextPtr, std::chrono::milliseconds(pingIntervalMilliseconds - pongTimeoutMilliseconds)));
       timerPtr->async_wait([wsConnectionPtr, that = shared_from_this(), pingMethod, pongTimeoutMilliseconds, method](ErrorCode const& ec) {
-        WsConnection& wsConnection = *wsConnectionPtr;
         if (that->wsConnectionPtrByIdMap.find(wsConnectionPtr->id) != that->wsConnectionPtrByIdMap.end()) {
           if (ec && ec != boost::asio::error::operation_aborted) {
             CCAPI_LOGGER_ERROR("wsConnection = " + toString(*wsConnectionPtr) + ", ping timer error: " + ec.message());
@@ -1481,7 +1473,6 @@ class Service : public std::enable_shared_from_this<Service> {
               }
               TimerPtr timerPtr(new net::steady_timer(*that->serviceContextPtr->ioContextPtr, std::chrono::milliseconds(pongTimeoutMilliseconds)));
               timerPtr->async_wait([wsConnectionPtr, that, pingMethod, pongTimeoutMilliseconds, method](ErrorCode const& ec) {
-                WsConnection& wsConnection = *wsConnectionPtr;
                 if (that->wsConnectionPtrByIdMap.find(wsConnectionPtr->id) != that->wsConnectionPtrByIdMap.end()) {
                   if (ec && ec != boost::asio::error::operation_aborted) {
                     CCAPI_LOGGER_ERROR("wsConnection = " + toString(*wsConnectionPtr) + ", pong time out timer error: " + ec.message());

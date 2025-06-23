@@ -141,8 +141,6 @@ class MarketDataServiceKraken : public MarketDataService {
 
   void processTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
                           std::vector<MarketDataMessage>& marketDataMessageList) override {
-    WsConnection& wsConnection = *wsConnectionPtr;
-
     rj::Document document;
     rj::Document::AllocatorType& allocator = document.GetAllocator();
     document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());

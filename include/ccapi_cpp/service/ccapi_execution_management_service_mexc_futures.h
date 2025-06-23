@@ -369,8 +369,6 @@ class ExecutionManagementServiceMexcFutures : public ExecutionManagementService 
   }
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
-    WsConnection& wsConnection = *wsConnectionPtr;
-
     // if (textMessageView != "pong") {
     //   rj::Document document;
     //   document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());

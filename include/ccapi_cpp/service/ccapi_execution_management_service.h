@@ -210,7 +210,6 @@ class ExecutionManagementService : public Service {
   virtual void logonToExchange(std::shared_ptr<WsConnection> wsConnectionPtr, const TimePoint& now, const std::map<std::string, std::string>& credential) {
     CCAPI_LOGGER_INFO("about to logon to exchange");
     CCAPI_LOGGER_INFO("exchange is " + this->exchangeName);
-    WsConnection& wsConnection = *wsConnectionPtr;
     CCAPI_LOGGER_FINE("wsConnection = " + toString(*wsConnectionPtr));
     auto subscription = wsConnectionPtr->subscriptionList.at(0);
     std::vector<std::string> sendStringList = this->createSendStringListFromSubscription(wsConnectionPtr, subscription, now, credential);
@@ -234,7 +233,6 @@ class ExecutionManagementService : public Service {
     CCAPI_LOGGER_FUNCTION_ENTER;
     Service::onOpen(wsConnectionPtr);
     auto now = UtilTime::now();
-    WsConnection& wsConnection = *wsConnectionPtr;
     auto correlationId = wsConnectionPtr->subscriptionList.at(0).getCorrelationId();
     this->wsConnectionPtrByCorrelationIdMap.insert({correlationId, wsConnectionPtr});
     this->correlationIdByConnectionIdMap.insert({wsConnectionPtr->id, correlationId});
@@ -244,7 +242,6 @@ class ExecutionManagementService : public Service {
 
   void onClose(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode ec) override {
     CCAPI_LOGGER_FUNCTION_ENTER;
-    WsConnection& wsConnection = *wsConnectionPtr;
     if (this->correlationIdByConnectionIdMap.find(wsConnectionPtr->id) != this->correlationIdByConnectionIdMap.end()) {
       this->wsConnectionPtrByCorrelationIdMap.erase(this->correlationIdByConnectionIdMap.at(wsConnectionPtr->id));
       this->correlationIdByConnectionIdMap.erase(wsConnectionPtr->id);
@@ -313,7 +310,6 @@ class ExecutionManagementService : public Service {
                         }
 
                         auto wsConnectionPtr = it->second;
-                        auto& wsConnection = *wsConnectionPtr;
 
                         CCAPI_LOGGER_TRACE("wsConnection = " + toString(*wsConnectionPtr));
                         const auto& instrument = request.getInstrument();

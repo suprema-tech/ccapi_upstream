@@ -338,8 +338,6 @@ class ExecutionManagementServiceFtxBase : public ExecutionManagementService {
 
   void onTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const Subscription& subscription, boost::beast::string_view textMessageView,
                      const TimePoint& timeReceived) override {
-    WsConnection& wsConnection = *wsConnectionPtr;
-
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
     document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());

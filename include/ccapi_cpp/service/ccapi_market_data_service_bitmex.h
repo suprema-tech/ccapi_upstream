@@ -83,8 +83,6 @@ class MarketDataServiceBitmex : public MarketDataService {
 
   void processTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
                           std::vector<MarketDataMessage>& marketDataMessageList) override {
-    WsConnection& wsConnection = *wsConnectionPtr;
-
     if (textMessageView != "pong") {
       this->jsonDocumentAllocator.Clear();
       rj::Document document(&this->jsonDocumentAllocator);

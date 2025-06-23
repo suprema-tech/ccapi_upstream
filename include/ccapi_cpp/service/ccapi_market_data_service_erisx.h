@@ -75,8 +75,6 @@ class MarketDataServiceErisx : public MarketDataService {
 
   void processTextMessage(std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessageView, const TimePoint& timeReceived, Event& event,
                           std::vector<MarketDataMessage>& marketDataMessageList) override {
-    WsConnection& wsConnection = *wsConnectionPtr;
-
     this->jsonDocumentAllocator.Clear();
     rj::Document document(&this->jsonDocumentAllocator);
     document.Parse<rj::kParseNumbersAsStringsFlag>(textMessageView.data(), textMessageView.size());

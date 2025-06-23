@@ -73,7 +73,6 @@ class MarketDataService : public Service {
               that->subscriptionStatusByInstrumentGroupInstrumentMap.find(instrumentGroup) != that->subscriptionStatusByInstrumentGroupInstrumentMap.end()) {
             auto wsConnectionId = wsConnectionIdListByInstrumentGroupMap.at(instrumentGroup).at(0);
             auto wsConnectionPtr = that->wsConnectionPtrByIdMap.at(wsConnectionId);
-            WsConnection& wsConnection = *wsConnectionPtr;
             for (const auto& subscription : subscriptionListGivenInstrumentGroup) {
               auto instrument = subscription.getInstrument();
               if (that->subscriptionStatusByInstrumentGroupInstrumentMap[instrumentGroup].find(instrument) !=
@@ -167,7 +166,6 @@ class MarketDataService : public Service {
   void processMarketDataMessageList(std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view textMessage, const TimePoint& timeReceived,
                                     Event& event, std::vector<MarketDataMessage>& marketDataMessageList) {
     CCAPI_LOGGER_TRACE("marketDataMessageList = " + toString(marketDataMessageList));
-    WsConnection& wsConnection = *wsConnectionPtr;
     event.setType(Event::Type::SUBSCRIPTION_DATA);
     for (auto& marketDataMessage : marketDataMessageList) {
       if (marketDataMessage.type == MarketDataMessage::Type::MARKET_DATA_EVENTS_MARKET_DEPTH ||
@@ -327,7 +325,6 @@ class MarketDataService : public Service {
 
   void onOpen(std::shared_ptr<WsConnection> wsConnectionPtr) override {
     CCAPI_LOGGER_FUNCTION_ENTER;
-    WsConnection& wsConnection = *wsConnectionPtr;
     auto now = UtilTime::now();
     Service::onOpen(wsConnectionPtr);
     auto credential = wsConnectionPtr->credential;
@@ -339,14 +336,12 @@ class MarketDataService : public Service {
   }
 
   void onFail_(std::shared_ptr<WsConnection> wsConnectionPtr) override {
-    WsConnection& wsConnection = *wsConnectionPtr;
     std::string wsConnectionId = wsConnectionPtr->id;
     Service::onFail_(wsConnectionPtr);
     this->instrumentGroupByWsConnectionIdMap.erase(wsConnectionId);
   }
 
   void clearStates(std::shared_ptr<WsConnection> wsConnectionPtr) override {
-    WsConnection& wsConnection = *wsConnectionPtr;
     Service::clearStates(wsConnectionPtr);
     this->fieldByConnectionIdChannelIdSymbolIdMap.erase(wsConnectionPtr->id);
     this->optionMapByConnectionIdChannelIdSymbolIdMap.erase(wsConnectionPtr->id);
@@ -388,7 +383,6 @@ class MarketDataService : public Service {
 
   virtual void onClose(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode ec) override {
     CCAPI_LOGGER_FUNCTION_ENTER;
-    WsConnection& wsConnection = *wsConnectionPtr;
     this->exchangeSubscriptionIdListByConnectionIdExchangeJsonPayloadIdMap.erase(wsConnectionPtr->id);
     this->exchangeJsonPayloadIdByConnectionIdMap.erase(wsConnectionPtr->id);
     this->instrumentGroupByWsConnectionIdMap.erase(wsConnectionPtr->id);
@@ -397,7 +391,6 @@ class MarketDataService : public Service {
   }
 
   virtual void subscribeToExchange(std::shared_ptr<WsConnection> wsConnectionPtr) {
-    WsConnection& wsConnection = *wsConnectionPtr;
     CCAPI_LOGGER_INFO("exchange is " + this->exchangeName);
     std::vector<std::string> sendStringList;
     if (this->correlationIdByConnectionIdMap.find(wsConnectionPtr->id) == this->correlationIdByConnectionIdMap.end()) {
@@ -417,7 +410,6 @@ class MarketDataService : public Service {
   }
 
   void startSubscribe(std::shared_ptr<WsConnection> wsConnectionPtr) {
-    WsConnection& wsConnection = *wsConnectionPtr;
     auto instrumentGroup = wsConnectionPtr->group;
     for (const auto& subscription : wsConnectionPtr->subscriptionList) {
       auto instrument = subscription.getInstrument();
@@ -433,7 +425,6 @@ class MarketDataService : public Service {
   }
 
   virtual void logonToExchange(std::shared_ptr<WsConnection> wsConnectionPtr, const TimePoint& now, const std::map<std::string, std::string>& credential) {
-    WsConnection& wsConnection = *wsConnectionPtr;
     CCAPI_LOGGER_INFO("about to logon to exchange");
     CCAPI_LOGGER_INFO("exchange is " + this->exchangeName);
     auto subscriptionList = wsConnectionPtr->subscriptionList;
