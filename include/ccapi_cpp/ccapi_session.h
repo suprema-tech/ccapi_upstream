@@ -286,6 +286,8 @@ class Session {
 
   virtual ~Session() {
     CCAPI_LOGGER_FUNCTION_ENTER;
+    this->delayTimerByIdMap.clear();
+    this->serviceByServiceNameExchangeMap.clear();
     if (this->useInternalServiceContextPtr) {
       delete this->serviceContextPtr;
     }
@@ -597,6 +599,9 @@ class Session {
 
   virtual void stop() {
     boost::asio::post(*this->serviceContextPtr->ioContextPtr, [this]() {
+      for (const auto& [_, delayTimer] : this->delayTimerByIdMap) {
+        delayTimer->cancel();
+      }
       for (const auto& x : this->serviceByServiceNameExchangeMap) {
         for (const auto& y : x.second) {
           y.second->stop();
@@ -902,8 +907,7 @@ class Session {
   virtual void setTimer(const std::string& id, long delayMilliseconds, std::function<void(const boost::system::error_code&)> errorHandler,
                         std::function<void()> successHandler) {
     boost::asio::post(*this->serviceContextPtr->ioContextPtr, [this, id, delayMilliseconds, errorHandler, successHandler]() {
-      std::shared_ptr<boost::asio::steady_timer> timerPtr(
-          new boost::asio::steady_timer(*this->serviceContextPtr->ioContextPtr, boost::asio::chrono::milliseconds(delayMilliseconds)));
+      auto timerPtr = std::make_shared<boost::asio::steady_timer>(*this->serviceContextPtr->ioContextPtr, boost::asio::chrono::milliseconds(delayMilliseconds));
       timerPtr->async_wait([this, id, errorHandler, successHandler](const boost::system::error_code& ec) {
         if (this->eventHandler) {
           if (!this->eventDispatcher) {

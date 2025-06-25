@@ -137,8 +137,8 @@ class Request {
 
   Request() {}
 
-  Request(Operation operation, const std::string& exchange, const std::string& instrument = "", const std::string& correlationId = "",
-          const std::map<std::string, std::string>& credential = {})
+  explicit Request(Operation operation, const std::string& exchange = "", const std::string& instrument = "", const std::string& correlationId = "",
+                   const std::map<std::string, std::string>& credential = {})
       : operation(operation), exchange(exchange), instrument(instrument), correlationId(correlationId), credential(credential) {
     if (operation == Operation::CUSTOM) {
       this->serviceName = CCAPI_UNKNOWN;
@@ -227,6 +227,10 @@ class Request {
   const std::string& getHost() const { return host; }
 
   const std::string& getPort() const { return port; }
+
+  void setExchange(const std::string& exchange) { this->exchange = exchange; }
+
+  void setInstrument(const std::string& instrument) { this->instrument = instrument; }
 
   void setIndex(int index) { this->index = index; }
 
