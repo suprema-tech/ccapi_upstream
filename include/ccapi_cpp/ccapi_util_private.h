@@ -1142,16 +1142,19 @@ class Decimal {
     return *this;
   }
 
-#ifndef CCAPI_EXPOSE_INTERNAL
-
- private:
-#endif
   Decimal negate() const {
     Decimal o;
+    o.sign = !this->sign;
     o.before = this->before;
     o.frac = this->frac;
-    o.sign = !this->sign;
     return o;
+  }
+
+  Decimal abs() const {
+    if (!this->sign) {  // if the input is negative
+      return -*this;    // negate it
+    }
+    return *this;  // already positive
   }
 
   Decimal add(const Decimal& x) const {
@@ -1337,7 +1340,10 @@ class Decimal {
 
     return result;
   }
+#ifndef CCAPI_EXPOSE_INTERNAL
 
+ private:
+#endif
   // false means negative sign needed
   bool sign{true};
   // {-}bbbb.aaaa
@@ -1380,6 +1386,10 @@ inline std::string ConvertDecimalToString(const Decimal& input, bool normalize =
   //   s.resize(end);
   return input.toString();
 }
+
+inline Decimal ConvertDecimalToAbs(const Decimal& input) { return input.abs(); }
+
+inline double ConvertDecimalToDouble(const Decimal& input) { return input.toDouble(); }
 
 inline std::string size_tToString(const size_t& t) {
   std::stringstream ss;

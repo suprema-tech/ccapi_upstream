@@ -39,6 +39,30 @@ class Element {
     }
   }
 
+  // Template insert: accept any string-like value
+  template <typename S>
+  void insert_or_assign(std::string_view name, S&& value) {
+    // Construct std::string only if necessary
+    if constexpr (std::is_same_v<std::decay_t<S>, std::string>) {
+      // If value is std::string, move it in to avoid copy
+      nameValueMap.insert_or_assign(name, std::forward<S>(value));
+    } else {
+      // Otherwise, construct std::string from value (string_view, const char*)
+      nameValueMap.insert_or_assign(name, std::string(std::forward<S>(value)));
+    }
+  }
+
+  template <typename S>
+  void insert_or_assign(int tag, S&& value) {
+    if constexpr (std::is_same_v<std::decay_t<S>, std::string>) {
+      // If already std::string, move to avoid copy
+      tagValueMap.insert_or_assign(tag, std::forward<S>(value));
+    } else {
+      // Otherwise, construct std::string from value (string_view, literal, etc.)
+      tagValueMap.insert_or_assign(tag, std::string(std::forward<S>(value)));
+    }
+  }
+
   //   void emplace(std::string& name, std::string& value) { this->nameValueMap.emplace(std::move(name), std::move(value)); }
 
   //   void emplace(int tag, std::string& value) { this->tagValueMap.emplace(std::move(tag), std::move(value)); }

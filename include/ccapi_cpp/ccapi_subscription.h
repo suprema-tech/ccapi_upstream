@@ -159,7 +159,7 @@ class Subscription {
         output = "UNSUBSCRIBED";
         break;
       default:
-        CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);
+        CCAPI_LOGGER_FATAL(std::string(CCAPI_UNSUPPORTED_VALUE) + " " + std::to_string(static_cast<int>(status)));
     }
     return output;
   }

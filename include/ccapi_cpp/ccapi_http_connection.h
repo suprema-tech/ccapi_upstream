@@ -28,23 +28,12 @@ class HttpConnection {
 
   void clearBuffer() { this->buffer.consume(this->buffer.size()); }
 
-  void resetResponseParser() {
-    this->resParserOpt.emplace();
-    this->resParserOpt->body_limit(CCAPI_HTTP_RESPONSE_PARSER_BODY_LIMIT);
-  }
-
-  void prepareReadNextResponse() {
-    this->clearBuffer();
-    this->resetResponseParser();
-  }
-
   std::string host;
   std::string port;
   std::shared_ptr<beast::ssl_stream<beast::tcp_stream>> streamPtr;
   TimePoint lastReceiveDataTp{std::chrono::seconds{0}};
 
   boost::beast::flat_buffer buffer;
-  std::optional<boost::beast::http::response_parser<boost::beast::http::string_body>> resParserOpt;
 };
 
 } /* namespace ccapi */
