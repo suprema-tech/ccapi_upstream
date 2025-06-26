@@ -28,6 +28,7 @@ namespace ccapi {
 class Request {
  public:
   enum class Operation {
+    UNKNOWN = 0,
     CUSTOM = CCAPI_REQUEST_OPERATION_TYPE_CUSTOM,
     GENERIC_PUBLIC_REQUEST = CCAPI_REQUEST_OPERATION_TYPE_GENERIC_PUBLIC_REQUEST,
     GENERIC_PRIVATE_REQUEST = CCAPI_REQUEST_OPERATION_TYPE_GENERIC_PRIVATE_REQUEST,
@@ -59,6 +60,9 @@ class Request {
     switch (operation) {
       case Operation::CUSTOM:
         output = "CUSTOM";
+        break;
+      case Operation::UNKNOWN:
+        output = "UNKNOWN";
         break;
       case Operation::GENERIC_PUBLIC_REQUEST:
         output = "GENERIC_PUBLIC_REQUEST";
@@ -130,7 +134,7 @@ class Request {
         output = "GET_ACCOUNT_POSITIONS";
         break;
       default:
-        CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);
+        CCAPI_LOGGER_FATAL(std::string(CCAPI_UNSUPPORTED_VALUE) + " " + std::to_string(static_cast<int>(operation)));
     }
     return output;
   }
@@ -267,7 +271,7 @@ class Request {
 
  private:
 #endif
-  Operation operation;
+  Operation operation{Operation::UNKNOWN};
   std::string exchange;
   std::string marginType;
   std::string instrument;

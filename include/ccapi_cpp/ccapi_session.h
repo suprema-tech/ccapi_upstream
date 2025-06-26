@@ -660,7 +660,7 @@ class Session {
       auto subscriptionList = x.second;
       if (this->serviceByServiceNameExchangeMap.find(serviceName) == this->serviceByServiceNameExchangeMap.end()) {
         this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE,
-                      "please enable service: " + serviceName + ", and the exchanges that you want");
+                      "please enable service: " + serviceName + ", and the exchanges that you want for subscriptionList " + toString(subscriptionList));
         return;
       }
       if (serviceName == CCAPI_MARKET_DATA) {
@@ -727,7 +727,8 @@ class Session {
     auto serviceName = subscription.getServiceName();
     CCAPI_LOGGER_DEBUG("serviceName = " + serviceName);
     if (this->serviceByServiceNameExchangeMap.find(serviceName) == this->serviceByServiceNameExchangeMap.end()) {
-      this->onError(Event::Type::FIX_STATUS, Message::Type::FIX_FAILURE, "please enable service: " + serviceName + ", and the exchanges that you want");
+      this->onError(Event::Type::FIX_STATUS, Message::Type::FIX_FAILURE,
+                    "please enable service: " + serviceName + ", and the exchanges that you want for subscription " + toString(subscription));
       return;
     }
     auto exchange = subscription.getExchange();
@@ -781,7 +782,8 @@ class Session {
     auto serviceName = request.getServiceName();
     CCAPI_LOGGER_DEBUG("serviceName = " + serviceName);
     if (this->serviceByServiceNameExchangeMap.find(serviceName) == this->serviceByServiceNameExchangeMap.end()) {
-      this->onError(Event::Type::FIX_STATUS, Message::Type::FIX_FAILURE, "please enable service: " + serviceName + ", and the exchanges that you want");
+      this->onError(Event::Type::FIX_STATUS, Message::Type::FIX_FAILURE,
+                    "please enable service: " + serviceName + ", and the exchanges that you want for request " + toString(request));
       return;
     }
     std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
@@ -807,7 +809,9 @@ class Session {
     const auto& serviceName = request.getServiceName();
     CCAPI_LOGGER_DEBUG("serviceName = " + serviceName);
     if (this->serviceByServiceNameExchangeMap.find(serviceName) == this->serviceByServiceNameExchangeMap.end()) {
-      this->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE, "please enable service: " + serviceName + ", and the exchanges that you want");
+      this->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE,
+                    "please enable service: " + serviceName + ", and the exchanges that you want for websocketOrderEntrySubscriptionCorrelationId " +
+                        toString(websocketOrderEntrySubscriptionCorrelationId) + ", request = " + toString(request));
       return;
     }
     const std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
@@ -846,7 +850,7 @@ class Session {
       CCAPI_LOGGER_DEBUG("serviceName = " + serviceName);
       if (this->serviceByServiceNameExchangeMap.find(serviceName) == this->serviceByServiceNameExchangeMap.end()) {
         this->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE,
-                      "please enable service: " + serviceName + ", and the exchanges that you want", eventQueuePtr);
+                      "please enable service: " + serviceName + ", and the exchanges that you want for request " + toString(request), eventQueuePtr);
         return;
       }
       std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
