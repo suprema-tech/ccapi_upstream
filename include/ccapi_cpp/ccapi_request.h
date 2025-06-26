@@ -28,6 +28,7 @@ namespace ccapi {
 class Request {
  public:
   enum class Operation {
+    UNKNOWN = 0,
     CUSTOM = CCAPI_REQUEST_OPERATION_TYPE_CUSTOM,
     GENERIC_PUBLIC_REQUEST = CCAPI_REQUEST_OPERATION_TYPE_GENERIC_PUBLIC_REQUEST,
     GENERIC_PRIVATE_REQUEST = CCAPI_REQUEST_OPERATION_TYPE_GENERIC_PRIVATE_REQUEST,
@@ -59,6 +60,9 @@ class Request {
     switch (operation) {
       case Operation::CUSTOM:
         output = "CUSTOM";
+        break;
+      case Operation::UNKNOWN:
+        output = "UNKNOWN";
         break;
       case Operation::GENERIC_PUBLIC_REQUEST:
         output = "GENERIC_PUBLIC_REQUEST";
@@ -130,15 +134,15 @@ class Request {
         output = "GET_ACCOUNT_POSITIONS";
         break;
       default:
-        CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);
+        CCAPI_LOGGER_FATAL(std::string(CCAPI_UNSUPPORTED_VALUE) + " " + std::to_string(static_cast<int>(operation)));
     }
     return output;
   }
 
   Request() {}
 
-  Request(Operation operation, const std::string& exchange, const std::string& instrument = "", const std::string& correlationId = "",
-          const std::map<std::string, std::string>& credential = {})
+  explicit Request(Operation operation, const std::string& exchange = "", const std::string& instrument = "", const std::string& correlationId = "",
+                   const std::map<std::string, std::string>& credential = {})
       : operation(operation), exchange(exchange), instrument(instrument), correlationId(correlationId), credential(credential) {
     if (operation == Operation::CUSTOM) {
       this->serviceName = CCAPI_UNKNOWN;
@@ -228,6 +232,10 @@ class Request {
 
   const std::string& getPort() const { return port; }
 
+  void setExchange(const std::string& exchange) { this->exchange = exchange; }
+
+  void setInstrument(const std::string& instrument) { this->instrument = instrument; }
+
   void setIndex(int index) { this->index = index; }
 
   void setCredential(const std::map<std::string, std::string>& credential) { this->credential = credential; }
@@ -263,7 +271,7 @@ class Request {
 
  private:
 #endif
-  Operation operation;
+  Operation operation{Operation::UNKNOWN};
   std::string exchange;
   std::string marginType;
   std::string instrument;

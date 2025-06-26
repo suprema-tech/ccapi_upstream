@@ -529,7 +529,14 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
             element.insert(CCAPI_EM_ORDER_SIDE, std::string_view(data["S"].GetString()) == "BUY" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
             element.insert(CCAPI_IS_MAKER, data["m"].GetBool() ? "1" : "0");
             element.insert(CCAPI_EM_ORDER_ID, data["i"].GetString());
-            element.insert(CCAPI_EM_CLIENT_ORDER_ID, data["c"].GetString());
+            {
+              auto it = data.FindMember("C");
+              if (it != data.MemberEnd() && !it->value.IsNull() && it->value.GetStringLength()) {
+                element.insert(CCAPI_EM_CLIENT_ORDER_ID, std::string(it->value.GetString()));
+              } else {
+                element.insert(CCAPI_EM_CLIENT_ORDER_ID, data["c"].GetString());
+              }
+            }
             element.insert(CCAPI_EM_ORDER_INSTRUMENT, instrument);
             {
               auto it = data.FindMember("n");
@@ -555,7 +562,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
             message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_ORDER_UPDATE);
             const std::map<std::string_view, std::pair<std::string_view, JsonDataType>>& extractionFieldNameMap = {
                 {CCAPI_EM_ORDER_ID, std::make_pair("i", JsonDataType::INTEGER)},
-                {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("c", JsonDataType::STRING)},
+                {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("C", JsonDataType::STRING)},
                 {CCAPI_EM_ORDER_SIDE, std::make_pair("S", JsonDataType::STRING)},
                 {CCAPI_EM_ORDER_LIMIT_PRICE, std::make_pair("p", JsonDataType::STRING)},
                 {CCAPI_EM_ORDER_QUANTITY, std::make_pair("q", JsonDataType::STRING)},
@@ -566,10 +573,10 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
             };
             Element info;
             this->extractOrderInfo(info, data, extractionFieldNameMap);
-            {
-              auto it = data.FindMember("C");
+            if (info.getValue(CCAPI_EM_CLIENT_ORDER_ID).empty()) {
+              auto it = data.FindMember("c");
               if (it != data.MemberEnd() && !it->value.IsNull() && it->value.GetStringLength()) {
-                info.insert(CCAPI_EM_ORIGINAL_CLIENT_ORDER_ID, std::string(it->value.GetString()));
+                info.insert_or_assign(CCAPI_EM_CLIENT_ORDER_ID, std::string(it->value.GetString()));
               }
             }
             {
@@ -723,7 +730,7 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
         {CCAPI_EM_ORDER_STATUS, std::make_pair("status", JsonDataType::STRING)},
         {CCAPI_EM_ORDER_INSTRUMENT, std::make_pair("symbol", JsonDataType::STRING)},
         {CCAPI_LAST_UPDATED_TIME_SECONDS, std::make_pair(this->isDerivatives ? "updateTime" : "transactTime", JsonDataType::STRING)},
-        {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("clientOrderId", JsonDataType::STRING)},
+        {CCAPI_EM_CLIENT_ORDER_ID, std::make_pair("origClientOrderId", JsonDataType::STRING)},
     };
 
     Element element;

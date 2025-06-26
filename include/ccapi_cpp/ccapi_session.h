@@ -286,6 +286,8 @@ class Session {
 
   virtual ~Session() {
     CCAPI_LOGGER_FUNCTION_ENTER;
+    this->delayTimerByIdMap.clear();
+    this->serviceByServiceNameExchangeMap.clear();
     if (this->useInternalServiceContextPtr) {
       delete this->serviceContextPtr;
     }
@@ -597,6 +599,9 @@ class Session {
 
   virtual void stop() {
     boost::asio::post(*this->serviceContextPtr->ioContextPtr, [this]() {
+      for (const auto& [_, delayTimer] : this->delayTimerByIdMap) {
+        delayTimer->cancel();
+      }
       for (const auto& x : this->serviceByServiceNameExchangeMap) {
         for (const auto& y : x.second) {
           y.second->stop();
@@ -655,7 +660,7 @@ class Session {
       auto subscriptionList = x.second;
       if (this->serviceByServiceNameExchangeMap.find(serviceName) == this->serviceByServiceNameExchangeMap.end()) {
         this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE,
-                      "please enable service: " + serviceName + ", and the exchanges that you want");
+                      "please enable service: " + serviceName + ", and the exchanges that you want for subscriptionList " + toString(subscriptionList));
         return;
       }
       if (serviceName == CCAPI_MARKET_DATA) {
@@ -722,7 +727,8 @@ class Session {
     auto serviceName = subscription.getServiceName();
     CCAPI_LOGGER_DEBUG("serviceName = " + serviceName);
     if (this->serviceByServiceNameExchangeMap.find(serviceName) == this->serviceByServiceNameExchangeMap.end()) {
-      this->onError(Event::Type::FIX_STATUS, Message::Type::FIX_FAILURE, "please enable service: " + serviceName + ", and the exchanges that you want");
+      this->onError(Event::Type::FIX_STATUS, Message::Type::FIX_FAILURE,
+                    "please enable service: " + serviceName + ", and the exchanges that you want for subscription " + toString(subscription));
       return;
     }
     auto exchange = subscription.getExchange();
@@ -776,7 +782,8 @@ class Session {
     auto serviceName = request.getServiceName();
     CCAPI_LOGGER_DEBUG("serviceName = " + serviceName);
     if (this->serviceByServiceNameExchangeMap.find(serviceName) == this->serviceByServiceNameExchangeMap.end()) {
-      this->onError(Event::Type::FIX_STATUS, Message::Type::FIX_FAILURE, "please enable service: " + serviceName + ", and the exchanges that you want");
+      this->onError(Event::Type::FIX_STATUS, Message::Type::FIX_FAILURE,
+                    "please enable service: " + serviceName + ", and the exchanges that you want for request " + toString(request));
       return;
     }
     std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
@@ -802,7 +809,9 @@ class Session {
     const auto& serviceName = request.getServiceName();
     CCAPI_LOGGER_DEBUG("serviceName = " + serviceName);
     if (this->serviceByServiceNameExchangeMap.find(serviceName) == this->serviceByServiceNameExchangeMap.end()) {
-      this->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE, "please enable service: " + serviceName + ", and the exchanges that you want");
+      this->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE,
+                    "please enable service: " + serviceName + ", and the exchanges that you want for websocketOrderEntrySubscriptionCorrelationId " +
+                        toString(websocketOrderEntrySubscriptionCorrelationId) + ", request = " + toString(request));
       return;
     }
     const std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
@@ -841,7 +850,7 @@ class Session {
       CCAPI_LOGGER_DEBUG("serviceName = " + serviceName);
       if (this->serviceByServiceNameExchangeMap.find(serviceName) == this->serviceByServiceNameExchangeMap.end()) {
         this->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE,
-                      "please enable service: " + serviceName + ", and the exchanges that you want", eventQueuePtr);
+                      "please enable service: " + serviceName + ", and the exchanges that you want for request " + toString(request), eventQueuePtr);
         return;
       }
       std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
@@ -902,8 +911,7 @@ class Session {
   virtual void setTimer(const std::string& id, long delayMilliseconds, std::function<void(const boost::system::error_code&)> errorHandler,
                         std::function<void()> successHandler) {
     boost::asio::post(*this->serviceContextPtr->ioContextPtr, [this, id, delayMilliseconds, errorHandler, successHandler]() {
-      std::shared_ptr<boost::asio::steady_timer> timerPtr(
-          new boost::asio::steady_timer(*this->serviceContextPtr->ioContextPtr, boost::asio::chrono::milliseconds(delayMilliseconds)));
+      auto timerPtr = std::make_shared<boost::asio::steady_timer>(*this->serviceContextPtr->ioContextPtr, boost::asio::chrono::milliseconds(delayMilliseconds));
       timerPtr->async_wait([this, id, errorHandler, successHandler](const boost::system::error_code& ec) {
         if (this->eventHandler) {
           if (!this->eventDispatcher) {
