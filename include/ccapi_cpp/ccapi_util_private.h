@@ -948,6 +948,16 @@ class Decimal {
  public:
   Decimal() {}
 
+  template <typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
+  Decimal(T value) {
+    if (value < 0) {
+      this->sign = false;
+      this->before = -value;
+    } else if (value > 0) {
+      this->before = value;
+    }
+  }
+
   explicit Decimal(std::string_view originalValue) {
     if (originalValue.empty()) {
       throw std::invalid_argument("Decimal constructor input value cannot be empty");
@@ -1340,6 +1350,8 @@ class Decimal {
 
     return result;
   }
+
+  static const Decimal zero;
 #ifndef CCAPI_EXPOSE_INTERNAL
 
  private:
@@ -1353,6 +1365,8 @@ class Decimal {
   mutable std::optional<std::string> cachedToString;
   mutable std::optional<double> cachedToDouble;
 };
+
+inline const Decimal Decimal::zero = Decimal(0);  // define after full class body
 
 inline std::string ConvertDecimalToString(const Decimal& input, bool normalize = true) {
   //   constexpr unsigned precision = GetCppDecFloatDigits<Decimal::backend_type>::value;
