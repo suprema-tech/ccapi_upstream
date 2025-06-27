@@ -32,6 +32,8 @@ class MarketDataServiceBybit : public MarketDataService {
 
  protected:
 #endif
+  void pingOnApplicationLevel(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode& ec) override { this->send(wsConnectionPtr, R"({"op":"ping"})", ec); }
+
   std::string getInstrumentGroup(const Subscription& subscription) override {
     const auto& instrumentTypeSubstitute = subscription.getInstrumentType();
     std::string url = MarketDataService::getInstrumentGroup(subscription);
