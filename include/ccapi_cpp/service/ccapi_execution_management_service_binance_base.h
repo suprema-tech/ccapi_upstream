@@ -374,56 +374,73 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
         const auto& marginType = request.getMarginType();
         if (this->isDerivatives) {
           for (const auto& x : document["assets"].GetArray()) {
-            Element element;
-            element.insert(CCAPI_EM_ASSET, x["asset"].GetString());
-            element.insert(CCAPI_EM_QUANTITY_TOTAL, x["walletBalance"].GetString());
-            element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, x["availableBalance"].GetString());
-            if (this->isDerivatives) {
-              element.insert(CCAPI_LAST_UPDATED_TIME_SECONDS, UtilTime::convertMillisecondsStrToSecondsStr(x["updateTime"].GetString()));
+            const auto& quantityTotalDecimal = Decimal(x["walletBalance"].GetString());
+            if (quantityTotalDecimal != Decimal::zero) {
+              Element element;
+              element.insert(CCAPI_EM_ASSET, x["asset"].GetString());
+              element.insert(CCAPI_EM_QUANTITY_TOTAL, ConvertDecimalToString(quantityTotalDecimal));
+              element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, x["availableBalance"].GetString());
+              if (this->isDerivatives) {
+                element.insert(CCAPI_LAST_UPDATED_TIME_SECONDS, UtilTime::convertMillisecondsStrToSecondsStr(x["updateTime"].GetString()));
+              }
+              elementList.emplace_back(std::move(element));
             }
-            elementList.emplace_back(std::move(element));
           }
         } else {
           if (marginType == CCAPI_EM_MARGIN_TYPE_CROSS_MARGIN) {
             for (const auto& x : document["userAssets"].GetArray()) {
-              Element element;
-              element.insert(CCAPI_EM_ASSET, x["asset"].GetString());
-              element.insert(CCAPI_EM_QUANTITY_TOTAL, ConvertDecimalToString(Decimal(x["free"].GetString()) + (Decimal(x["locked"].GetString()))));
-              element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, x["free"].GetString());
-              element.insert(CCAPI_EM_QUANTITY_LIABILITY, ConvertDecimalToString(Decimal(x["borrowed"].GetString()) + (Decimal(x["interest"].GetString()))));
-              elementList.emplace_back(std::move(element));
+              const auto& quantityTotalDecimal = Decimal(x["free"].GetString()) + Decimal(x["locked"].GetString());
+              if (quantityTotalDecimal != Decimal::zero) {
+                Element element;
+                element.insert(CCAPI_EM_ASSET, x["asset"].GetString());
+                element.insert(CCAPI_EM_QUANTITY_TOTAL, ConvertDecimalToString(quantityTotalDecimal));
+                element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, x["free"].GetString());
+                element.insert(CCAPI_EM_QUANTITY_LIABILITY, ConvertDecimalToString(Decimal(x["borrowed"].GetString()) + (Decimal(x["interest"].GetString()))));
+                elementList.emplace_back(std::move(element));
+              }
             }
           } else if (marginType == CCAPI_EM_MARGIN_TYPE_ISOLATED_MARGIN) {
             for (const auto& x : document["assets"].GetArray()) {
               std::string symbol = x["symbol"].GetString();
               {
                 const auto& y = x["baseAsset"];
-                Element element;
-                element.insert(CCAPI_EM_INSTRUMENT, symbol);
-                element.insert(CCAPI_EM_ASSET, y["asset"].GetString());
-                element.insert(CCAPI_EM_QUANTITY_TOTAL, ConvertDecimalToString(Decimal(y["free"].GetString()) + (Decimal(y["locked"].GetString()))));
-                element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, y["free"].GetString());
-                element.insert(CCAPI_EM_QUANTITY_LIABILITY, ConvertDecimalToString(Decimal(y["borrowed"].GetString()) + (Decimal(y["interest"].GetString()))));
-                elementList.emplace_back(std::move(element));
+                const auto& quantityTotalDecimal = Decimal(y["free"].GetString()) + Decimal(y["locked"].GetString());
+                if (quantityTotalDecimal != Decimal::zero) {
+                  Element element;
+                  element.insert(CCAPI_EM_INSTRUMENT, symbol);
+                  element.insert(CCAPI_EM_ASSET, y["asset"].GetString());
+                  element.insert(CCAPI_EM_QUANTITY_TOTAL, ConvertDecimalToString(quantityTotalDecimal));
+                  element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, y["free"].GetString());
+                  element.insert(CCAPI_EM_QUANTITY_LIABILITY,
+                                 ConvertDecimalToString(Decimal(y["borrowed"].GetString()) + (Decimal(y["interest"].GetString()))));
+                  elementList.emplace_back(std::move(element));
+                }
               }
               {
                 const auto& y = x["quoteAsset"];
-                Element element;
-                element.insert(CCAPI_EM_INSTRUMENT, symbol);
-                element.insert(CCAPI_EM_ASSET, y["asset"].GetString());
-                element.insert(CCAPI_EM_QUANTITY_TOTAL, ConvertDecimalToString(Decimal(y["free"].GetString()) + (Decimal(y["locked"].GetString()))));
-                element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, y["free"].GetString());
-                element.insert(CCAPI_EM_QUANTITY_LIABILITY, ConvertDecimalToString(Decimal(y["borrowed"].GetString()) + (Decimal(y["interest"].GetString()))));
-                elementList.emplace_back(std::move(element));
+                const auto& quantityTotalDecimal = Decimal(y["free"].GetString()) + Decimal(y["locked"].GetString());
+                if (quantityTotalDecimal != Decimal::zero) {
+                  Element element;
+                  element.insert(CCAPI_EM_INSTRUMENT, symbol);
+                  element.insert(CCAPI_EM_ASSET, y["asset"].GetString());
+                  element.insert(CCAPI_EM_QUANTITY_TOTAL, ConvertDecimalToString(quantityTotalDecimal));
+                  element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, y["free"].GetString());
+                  element.insert(CCAPI_EM_QUANTITY_LIABILITY,
+                                 ConvertDecimalToString(Decimal(y["borrowed"].GetString()) + (Decimal(y["interest"].GetString()))));
+                  elementList.emplace_back(std::move(element));
+                }
               }
             }
           } else {
             for (const auto& x : document["balances"].GetArray()) {
-              Element element;
-              element.insert(CCAPI_EM_ASSET, x["asset"].GetString());
-              element.insert(CCAPI_EM_QUANTITY_TOTAL, ConvertDecimalToString(Decimal(x["free"].GetString()) + (Decimal(x["locked"].GetString()))));
-              element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, x["free"].GetString());
-              elementList.emplace_back(std::move(element));
+              const auto& quantityTotalDecimal = Decimal(x["free"].GetString()) + Decimal(x["locked"].GetString());
+              if (quantityTotalDecimal != Decimal::zero) {
+                Element element;
+                element.insert(CCAPI_EM_ASSET, x["asset"].GetString());
+                element.insert(CCAPI_EM_QUANTITY_TOTAL, ConvertDecimalToString(quantityTotalDecimal));
+                element.insert(CCAPI_EM_QUANTITY_AVAILABLE_FOR_TRADING, x["free"].GetString());
+                elementList.emplace_back(std::move(element));
+              }
             }
           }
         }
