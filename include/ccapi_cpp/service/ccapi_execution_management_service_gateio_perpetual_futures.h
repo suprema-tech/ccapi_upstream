@@ -101,15 +101,8 @@ class ExecutionManagementServiceGateioPerpetualFutures : public ExecutionManagem
                   credential = that->credentialDefault;
                 }
 
-                std::shared_ptr<beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>> streamPtr(nullptr);
-                try {
-                  streamPtr = that->createWsStream(that->serviceContextPtr->ioContextPtr, that->serviceContextPtr->sslContextPtr);
-                } catch (const beast::error_code& ec) {
-                  CCAPI_LOGGER_TRACE("fail");
-                  that->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "create stream", {subscription.getCorrelationId()});
-                  return;
-                }
-                std::shared_ptr<WsConnection> wsConnectionPtr(new WsConnection(that->baseUrlWs + settle, "", {subscription}, credential, streamPtr));
+                auto wsConnectionPtr = std::make_shared<WsConnection>(that->baseUrlWs + settle, "",std::vector<Subscription>{subscription}, credential);
+                that->setWsConnectionStream(wsConnectionPtr);
                 CCAPI_LOGGER_WARN("about to subscribe with new wsConnectionPtr " + toString(*wsConnectionPtr));
                 that->prepareConnect(wsConnectionPtr);
               }

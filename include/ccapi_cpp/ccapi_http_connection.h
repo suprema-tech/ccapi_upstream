@@ -30,7 +30,7 @@ class HttpConnection {
 
   std::string host;
   std::string port;
-  std::shared_ptr<beast::ssl_stream<beast::tcp_stream>> streamPtr;
+  std::shared_ptr<beast::ssl_stream<beast::tcp_stream>> streamPtr{nullptr};
   TimePoint lastReceiveDataTp{std::chrono::seconds{0}};
 
   boost::beast::flat_buffer buffer;

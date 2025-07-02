@@ -2,7 +2,7 @@
 #define INCLUDE_CCAPI_CPP_CCAPI_WS_CONNECTION_H_
 
 #include <string>
-
+#include <variant>
 #include "ccapi_cpp/ccapi_logger.h"
 #include "ccapi_cpp/ccapi_subscription.h"
 
@@ -16,9 +16,8 @@ class WsConnection {
   WsConnection(const WsConnection&) = delete;
   WsConnection& operator=(const WsConnection&) = delete;
 
-  WsConnection(std::string url, std::string group, std::vector<Subscription> subscriptionList, std::map<std::string, std::string> credential,
-               std::shared_ptr<beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>> streamPtr)
-      : url(url), group(group), subscriptionList(subscriptionList), credential(credential), streamPtr(streamPtr) {
+  WsConnection(const std::string& url, const std::string& group, const std::vector<Subscription>& subscriptionList, const std::map<std::string, std::string>& credential)
+      : url(url), group(group), subscriptionList(subscriptionList), credential(credential) {
     std::map<std::string, std::string> shortCredential;
     for (const auto& x : credential) {
       shortCredential.insert(std::make_pair(x.first, UtilString::firstNCharacter(x.second, CCAPI_CREDENTIAL_DISPLAY_LENGTH)));
@@ -39,7 +38,13 @@ class WsConnection {
       shortCredential.insert(std::make_pair(x.first, UtilString::firstNCharacter(x.second, CCAPI_CREDENTIAL_DISPLAY_LENGTH)));
     }
     std::ostringstream oss;
-    oss << streamPtr;
+    std::visit([&oss](auto&& streamSharedPtr) {
+  if (streamSharedPtr) {
+    oss << streamSharedPtr.get();
+  } else {
+    oss << "nullptr";
+  }
+}, streamPtr);
     std::string output = "WsConnection [longId = " + longId + ", id = " + id + ", url = " + url + ", group = " + group +
                          ", subscriptionList = " + ccapi::toString(subscriptionList) + ", credential = " + ccapi::toString(shortCredential) +
                          ", status = " + statusToString(status) + ", headers = " + ccapi::toString(headers) + ", streamPtr = " + oss.str() +
@@ -116,6 +121,9 @@ class WsConnection {
           this->port = CCAPI_HTTP_PORT_DEFAULT;
         }
       }
+      if (splitted1.at(0) == "https" || splitted1.at(0) == "wss") {
+        this->isSecure = true;
+      }
     }
   }
 
@@ -133,7 +141,8 @@ class WsConnection {
   Status status{Status::UNKNOWN};
   std::map<std::string, std::string> headers;
   std::map<std::string, std::string> credential;
-  std::shared_ptr<beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>> streamPtr;
+  std::variant<std::shared_ptr<beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>>,
+    std::shared_ptr<beast::websocket::stream<beast::tcp_stream>>>  streamPtr;
   beast::websocket::close_code remoteCloseCode{};
   beast::websocket::close_reason remoteCloseReason{};
   std::string hostHttpHeaderValue;
@@ -145,6 +154,7 @@ class WsConnection {
   std::array<char, CCAPI_WEBSOCKET_WRITE_BUFFER_SIZE> writeMessageBuffer;
   size_t writeMessageBufferWrittenLength{};
   std::vector<size_t> writeMessageBufferBoundary;
+  bool isSecure{};
 };
 
 } /* namespace ccapi */
