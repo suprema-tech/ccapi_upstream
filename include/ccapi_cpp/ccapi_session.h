@@ -856,7 +856,8 @@ class Session {
       std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
       const auto& exchange = request.getExchange();
       if (serviceByExchangeMap.find(exchange) == serviceByExchangeMap.end()) {
-        this->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE, "please enable exchange: " + exchange, eventQueuePtr);
+        this->onError(Event::Type::REQUEST_STATUS, Message::Type::REQUEST_FAILURE, "please enable exchange: " + exchange + " for request " + toString(request),
+                      eventQueuePtr);
         return;
       }
       std::shared_ptr<Service> servicePtr = serviceByExchangeMap.at(exchange);
