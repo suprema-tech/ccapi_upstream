@@ -209,6 +209,9 @@
 
 // start: enable exchanges for FIX
 #ifdef CCAPI_ENABLE_SERVICE_FIX
+#ifdef CCAPI_ENABLE_EXCHANGE_BINANCE
+#include "ccapi_cpp/service/ccapi_fix_service_binance.h"
+#endif
 #ifdef CCAPI_ENABLE_EXCHANGE_COINBASE
 #include "ccapi_cpp/service/ccapi_fix_service_coinbase.h"
 #endif

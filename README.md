@@ -69,7 +69,7 @@
 * Supported exchanges:
   * Market Data: ascendex, [binance](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-usds-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-coin-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, [bybit](https://www.bybit.com/invite?ref=XNYP2K), coinbase, [cryptocom](https://crypto.com/exch/tqj4b8x48w), deribit, erisx (Cboe Digital), [gateio](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), [gateio-perpetual-futures](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, mexc-futures, [okx](https://www.okx.com/join/47636709), whitebit.
   * Execution Management: ascendex, [binance](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-usds-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-coin-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, [bybit](https://www.bybit.com/invite?ref=XNYP2K), coinbase, [cryptocom](https://crypto.com/exch/tqj4b8x48w), deribit, erisx (Cboe Digital), [gateio](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), [gateio-perpetual-futures](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, [okx](https://www.okx.com/join/47636709).
-  * FIX: coinbase, gemini.
+  * FIX: [binance](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), coinbase, gemini.
 * Join us on Discord https://discord.gg/b5EKcp9s8T and Medium https://cryptochassis.medium.com.
 
 ## Branches
@@ -780,7 +780,7 @@ Subscription subscription("okx", "BTC-USDT", "ORDER_UPDATE", "", "", {
 ```
 
 #### Override exchange urls
-You can override exchange urls at compile time by using macros. See section "exchange REST urls", "exchange WS urls", and "exchange FIX urls" in [`include/ccapi_cpp/ccapi_macro.h`](include/ccapi_cpp/ccapi_macro.h). You can also override exchange urls at runtime. See [this example](example/src/override_exchange_url_at_runtime/main.cpp). These can be useful if you need to connect to test accounts (e.g. https://www.okx.com/docs-v5/en/#overview-demo-trading-services).
+You can override exchange urls at compile time by using macros. See section "exchange REST urls", "exchange WS urls", and "exchange FIX urls" in [`include/ccapi_cpp/ccapi_macro.h`](include/ccapi_cpp/ccapi_macro.h). You can also override exchange urls at runtime. See [this example](example/src/override_exchange_url_at_runtime/main.cpp). These can be useful if you need to connect to test accounts (e.g. https://www.okx.com/docs-v5/en/#overview-demo-trading-services) or connect to an IP address (e.g. ws://172.30.0.146:9000).
 
 #### Complex request parameters
 Please follow the exchange's API documentations: e.g. https://www.okx.com/docs-v5/en/#order-book-trading-trade-post-place-order.

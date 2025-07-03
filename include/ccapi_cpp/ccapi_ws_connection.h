@@ -41,9 +41,9 @@ class WsConnection {
     }
     std::ostringstream oss;
     std::visit(
-        [&oss](auto&& streamSharedPtr) {
-          if (streamSharedPtr) {
-            oss << streamSharedPtr.get();
+        [&oss](auto&& streamPtr) {
+          if (streamPtr) {
+            oss << streamPtr.get();
           } else {
             oss << "nullptr";
           }
