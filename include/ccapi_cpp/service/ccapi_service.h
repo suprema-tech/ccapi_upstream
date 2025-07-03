@@ -1283,7 +1283,6 @@ class Service : public std::enable_shared_from_this<Service> {
                   "connection " + toString(*wsConnectionPtr) + " has failed before opening", wsConnectionPtr->correlationIdList);
     std::string wsConnectionId = wsConnectionPtr->id;
     std::string wsConnectionUrl = wsConnectionPtr->url;
-    wsConnectionPtr->clear();
     this->wsConnectionPtrByIdMap.erase(wsConnectionId);
     auto urlBase = UtilString::split(wsConnectionUrl, "?").at(0);
     long seconds = std::round(UtilAlgorithm::exponentialBackoff(1, 1, 2, std::min(this->connectNumRetryOnFailByConnectionUrlMap[urlBase], 6)));
@@ -1387,7 +1386,6 @@ class Service : public std::enable_shared_from_this<Service> {
     CCAPI_LOGGER_INFO("connection " + toString(*wsConnectionPtr) + " is closed");
     this->clearStates(wsConnectionPtr);
     this->setWsConnectionStream(wsConnectionPtr);
-    wsConnectionPtr->clear();
     this->wsConnectionPtrByIdMap.erase(wsConnectionPtr->id);
     if (this->shouldContinue.load()) {
       this->prepareConnect(wsConnectionPtr);
