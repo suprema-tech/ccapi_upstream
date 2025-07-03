@@ -136,6 +136,18 @@ class WsConnection {
     this->setUrlParts();
   }
 
+  void clear() {
+    this->status = Status::UNKNOWN;
+    this->headers.clear();
+    this->streamPtr = {};  // Reset the variant (holds std::monostate if uninitialized)
+    this->remoteCloseCode = {};
+    this->remoteCloseReason = {};
+    this->readMessageBuffer.clear();
+    this->writeMessageBuffer.fill(0);  // Zero out the write buffer
+    this->writeMessageBufferWrittenLength = 0;
+    this->writeMessageBufferBoundary.clear();
+  }
+
   std::string longId;
   std::string id;
   std::string url;
