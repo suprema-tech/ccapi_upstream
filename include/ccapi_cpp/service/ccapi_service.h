@@ -944,19 +944,18 @@ class Service : public std::enable_shared_from_this<Service> {
     return http::string_to_verb(methodStringUpper);
   }
 
-void close(std::shared_ptr<WsConnection> wsConnectionPtr, beast::websocket::close_code const code, beast::websocket::close_reason reason, ErrorCode& ec) {
-  if (wsConnectionPtr->status == WsConnection::Status::CLOSING) {
-    CCAPI_LOGGER_WARN("websocket connection is already in the state of closing");
-    return;
-  }
-  wsConnectionPtr->status = WsConnection::Status::CLOSING;
-  wsConnectionPtr->remoteCloseCode = code;
-  wsConnectionPtr->remoteCloseReason = reason;
+  void close(std::shared_ptr<WsConnection> wsConnectionPtr, beast::websocket::close_code const code, beast::websocket::close_reason reason, ErrorCode& ec) {
+    if (wsConnectionPtr->status == WsConnection::Status::CLOSING) {
+      CCAPI_LOGGER_WARN("websocket connection is already in the state of closing");
+      return;
+    }
+    wsConnectionPtr->status = WsConnection::Status::CLOSING;
+    wsConnectionPtr->remoteCloseCode = code;
+    wsConnectionPtr->remoteCloseReason = reason;
 
-  std::visit([&](auto& streamPtr) {
-      streamPtr->async_close(code, beast::bind_front_handler(&Service::onClose, shared_from_this(), wsConnectionPtr));
-  }, wsConnectionPtr->streamPtr);
-}
+    std::visit([&](auto& streamPtr) { streamPtr->async_close(code, beast::bind_front_handler(&Service::onClose, shared_from_this(), wsConnectionPtr)); },
+               wsConnectionPtr->streamPtr);
+  }
 
   virtual void prepareConnect(std::shared_ptr<WsConnection> wsConnectionPtr) { this->connect(wsConnectionPtr); }
 
@@ -990,152 +989,143 @@ void close(std::shared_ptr<WsConnection> wsConnectionPtr, beast::websocket::clos
   }
 
   void startConnectWs(std::shared_ptr<WsConnection> wsConnectionPtr, long timeoutMilliseconds, tcp::resolver::results_type tcpResolverResults) {
-        std::visit([&](auto& streamPtr) {
-        using StreamType = std::decay_t<decltype(*streamPtr)>;
+    std::visit(
+        [&](auto& streamPtr) {
+          using StreamType = std::decay_t<decltype(*streamPtr)>;
 
-        if (timeoutMilliseconds > 0) {
+          if (timeoutMilliseconds > 0) {
             beast::get_lowest_layer(*streamPtr).expires_after(std::chrono::milliseconds(timeoutMilliseconds));
-        }
+          }
 
-        if constexpr (std::is_same_v<StreamType, beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>>) {
+          if constexpr (std::is_same_v<StreamType, beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>>) {
             // Set SNI hostname (only for WSS)
             if (!SSL_set_tlsext_host_name(streamPtr->next_layer().native_handle(), wsConnectionPtr->host.c_str())) {
-            beast::error_code ec{static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()};
-            CCAPI_LOGGER_DEBUG("error SSL_set_tlsext_host_name: " + ec.message());
-            this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec,
-                            "set SNI Hostname", wsConnectionPtr->correlationIdList);
-            return;
+              beast::error_code ec{static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()};
+              CCAPI_LOGGER_DEBUG("error SSL_set_tlsext_host_name: " + ec.message());
+              this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "set SNI Hostname", wsConnectionPtr->correlationIdList);
+              return;
             }
-        }
+          }
 
-        CCAPI_LOGGER_TRACE("before async_connect");
+          CCAPI_LOGGER_TRACE("before async_connect");
 
-        beast::get_lowest_layer(*streamPtr).async_connect(
-            tcpResolverResults,
-            beast::bind_front_handler(&Service::onConnectWs, shared_from_this(), wsConnectionPtr)
-        );
+          beast::get_lowest_layer(*streamPtr)
+              .async_connect(tcpResolverResults, beast::bind_front_handler(&Service::onConnectWs, shared_from_this(), wsConnectionPtr));
 
-        CCAPI_LOGGER_TRACE("after async_connect");
-        }, wsConnectionPtr->streamPtr);
+          CCAPI_LOGGER_TRACE("after async_connect");
+        },
+        wsConnectionPtr->streamPtr);
   }
 
   void onConnectWs(std::shared_ptr<WsConnection> wsConnectionPtr, beast::error_code ec, tcp::resolver::results_type::endpoint_type ep) {
-        CCAPI_LOGGER_TRACE("async_connect callback start");
-        if (ec) {
-        CCAPI_LOGGER_TRACE("fail");
-        this->onFail(wsConnectionPtr);
-        return;
-        }
+    CCAPI_LOGGER_TRACE("async_connect callback start");
+    if (ec) {
+      CCAPI_LOGGER_TRACE("fail");
+      this->onFail(wsConnectionPtr);
+      return;
+    }
 
-        CCAPI_LOGGER_TRACE("connected");
-        CCAPI_LOGGER_TRACE("ep.port() = " + std::to_string(ep.port()));
+    CCAPI_LOGGER_TRACE("connected");
+    CCAPI_LOGGER_TRACE("ep.port() = " + std::to_string(ep.port()));
 
-        wsConnectionPtr->hostHttpHeaderValue =
-            this->hostHttpHeaderValueIgnorePort ? wsConnectionPtr->host
-                                                : wsConnectionPtr->host + ':' + std::to_string(ep.port());
+    wsConnectionPtr->hostHttpHeaderValue =
+        this->hostHttpHeaderValueIgnorePort ? wsConnectionPtr->host : wsConnectionPtr->host + ':' + std::to_string(ep.port());
 
-        CCAPI_LOGGER_TRACE("wsConnectionPtr->hostHttpHeaderValue = " + wsConnectionPtr->hostHttpHeaderValue);
+    CCAPI_LOGGER_TRACE("wsConnectionPtr->hostHttpHeaderValue = " + wsConnectionPtr->hostHttpHeaderValue);
 
-        // Use std::visit to access the concrete stream
-        std::visit([&](auto& streamPtr) {
-        using StreamType = std::decay_t<decltype(*streamPtr)>;
+    // Use std::visit to access the concrete stream
+    std::visit(
+        [&](auto& streamPtr) {
+          using StreamType = std::decay_t<decltype(*streamPtr)>;
 
-        // Set TCP_NODELAY
-        beast::get_lowest_layer(*streamPtr).socket().set_option(tcp::no_delay(true));
+          // Set TCP_NODELAY
+          beast::get_lowest_layer(*streamPtr).socket().set_option(tcp::no_delay(true));
 
-        if constexpr (std::is_same_v<StreamType, beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>>) {
+          if constexpr (std::is_same_v<StreamType, beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>>) {
             CCAPI_LOGGER_TRACE("before ssl async_handshake");
 
-            streamPtr->next_layer().async_handshake(
-            ssl::stream_base::client,
-            beast::bind_front_handler(&Service::onSslHandshakeWs, shared_from_this(), wsConnectionPtr)
-            );
+            streamPtr->next_layer().async_handshake(ssl::stream_base::client,
+                                                    beast::bind_front_handler(&Service::onSslHandshakeWs, shared_from_this(), wsConnectionPtr));
 
             CCAPI_LOGGER_TRACE("after ssl async_handshake");
-        } else {
+          } else {
             // Non-SSL streams skip SSL handshake and go straight to WebSocket handshake
             this->onSslHandshakeWs(wsConnectionPtr, {});
-        }
-        }, wsConnectionPtr->streamPtr);
+          }
+        },
+        wsConnectionPtr->streamPtr);
   }
 
   void onSslHandshakeWs(std::shared_ptr<WsConnection> wsConnectionPtr, beast::error_code ec) {
-        CCAPI_LOGGER_TRACE("ssl async_handshake callback start");
-        if (ec) {
-        CCAPI_LOGGER_TRACE("ssl handshake fail");
-        this->onFail(wsConnectionPtr);
-        return;
-        }
-        CCAPI_LOGGER_TRACE("ssl handshaked");
+    CCAPI_LOGGER_TRACE("ssl async_handshake callback start");
+    if (ec) {
+      CCAPI_LOGGER_TRACE("ssl handshake fail");
+      this->onFail(wsConnectionPtr);
+      return;
+    }
+    CCAPI_LOGGER_TRACE("ssl handshaked");
 
-        std::visit([&](auto& streamPtr) {
-        auto& stream = *streamPtr;
-        beast::get_lowest_layer(stream).expires_never();
+    std::visit(
+        [&](auto& streamPtr) {
+          auto& stream = *streamPtr;
+          beast::get_lowest_layer(stream).expires_never();
 
-        beast::websocket::stream_base::timeout opt{
-            std::chrono::milliseconds(this->sessionOptions.websocketConnectTimeoutMilliseconds),
-            std::chrono::milliseconds(this->sessionOptions.pongWebsocketProtocolLevelTimeoutMilliseconds),
-            true
-        };
+          beast::websocket::stream_base::timeout opt{std::chrono::milliseconds(this->sessionOptions.websocketConnectTimeoutMilliseconds),
+                                                     std::chrono::milliseconds(this->sessionOptions.pongWebsocketProtocolLevelTimeoutMilliseconds), true};
 
-        stream.set_option(opt);
-        stream.set_option(beast::websocket::stream_base::decorator([wsConnectionPtr](beast::websocket::request_type& req) {
+          stream.set_option(opt);
+          stream.set_option(beast::websocket::stream_base::decorator([wsConnectionPtr](beast::websocket::request_type& req) {
             req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
             for (const auto& kv : wsConnectionPtr->headers) {
-            req.set(kv.first, kv.second);
+              req.set(kv.first, kv.second);
             }
-        }));
+          }));
 
-        CCAPI_LOGGER_TRACE("before ws async_handshake");
-        stream.async_handshake(
-            wsConnectionPtr->hostHttpHeaderValue,
-            wsConnectionPtr->path,
-            beast::bind_front_handler(&Service::onWsHandshakeWs, shared_from_this(), wsConnectionPtr)
-        );
-        CCAPI_LOGGER_TRACE("after ws async_handshake");
-
-        }, wsConnectionPtr->streamPtr);
+          CCAPI_LOGGER_TRACE("before ws async_handshake");
+          stream.async_handshake(wsConnectionPtr->hostHttpHeaderValue, wsConnectionPtr->path,
+                                 beast::bind_front_handler(&Service::onWsHandshakeWs, shared_from_this(), wsConnectionPtr));
+          CCAPI_LOGGER_TRACE("after ws async_handshake");
+        },
+        wsConnectionPtr->streamPtr);
   }
 
   void onWsHandshakeWs(std::shared_ptr<WsConnection> wsConnectionPtr, beast::error_code ec) {
-        CCAPI_LOGGER_TRACE("ws async_handshake callback start");
-        if (ec) {
-        CCAPI_LOGGER_TRACE("ws handshake fail");
-        this->onFail(wsConnectionPtr);
-        return;
-        }
-        CCAPI_LOGGER_TRACE("ws handshaked");
+    CCAPI_LOGGER_TRACE("ws async_handshake callback start");
+    if (ec) {
+      CCAPI_LOGGER_TRACE("ws handshake fail");
+      this->onFail(wsConnectionPtr);
+      return;
+    }
+    CCAPI_LOGGER_TRACE("ws handshaked");
 
-        // Finalize connection setup
-        this->onOpen(wsConnectionPtr);
-        this->wsConnectionPtrByIdMap.insert({wsConnectionPtr->id, wsConnectionPtr});
-        CCAPI_LOGGER_TRACE("about to start read");
+    // Finalize connection setup
+    this->onOpen(wsConnectionPtr);
+    this->wsConnectionPtrByIdMap.insert({wsConnectionPtr->id, wsConnectionPtr});
+    CCAPI_LOGGER_TRACE("about to start read");
 
-        // Start reading messages
-        this->startReadWs(wsConnectionPtr);
+    // Start reading messages
+    this->startReadWs(wsConnectionPtr);
 
-        // Setup control callback (ping/pong/close)
-        std::visit([&](auto& streamPtr) {
-        streamPtr->control_callback(
-            [wsConnectionPtr, that = shared_from_this()](boost::beast::websocket::frame_type kind, boost::beast::string_view payload) {
-            that->onControlCallback(wsConnectionPtr, kind, payload);
-            }
-        );
-        }, wsConnectionPtr->streamPtr);
+    // Setup control callback (ping/pong/close)
+    std::visit(
+        [&](auto& streamPtr) {
+          streamPtr->control_callback(
+              [wsConnectionPtr, that = shared_from_this()](boost::beast::websocket::frame_type kind, boost::beast::string_view payload) {
+                that->onControlCallback(wsConnectionPtr, kind, payload);
+              });
+        },
+        wsConnectionPtr->streamPtr);
   }
 
   void startReadWs(std::shared_ptr<WsConnection> wsConnectionPtr) {
-        CCAPI_LOGGER_TRACE("before async_read");
-        auto& readMessageBuffer = wsConnectionPtr->readMessageBuffer;
+    CCAPI_LOGGER_TRACE("before async_read");
+    auto& readMessageBuffer = wsConnectionPtr->readMessageBuffer;
 
-        std::visit([&](auto& streamPtr) {
-        streamPtr->async_read(
-            readMessageBuffer,
-            beast::bind_front_handler(&Service::onReadWs, shared_from_this(), wsConnectionPtr)
-        );
-        }, wsConnectionPtr->streamPtr);
+    std::visit(
+        [&](auto& streamPtr) { streamPtr->async_read(readMessageBuffer, beast::bind_front_handler(&Service::onReadWs, shared_from_this(), wsConnectionPtr)); },
+        wsConnectionPtr->streamPtr);
 
-        CCAPI_LOGGER_TRACE("after async_read");
+    CCAPI_LOGGER_TRACE("after async_read");
   }
 
   void onReadWs(std::shared_ptr<WsConnection> wsConnectionPtr, const ErrorCode& ec, std::size_t n) {
@@ -1234,21 +1224,20 @@ void close(std::shared_ptr<WsConnection> wsConnectionPtr, beast::websocket::clos
     CCAPI_LOGGER_TRACE("writeMessageBufferBoundary = " + toString(writeMessageBufferBoundary));
   }
 
-void startWriteWs(std::shared_ptr<WsConnection> wsConnectionPtr, const char* data, size_t numBytesToWrite) {
-  CCAPI_LOGGER_TRACE("before async_write");
-  CCAPI_LOGGER_TRACE("numBytesToWrite = " + toString(numBytesToWrite));
+  void startWriteWs(std::shared_ptr<WsConnection> wsConnectionPtr, const char* data, size_t numBytesToWrite) {
+    CCAPI_LOGGER_TRACE("before async_write");
+    CCAPI_LOGGER_TRACE("numBytesToWrite = " + toString(numBytesToWrite));
 
-  std::visit([&](auto& streamPtr) {
-    auto& stream = *streamPtr;  // dereference shared_ptr
-    stream.binary(false);
-    stream.async_write(
-      net::buffer(data, numBytesToWrite),
-      beast::bind_front_handler(&Service::onWriteWs, shared_from_this(), wsConnectionPtr)
-    );
-  }, wsConnectionPtr->streamPtr);
+    std::visit(
+        [&](auto& streamPtr) {
+          auto& stream = *streamPtr;  // dereference shared_ptr
+          stream.binary(false);
+          stream.async_write(net::buffer(data, numBytesToWrite), beast::bind_front_handler(&Service::onWriteWs, shared_from_this(), wsConnectionPtr));
+        },
+        wsConnectionPtr->streamPtr);
 
-  CCAPI_LOGGER_TRACE("after async_write");
-}
+    CCAPI_LOGGER_TRACE("after async_write");
+  }
 
   void onWriteWs(std::shared_ptr<WsConnection> wsConnectionPtr, const ErrorCode& ec, std::size_t n) {
     CCAPI_LOGGER_FUNCTION_ENTER;
@@ -1326,11 +1315,11 @@ void startWriteWs(std::shared_ptr<WsConnection> wsConnectionPtr, const char* dat
   }
 
   void setWsConnectionStream(std::shared_ptr<WsConnection> wsConnectionPtr) {
-    if (wsConnectionPtr->isSecure){
-        wsConnectionPtr->streamPtr = std::make_shared<beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>>(
-            *this->serviceContextPtr->ioContextPtr, *this->serviceContextPtr->sslContextPtr);
+    if (wsConnectionPtr->isSecure) {
+      wsConnectionPtr->streamPtr = std::make_shared<beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>>(*this->serviceContextPtr->ioContextPtr,
+                                                                                                                    *this->serviceContextPtr->sslContextPtr);
     } else {
-        wsConnectionPtr->streamPtr = std::make_shared<beast::websocket::stream<beast::tcp_stream>>(*this->serviceContextPtr->ioContextPtr);
+      wsConnectionPtr->streamPtr = std::make_shared<beast::websocket::stream<beast::tcp_stream>>(*this->serviceContextPtr->ioContextPtr);
     }
   }
 
@@ -1405,67 +1394,64 @@ void startWriteWs(std::shared_ptr<WsConnection> wsConnectionPtr, const char* dat
   }
 
   void onMessage(std::shared_ptr<WsConnection> wsConnectionPtr, const char* data, size_t dataSize) {
-        auto now = UtilTime::now();
-        CCAPI_LOGGER_DEBUG("received a message from connection " + toString(*wsConnectionPtr));
-        if (wsConnectionPtr->status != WsConnection::Status::OPEN &&
-            !this->shouldProcessRemainingMessageOnClosingByConnectionIdMap[wsConnectionPtr->id]) {
-        CCAPI_LOGGER_WARN("should not process remaining message on closing");
-        return;
-        }
+    auto now = UtilTime::now();
+    CCAPI_LOGGER_DEBUG("received a message from connection " + toString(*wsConnectionPtr));
+    if (wsConnectionPtr->status != WsConnection::Status::OPEN && !this->shouldProcessRemainingMessageOnClosingByConnectionIdMap[wsConnectionPtr->id]) {
+      CCAPI_LOGGER_WARN("should not process remaining message on closing");
+      return;
+    }
 
-        std::visit([&](auto& streamPtr) {
-        auto& stream = *streamPtr;  // dereference shared_ptr
+    std::visit(
+        [&](auto& streamPtr) {
+          auto& stream = *streamPtr;  // dereference shared_ptr
 
-        if (stream.got_text()) {
+          if (stream.got_text()) {
             boost::beast::string_view textMessage(data, dataSize);
             CCAPI_LOGGER_DEBUG("received a text message: " + std::string(textMessage));
             try {
-            this->onTextMessage(wsConnectionPtr, textMessage, now);
+              this->onTextMessage(wsConnectionPtr, textMessage, now);
             } catch (const std::exception& e) {
-            CCAPI_LOGGER_ERROR("textMessage = " + std::string(textMessage));
-            this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, e);
+              CCAPI_LOGGER_ERROR("textMessage = " + std::string(textMessage));
+              this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, e);
             }
-        } else if (stream.got_binary()) {
-            CCAPI_LOGGER_DEBUG("received a binary message: " +
-                            UtilAlgorithm::stringToHex(std::string(data, dataSize)));
+          } else if (stream.got_binary()) {
+            CCAPI_LOGGER_DEBUG("received a binary message: " + UtilAlgorithm::stringToHex(std::string(data, dataSize)));
 
-        #if defined(CCAPI_ENABLE_SERVICE_MARKET_DATA) &&                                                                                                      \
-            (defined(CCAPI_ENABLE_EXCHANGE_HUOBI) || defined(CCAPI_ENABLE_EXCHANGE_HUOBI_USDT_SWAP) || defined(CCAPI_ENABLE_EXCHANGE_HUOBI_COIN_SWAP)) ||     \
-            defined(CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT) &&                                                                                             \
-            (defined(CCAPI_ENABLE_EXCHANGE_HUOBI_USDT_SWAP) || defined(CCAPI_ENABLE_EXCHANGE_HUOBI_COIN_SWAP) || defined(CCAPI_ENABLE_EXCHANGE_BITMART))
+#if defined(CCAPI_ENABLE_SERVICE_MARKET_DATA) &&                                                                                                      \
+        (defined(CCAPI_ENABLE_EXCHANGE_HUOBI) || defined(CCAPI_ENABLE_EXCHANGE_HUOBI_USDT_SWAP) || defined(CCAPI_ENABLE_EXCHANGE_HUOBI_COIN_SWAP)) || \
+    defined(CCAPI_ENABLE_SERVICE_EXECUTION_MANAGEMENT) &&                                                                                             \
+        (defined(CCAPI_ENABLE_EXCHANGE_HUOBI_USDT_SWAP) || defined(CCAPI_ENABLE_EXCHANGE_HUOBI_COIN_SWAP) || defined(CCAPI_ENABLE_EXCHANGE_BITMART))
 
             if (this->needDecompressWebsocketMessage) {
-            std::string decompressed;
-            boost::beast::string_view payload(data, dataSize);
-            try {
-                ErrorCode ec = this->inflater.decompress(reinterpret_cast<const uint8_t*>(&payload[0]),
-                                                        payload.size(), decompressed);
+              std::string decompressed;
+              boost::beast::string_view payload(data, dataSize);
+              try {
+                ErrorCode ec = this->inflater.decompress(reinterpret_cast<const uint8_t*>(&payload[0]), payload.size(), decompressed);
                 if (ec) {
-                CCAPI_LOGGER_FATAL(ec.message());
+                  CCAPI_LOGGER_FATAL(ec.message());
                 }
                 CCAPI_LOGGER_DEBUG("decompressed = " + decompressed);
                 this->onTextMessage(wsConnectionPtr, decompressed, now);
-            } catch (const std::exception& e) {
+              } catch (const std::exception& e) {
                 std::stringstream ss;
                 ss << std::hex << std::setfill('0');
                 for (int i = 0; i < payload.size(); ++i) {
-                ss << std::setw(2) << static_cast<unsigned>(reinterpret_cast<const uint8_t*>(&payload[0])[i]);
+                  ss << std::setw(2) << static_cast<unsigned>(reinterpret_cast<const uint8_t*>(&payload[0])[i]);
                 }
                 CCAPI_LOGGER_ERROR("binaryMessage = " + ss.str());
                 this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, e);
-            }
+              }
 
-            ErrorCode ec = this->inflater.inflate_reset();
-            if (ec) {
+              ErrorCode ec = this->inflater.inflate_reset();
+              if (ec) {
                 this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, ec, "decompress");
+              }
             }
-            }
 
-        #endif  // decompress block
-
-        }
-
-        }, wsConnectionPtr->streamPtr);  // <-- std::variant
+#endif  // decompress block
+          }
+        },
+        wsConnectionPtr->streamPtr);  // <-- std::variant
   }
 
   void onControlCallback(std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::websocket::frame_type kind, boost::beast::string_view payload) {
@@ -1503,18 +1489,18 @@ void startWriteWs(std::shared_ptr<WsConnection> wsConnectionPtr, const char* dat
     this->writeMessage(wsConnectionPtr, payload.data(), payload.length());
   }
 
-void ping(std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view payload, ErrorCode& ec) {
-  if (!this->wsConnectionPendingPingingByConnectionIdMap[wsConnectionPtr->id]) {
-    std::visit([&](auto& streamPtr) {
-        streamPtr->async_ping(
-          boost::beast::websocket::ping_data(payload),
-          [that = this, wsConnectionPtr](ErrorCode const& ec) {
-            that->wsConnectionPendingPingingByConnectionIdMap[wsConnectionPtr->id] = false;
-          });
-        this->wsConnectionPendingPingingByConnectionIdMap[wsConnectionPtr->id] = true;
-    }, wsConnectionPtr->streamPtr);
+  void ping(std::shared_ptr<WsConnection> wsConnectionPtr, boost::beast::string_view payload, ErrorCode& ec) {
+    if (!this->wsConnectionPendingPingingByConnectionIdMap[wsConnectionPtr->id]) {
+      std::visit(
+          [&](auto& streamPtr) {
+            streamPtr->async_ping(boost::beast::websocket::ping_data(payload), [that = this, wsConnectionPtr](ErrorCode const& ec) {
+              that->wsConnectionPendingPingingByConnectionIdMap[wsConnectionPtr->id] = false;
+            });
+            this->wsConnectionPendingPingingByConnectionIdMap[wsConnectionPtr->id] = true;
+          },
+          wsConnectionPtr->streamPtr);
+    }
   }
-}
 
   virtual void pingOnApplicationLevel(std::shared_ptr<WsConnection> wsConnectionPtr, ErrorCode& ec) {}
 

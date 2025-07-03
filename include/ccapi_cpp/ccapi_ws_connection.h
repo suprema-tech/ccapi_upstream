@@ -3,6 +3,7 @@
 
 #include <string>
 #include <variant>
+
 #include "ccapi_cpp/ccapi_logger.h"
 #include "ccapi_cpp/ccapi_subscription.h"
 
@@ -16,7 +17,8 @@ class WsConnection {
   WsConnection(const WsConnection&) = delete;
   WsConnection& operator=(const WsConnection&) = delete;
 
-  WsConnection(const std::string& url, const std::string& group, const std::vector<Subscription>& subscriptionList, const std::map<std::string, std::string>& credential)
+  WsConnection(const std::string& url, const std::string& group, const std::vector<Subscription>& subscriptionList,
+               const std::map<std::string, std::string>& credential)
       : url(url), group(group), subscriptionList(subscriptionList), credential(credential) {
     std::map<std::string, std::string> shortCredential;
     for (const auto& x : credential) {
@@ -38,13 +40,15 @@ class WsConnection {
       shortCredential.insert(std::make_pair(x.first, UtilString::firstNCharacter(x.second, CCAPI_CREDENTIAL_DISPLAY_LENGTH)));
     }
     std::ostringstream oss;
-    std::visit([&oss](auto&& streamSharedPtr) {
-  if (streamSharedPtr) {
-    oss << streamSharedPtr.get();
-  } else {
-    oss << "nullptr";
-  }
-}, streamPtr);
+    std::visit(
+        [&oss](auto&& streamSharedPtr) {
+          if (streamSharedPtr) {
+            oss << streamSharedPtr.get();
+          } else {
+            oss << "nullptr";
+          }
+        },
+        streamPtr);
     std::string output = "WsConnection [longId = " + longId + ", id = " + id + ", url = " + url + ", group = " + group +
                          ", subscriptionList = " + ccapi::toString(subscriptionList) + ", credential = " + ccapi::toString(shortCredential) +
                          ", status = " + statusToString(status) + ", headers = " + ccapi::toString(headers) + ", streamPtr = " + oss.str() +
@@ -141,8 +145,8 @@ class WsConnection {
   Status status{Status::UNKNOWN};
   std::map<std::string, std::string> headers;
   std::map<std::string, std::string> credential;
-  std::variant<std::shared_ptr<beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>>,
-    std::shared_ptr<beast::websocket::stream<beast::tcp_stream>>>  streamPtr;
+  std::variant<std::shared_ptr<beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>>, std::shared_ptr<beast::websocket::stream<beast::tcp_stream>>>
+      streamPtr;
   beast::websocket::close_code remoteCloseCode{};
   beast::websocket::close_reason remoteCloseReason{};
   std::string hostHttpHeaderValue;

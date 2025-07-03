@@ -101,7 +101,7 @@ class ExecutionManagementServiceGateioPerpetualFutures : public ExecutionManagem
                   credential = that->credentialDefault;
                 }
 
-                auto wsConnectionPtr = std::make_shared<WsConnection>(that->baseUrlWs + settle, "",std::vector<Subscription>{subscription}, credential);
+                auto wsConnectionPtr = std::make_shared<WsConnection>(that->baseUrlWs + settle, "", std::vector<Subscription>{subscription}, credential);
                 that->setWsConnectionStream(wsConnectionPtr);
                 CCAPI_LOGGER_WARN("about to subscribe with new wsConnectionPtr " + toString(*wsConnectionPtr));
                 that->prepareConnect(wsConnectionPtr);
