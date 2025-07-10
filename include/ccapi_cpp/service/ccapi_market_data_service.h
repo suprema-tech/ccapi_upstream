@@ -92,19 +92,9 @@ class MarketDataService : public Service {
             if (credential.empty()) {
               credential = that->credentialDefault;
             }
-            std::shared_ptr<beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>> streamPtr(nullptr);
-            try {
-              streamPtr = that->createWsStream(that->serviceContextPtr->ioContextPtr, that->serviceContextPtr->sslContextPtr);
-            } catch (const beast::error_code& ec) {
-              CCAPI_LOGGER_TRACE("fail");
-              std::vector<std::string> correlationIdList;
-              correlationIdList.reserve(subscriptionListGivenInstrumentGroup.size());
-              std::transform(subscriptionListGivenInstrumentGroup.cbegin(), subscriptionListGivenInstrumentGroup.cend(), std::back_inserter(correlationIdList),
-                             [](Subscription subscription) { return subscription.getCorrelationId(); });
-              that->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, ec, "create stream", correlationIdList);
-              return;
-            }
-            std::shared_ptr<WsConnection> wsConnectionPtr(new WsConnection(url, instrumentGroup, subscriptionListGivenInstrumentGroup, credential, streamPtr));
+
+            auto wsConnectionPtr = std::make_shared<WsConnection>(url, instrumentGroup, subscriptionListGivenInstrumentGroup, credential);
+            that->setWsConnectionStream(wsConnectionPtr);
             CCAPI_LOGGER_WARN("about to subscribe with new wsConnectionPtr " + toString(*wsConnectionPtr));
             that->prepareConnect(wsConnectionPtr);
           }
