@@ -27,14 +27,6 @@
 #define CCAPI_WEBSOCKET_WRITE_BUFFER_SIZE (1 << 20)
 #endif
 
-#ifndef CCAPI_SOCKET_SEND_BUFFER_SIZE
-#define CCAPI_SOCKET_SEND_BUFFER_SIZE (1 << 20)
-#endif
-
-#ifndef CCAPI_SOCKET_RECEIVE_BUFFER_SIZE
-#define CCAPI_SOCKET_RECEIVE_BUFFER_SIZE (1 << 20)
-#endif
-
 #include <regex>
 
 #include "boost/asio/strand.hpp"
@@ -1050,12 +1042,8 @@ class Service : public std::enable_shared_from_this<Service> {
 
           auto& lowestLayer = beast::get_lowest_layer(*streamPtr).socket();
 
-      // Disable Nagle
-      lowestLayer.set_option(tcp::no_delay(true));
-
-      // Set buffer sizes (example: 1 MB)
-      lowestLayer.set_option(boost::asio::socket_base::send_buffer_size(CCAPI_SOCKET_SEND_BUFFER_SIZE));
-      lowestLayer.set_option(boost::asio::socket_base::receive_buffer_size(CCAPI_SOCKET_RECEIVE_BUFFER_SIZE));
+          // Disable Nagle
+          lowestLayer.set_option(tcp::no_delay(true));
 
           if constexpr (std::is_same_v<StreamType, beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>>) {
             CCAPI_LOGGER_TRACE("before ssl async_handshake");
