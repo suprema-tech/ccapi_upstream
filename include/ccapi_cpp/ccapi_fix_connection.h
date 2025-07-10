@@ -69,7 +69,7 @@ class FixConnection {
   std::string url;
   Subscription subscription;
   Status status{Status::UNKNOWN};
-  std::shared_ptr<T> streamPtr;
+  std::shared_ptr<T> streamPtr{nullptr};
 };
 
 } /* namespace ccapi */
