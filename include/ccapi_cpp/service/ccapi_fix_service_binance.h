@@ -13,24 +13,14 @@ class FixServiceBinance : public FixService {
                      ServiceContextPtr serviceContextPtr)
       : FixService(eventHandler, sessionOptions, sessionConfigs, serviceContextPtr) {
     this->exchangeName = CCAPI_EXCHANGE_NAME_BINANCE;
-    this->hostFix = "";
-    this->portFix = "";
-    this->hostFixMarketData = "";
-    this->portFixMarketData = "";
-    this->hostFixExecutionManagement = "";
-    this->portFixExecutionManagement = "";
     this->baseUrlFix = this->sessionConfigs.getUrlFixBase().at(this->exchangeName);
+    this->baseUrlFixMarketData = sessionConfigs.getUrlFixMarketDataBase().at(this->exchangeName);
     this->setHostFixFromUrlFix(this->hostFix, this->portFix, this->baseUrlFix);
-    try {
-      this->tcpResolverResultsFix = this->resolver.resolve(this->hostFix, this->portFix);
-    } catch (const std::exception& e) {
-      CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
-    }
-    this->apiKeyName = CCAPI_BINANCE_FIX_API_KEY;
+    this->setHostFixFromUrlFix(this->hostFixMarketData, this->portFixMarketData, this->baseUrlFixMarketData);
     this->fixApiKeyName = CCAPI_BINANCE_FIX_API_KEY;
     this->fixApiPrivateKeyPathName = CCAPI_BINANCE_FIX_API_PRIVATE_KEY_PATH;
     this->fixApiPrivateKeyPasswordName = CCAPI_BINANCE_FIX_API_PRIVATE_KEY_PASSWORD;
-    this->setupCredential({this->apiKeyName, this->fixApiKeyName, this->fixApiPrivateKeyPathName,
+    this->setupCredential({this->fixApiKeyName, this->fixApiPrivateKeyPathName,
                            this->fixApiPrivateKeyPasswordName});
     this->protocolVersion = CCAPI_FIX_PROTOCOL_VERSION_BINANCE;
     this->targetCompID = "SPOT";
@@ -45,7 +35,7 @@ class FixServiceBinance : public FixService {
     return {
         {hff::tag::SenderCompID, mapGetWithDefault(this->credentialByConnectionIdMap[connectionId], this->apiKeyName)},
         {hff::tag::TargetCompID, this->targetCompID},
-        {hff::tag::MsgSeqNum, std::to_string(++this->fixRequestIdByConnectionIdMap[connectionId])},
+        {hff::tag::MsgSeqNum, std::to_string(++this->fixMsgSeqNumByConnectionIdMap[connectionId])},
         {hff::tag::SendingTime, nowFixTimeStr},
     };
   }

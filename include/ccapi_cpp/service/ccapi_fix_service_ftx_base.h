@@ -22,7 +22,7 @@ class FixServiceFtxBase : public FixService<beast::ssl_stream<beast::tcp_stream>
     return {
         {hff::tag::SenderCompID, mapGetWithDefault(this->credentialByConnectionIdMap[connectionId], this->apiKeyName)},
         {hff::tag::TargetCompID, this->targetCompID},
-        {hff::tag::MsgSeqNum, std::to_string(++this->fixRequestIdByConnectionIdMap[connectionId])},
+        {hff::tag::MsgSeqNum, std::to_string(++this->fixMsgSeqNumByConnectionIdMap[connectionId])},
         {hff::tag::SendingTime, nowFixTimeStr},
     };
   }
@@ -34,7 +34,7 @@ class FixServiceFtxBase : public FixService<beast::ssl_stream<beast::tcp_stream>
     param.push_back({hff::tag::MsgType, msgType});
     param.push_back({hff::tag::EncryptMethod, "0"});
     param.push_back({hff::tag::HeartBtInt, "30"});
-    auto msgSeqNum = std::to_string(this->fixRequestIdByConnectionIdMap[connectionId] + 1);
+    auto msgSeqNum = std::to_string(this->fixMsgSeqNumByConnectionIdMap[connectionId] + 1);
     auto credential = this->credentialByConnectionIdMap[connectionId];
     auto senderCompID = mapGetWithDefault(credential, this->apiKeyName);
     auto targetCompID = this->targetCompID;

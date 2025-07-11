@@ -964,9 +964,7 @@ class Service : public std::enable_shared_from_this<Service> {
   virtual void connect(std::shared_ptr<WsConnection> wsConnectionPtr) {
     CCAPI_LOGGER_FUNCTION_ENTER;
     wsConnectionPtr->status = WsConnection::Status::CONNECTING;
-    CCAPI_LOGGER_DEBUG("connection initialization on id " + wsConnectionPtr->id);
-    std::string url = wsConnectionPtr->url;
-    CCAPI_LOGGER_DEBUG("url = " + url);
+    CCAPI_LOGGER_DEBUG("wsConnectionPtr = " + wsConnectionPtr->toString());
     this->startResolveWs(wsConnectionPtr);
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
