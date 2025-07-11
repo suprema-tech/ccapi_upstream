@@ -81,8 +81,7 @@ class FixConnection {
   std::string url;
   Subscription subscription;
   Status status{Status::UNKNOWN};
-  std::variant<std::shared_ptr<beast::ssl_stream<beast::tcp_stream>>, std::shared_ptr<beast::tcp_stream>
-      streamPtr;
+  std::variant<std::shared_ptr<beast::ssl_stream<beast::tcp_stream>>, std::shared_ptr<beast::tcp_stream>> streamPtr;
       bool isSecure{};
 };
 

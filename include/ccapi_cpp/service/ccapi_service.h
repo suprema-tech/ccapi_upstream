@@ -250,9 +250,9 @@ class Service : public std::enable_shared_from_this<Service> {
 
   virtual void sendRequestByWebsocket(const std::string& websocketOrderEntrySubscriptionCorrelationId, Request& request, const TimePoint& now) {}
 
-  virtual void sendRequestByFix(Request& request, const TimePoint& now) {}
+  virtual void sendRequestByFix(const std::string& fixOrderEntrySubscriptionCorrelationId, Request& request, const TimePoint& now) {}
 
-  virtual void subscribeByFix(Subscription& subscription) {}
+  virtual void subscribe(Subscription& subscription) {}
 
   void onError(const Event::Type eventType, const Message::Type messageType, const std::string& errorMessage,
                const std::vector<std::string> correlationIdList = {}, Queue<Event>* eventQueuePtr = nullptr) {

@@ -1255,6 +1255,14 @@
 // end: exchange WS urls
 
 // start: exchange FIX urls
+#ifndef CCAPI_BINANCE_URL_FIX_BASE
+#define CCAPI_BINANCE_URL_FIX_BASE "tcp+tls://fix-oe.binance.com:9000"
+#endif
+
+#ifndef CCAPI_BINANCE_URL_FIX_MARKET_DATA_BASE
+#define CCAPI_BINANCE_URL_FIX_MARKET_DATA_BASE "tcp+tls://fix-md.binance.com:9000"
+#endif
+
 #ifndef CCAPI_COINBASE_URL_FIX_BASE
 #define CCAPI_COINBASE_URL_FIX_BASE "tcp+ssl://fix-ord.exchange.coinbase.com:6121"
 #endif
@@ -1278,7 +1286,6 @@
 #ifndef CCAPI_DERIBIT_URL_FIX_BASE
 #define CCAPI_DERIBIT_URL_FIX_BASE "www.deribit.com:9883"
 #endif
-
 // end: exchange FIX urls
 
 // start: exchange API credentials

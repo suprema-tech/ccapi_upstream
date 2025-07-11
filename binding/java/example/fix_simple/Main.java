@@ -55,7 +55,7 @@ public class Main {
     var config = new SessionConfigs();
     var session = new Session(option, config, eventHandler);
     var subscription = new Subscription("coinbase", "", "FIX", "", "same correlation id for subscription and request");
-    session.subscribeByFix(subscription);
+    session.subscribe(subscription);
     try {
       Thread.sleep(10000);
     } catch (InterruptedException e) {

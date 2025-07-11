@@ -726,7 +726,7 @@ class Session {
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
 
-//   virtual void subscribeByFix(Subscription& subscription) {
+//   virtual void subscribe(Subscription& subscription) {
 //     auto serviceName = subscription.getServiceName();
 //     CCAPI_LOGGER_DEBUG("serviceName = " + serviceName);
 //     if (this->serviceByServiceNameExchangeMap.find(serviceName) == this->serviceByServiceNameExchangeMap.end()) {
@@ -740,12 +740,12 @@ class Session {
 //       this->onError(Event::Type::FIX_STATUS, Message::Type::FIX_FAILURE, "please enable exchange: " + exchange+" for subscription " + toString(subscription));
 //       return;
 //     }
-//     serviceByExchangeMap.at(exchange)->subscribeByFix(subscription);
+//     serviceByExchangeMap.at(exchange)->subscribe(subscription);
 //   }
 
-//   virtual void subscribeByFix(std::vector<Subscription>& subscriptionList) {
+//   virtual void subscribe(std::vector<Subscription>& subscriptionList) {
 //     for (auto& x : subscriptionList) {
-//       this->subscribeByFix(x);
+//       this->subscribe(x);
 //     }
 //   }
 

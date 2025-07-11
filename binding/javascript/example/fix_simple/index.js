@@ -24,7 +24,7 @@ const sessionConfigs = new SessionConfigs()
 const sessionOptions = new SessionOptions()
 const session = new Session(sessionOptions, sessionConfigs)
 const subscription = new Subscription('coinbase', '', 'FIX', '', 'same correlation id for subscription and request')
-session.subscribeByFix(subscription)
+session.subscribe(subscription)
 const intervalId = setInterval(() => {
   const eventList = session.getEventQueue().purge()
   for (let i = 0; i < eventList.size(); i++) {

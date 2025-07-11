@@ -897,7 +897,7 @@ int main(int argc, char** argv) {
   MyEventHandler eventHandler;
   Session session(sessionOptions, sessionConfigs, &eventHandler);
   Subscription subscription("okx", "", "FIX", "", "same correlation id for subscription and request");
-  session.subscribeByFix(subscription);
+  session.subscribe(subscription);
   std::this_thread::sleep_for(std::chrono::seconds(10));
   session.stop();
   std::cout << "Bye" << std::endl;
@@ -976,7 +976,7 @@ std::vector<Event> eventList = session.getEventQueue().purge();
 An example can be found [here](example/src/market_data_advanced_subscription/main.cpp).
 
 #### Thread safety
-* The following methods are implemented to be thread-safe: `Session::sendRequest`, `Session::subscribe`, `Session::sendRequestByFix`, `Session::subscribeByFix`, `Session::setTimer`, all public methods in `Queue`.
+* The following methods are implemented to be thread-safe: `Session::sendRequest`, `Session::subscribe`, `Session::sendRequestByFix`, `Session::setTimer`, all public methods in `Queue`.
 * If you choose to inject an external `boost::asio::io_context` to `ServiceContext`, the `boost::asio::io_context` has to run on a single thread to ensure thread safety.
 
 #### Enable library logging

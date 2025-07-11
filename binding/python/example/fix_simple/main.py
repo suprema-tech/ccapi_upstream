@@ -46,7 +46,7 @@ if __name__ == "__main__":
     config = SessionConfigs()
     session = Session(option, config, eventHandler)
     subscription = Subscription("coinbase", "", "FIX", "", "same correlation id for subscription and request")
-    session.subscribeByFix(subscription)
+    session.subscribe(subscription)
     time.sleep(10)
     session.stop()
     print("Bye")

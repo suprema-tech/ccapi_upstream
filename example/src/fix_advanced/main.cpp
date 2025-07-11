@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
   Session session(sessionOptions, sessionConfigs, &eventHandler);
   Subscription subscription("coinbase", "", "FIX", "8013=S&9406=Y",
                             "same correlation id for subscription and request");  // https://docs.pro.coinbase.com/#logon-a
-  session.subscribeByFix(subscription);
+  session.subscribe(subscription);
   std::this_thread::sleep_for(std::chrono::seconds(10));
   session.stop();
   return EXIT_SUCCESS;

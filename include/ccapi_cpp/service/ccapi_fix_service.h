@@ -57,12 +57,12 @@ class FixService : public Service {
 
           const auto& fieldSet = subscription.getFieldSet();
           if (fieldSet.find(CCAPI_FIX_MARKET_DATA) != fieldSet.end()) {
-            auto fixConnectionPtr = std::make_shared<FixConnection>(that->baseUrlFixMarketData, "", std::vector<Subscription>{subscription}, credential);
+            auto fixConnectionPtr = std::make_shared<FixConnection>(that->baseUrlFixMarketData, "", std::vector<Subscription>{subscription});
             that->setFixConnectionStream(fixConnectionPtr);
             CCAPI_LOGGER_WARN("about to subscribe with new fixConnectionPtr " + toString(*fixConnectionPtr));
             that->connect(fixConnectionPtr);
           } else {
-            auto fixConnectionPtr = std::make_shared<FixConnection>(that->baseUrlFix, "", std::vector<Subscription>{subscription}, credential);
+            auto fixConnectionPtr = std::make_shared<FixConnection>(that->baseUrlFix, "", std::vector<Subscription>{subscription});
             that->setFixConnectionStream(fixConnectionPtr);
             CCAPI_LOGGER_WARN("about to subscribe with new fixConnectionPtr " + toString(*fixConnectionPtr));
             that->connect(fixConnectionPtr);
@@ -119,7 +119,7 @@ class FixService : public Service {
           that->onError(Event::Type::FIX_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
         } else {
           CCAPI_LOGGER_INFO("about to retry");
-          that->connect(fixConnectionPtr->subscription);
+          that->connect(fixConnectionPtr);
           that->connectNumRetryOnFailByConnectionUrlMap[urlBase] += 1;
         }
       }
@@ -148,7 +148,7 @@ class FixService : public Service {
     CCAPI_LOGGER_TRACE("fixConnectionPtr->host = " + fixConnectionPtr->host);
     CCAPI_LOGGER_TRACE("fixConnectionPtr->port = " + fixConnectionPtr->port);
     newResolverPtr->async_resolve(fixConnectionPtr->host, fixConnectionPtr->port,
-                                  beast::bind_front_handler(&Service::onResolveFix, shared_from_this(), fixConnectionPtr, newResolverPtr));
+                                  beast::bind_front_handler(&FixService::onResolveFix, shared_from_this(), fixConnectionPtr, newResolverPtr));
   }
 
   void onResolveFix(std::shared_ptr<FixConnection> fixConnectionPtr, std::shared_ptr<tcp::resolver> newResolverPtr, beast::error_code ec,
@@ -183,7 +183,7 @@ class FixService : public Service {
           CCAPI_LOGGER_TRACE("before async_connect");
 
           beast::get_lowest_layer(*streamPtr)
-              .async_connect(tcpResolverResults, beast::bind_front_handler(&Service::onConnectFix, shared_from_this(), fixConnectionPtr));
+              .async_connect(tcpResolverResults, beast::bind_front_handler(&FixService::onConnectFix, shared_from_this(), fixConnectionPtr));
 
           CCAPI_LOGGER_TRACE("after async_connect");
         },
@@ -207,7 +207,7 @@ class FixService : public Service {
                 CCAPI_LOGGER_TRACE("before ssl async_handshake");
 
                 streamPtr.async_handshake(ssl::stream_base::client,
-                                                        beast::bind_front_handler(&Service::onSslHandshakeFix, shared_from_this(), fixConnectionPtr));
+                                                        beast::bind_front_handler(&FixService::onSslHandshakeFix, shared_from_this(), fixConnectionPtr));
 
                 CCAPI_LOGGER_TRACE("after ssl async_handshake");
             } else {
@@ -598,7 +598,12 @@ class FixService : public Service {
                                                                                 that->lastPongTpByMethodByConnectionIdMap.at(fixConnectionPtr->id).at(method))
                                   .count() >= pongTimeoutMilliseconds) {
                         auto thisFixConnectionPtr = fixConnectionPtr;
-                        that->onFail(fixConnectionPtr, "pong timeout");
+                        ErrorCode ec;
+                        that->close(thisWsConnectionPtr, beast::websocket::close_code::normal,
+                                    beast::websocket::close_reason(beast::websocket::close_code::normal, "pong timeout"), ec);
+                        if (ec) {
+                          that->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, ec, "shutdown");
+                        }
                       } else {
                         auto thisFixConnectionPtr = fixConnectionPtr;
                         that->setPingPongTimer(method, thisFixConnectionPtr, pingMethod);
@@ -656,7 +661,7 @@ class FixService : public Service {
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
 
-  constexpr size_t readMessageChunkSize = CCAPI_HFFIX_READ_MESSAGE_CHUNK_SIZE;
+  const size_t readMessageChunkSize = CCAPI_HFFIX_READ_MESSAGE_CHUNK_SIZE;
   std::map<std::string, std::array<char, CCAPI_FIX_READ_BUFFER_SIZE>> readMessageBufferByConnectionIdMap;
   std::map<std::string, size_t> readMessageBufferReadLengthByConnectionIdMap;
   std::map<std::string, std::array<char, CCAPI_FIX_WRITE_BUFFER_SIZE>> writeMessageBufferByConnectionIdMap;
