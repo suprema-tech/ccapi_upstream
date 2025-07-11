@@ -49,7 +49,7 @@ class Subscription {
                                                                      std::string(CCAPI_EM_POSITION_UPDATE),    std::string(CCAPI_EM_WEBSOCKET_ORDER_ENTRY)};
     if (field == CCAPI_GENERIC_PUBLIC_SUBSCRIPTION) {
       this->serviceName = CCAPI_MARKET_DATA;
-    } else if (field == CCAPI_FIX || field == CCAPI_FIX_MARKET_DATA || field == CCAPI_FIX_EXECUTION_MANAGEMENT) {
+    } else if (field == CCAPI_FIX || field == CCAPI_FIX_MARKET_DATA) {
       this->serviceName = CCAPI_FIX;
     } else if (std::includes(executionManagementSubscriptionFieldSet.begin(), executionManagementSubscriptionFieldSet.end(), this->fieldSet.begin(),
                              this->fieldSet.end())) {

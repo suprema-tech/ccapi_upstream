@@ -43,7 +43,7 @@ const intervalId = setInterval(() => {
         param.add(new PairIntString(38, '0.001'))
         param.add(new PairIntString(40, '2'))
         param.add(new PairIntString(59, '1'))
-        request.appendParamFix(param)
+        request.appendFixParam(param)
         session.sendRequestByFix(request)
       }
     }

@@ -357,7 +357,7 @@ class Service : public std::enable_shared_from_this<Service> {
     oss << req;
     CCAPI_LOGGER_DEBUG("req = \n" + oss.str());
 #endif
-    std::shared_ptr<beast::ssl_stream<beast::tcp_stream>> streamPtr(nullptr);
+    std::shared_ptr<beast::ssl_stream<beast::tcp_stream>> streamPtr{nullptr};
     try {
       streamPtr = this->createStream<beast::ssl_stream<beast::tcp_stream>>(this->serviceContextPtr->ioContextPtr, this->serviceContextPtr->sslContextPtr,
                                                                            this->hostRest);
@@ -385,7 +385,7 @@ class Service : public std::enable_shared_from_this<Service> {
     oss << req;
     CCAPI_LOGGER_DEBUG("req = \n" + oss.str());
 #endif
-    std::shared_ptr<beast::ssl_stream<beast::tcp_stream>> streamPtr(nullptr);
+    std::shared_ptr<beast::ssl_stream<beast::tcp_stream>> streamPtr{nullptr};
     try {
       streamPtr = this->createStream<beast::ssl_stream<beast::tcp_stream>>(this->serviceContextPtr->ioContextPtr, this->serviceContextPtr->sslContextPtr, host);
     } catch (const beast::error_code& ec) {
@@ -826,7 +826,7 @@ class Service : public std::enable_shared_from_this<Service> {
                                                              this->httpConnectionPool[localIpAddress][requestBaseUrl].back()->lastReceiveDataTp)
                     .count() >= this->sessionOptions.httpConnectionKeepAliveTimeoutSeconds) {
           this->httpConnectionPool[localIpAddress][requestBaseUrl].clear();
-          std::shared_ptr<beast::ssl_stream<beast::tcp_stream>> streamPtr(nullptr);
+          std::shared_ptr<beast::ssl_stream<beast::tcp_stream>> streamPtr{nullptr};
           try {
             streamPtr = this->createStream<beast::ssl_stream<beast::tcp_stream>>(this->serviceContextPtr->ioContextPtr, this->serviceContextPtr->sslContextPtr,
                                                                                  this->hostRest);

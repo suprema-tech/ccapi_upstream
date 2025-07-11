@@ -37,7 +37,7 @@ class FixServiceCoinbase : public FixService<beast::ssl_stream<beast::tcp_stream
     return {
         {hff::tag::SenderCompID, mapGetWithDefault(this->credentialByConnectionIdMap[connectionId], this->apiKeyName)},
         {hff::tag::TargetCompID, this->targetCompID},
-        {hff::tag::MsgSeqNum, std::to_string(++this->sequenceSentByConnectionIdMap[connectionId])},
+        {hff::tag::MsgSeqNum, std::to_string(++this->fixRequestIdByConnectionIdMap[connectionId])},
         {hff::tag::SendingTime, nowFixTimeStr},
     };
   }
@@ -52,7 +52,7 @@ class FixServiceCoinbase : public FixService<beast::ssl_stream<beast::tcp_stream
     auto credential = this->credentialByConnectionIdMap[connectionId];
     auto apiPassphrase = mapGetWithDefault(credential, this->apiPassphraseName);
     param.push_back({hff::tag::Password, apiPassphrase});
-    auto msgSeqNum = std::to_string(this->sequenceSentByConnectionIdMap[connectionId] + 1);
+    auto msgSeqNum = std::to_string(this->fixRequestIdByConnectionIdMap[connectionId] + 1);
     auto senderCompID = mapGetWithDefault(credential, this->apiKeyName);
     auto targetCompID = this->targetCompID;
     std::vector<std::string> prehashFieldList{nowFixTimeStr, msgType, msgSeqNum, senderCompID, targetCompID, apiPassphrase};

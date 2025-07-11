@@ -22,7 +22,7 @@ namespace ccapi {
 /**
  * A single request. Request objects are created using Request constructors. They are used with Session::sendRequest() or Session::sendRequestByWebsocket() or
  * Session::sendRequestByFix(). The Request object contains the parameters for a single request. Once a Request has been created its fields can be further
- * modified using the convenience functions appendParam() or appendParamFix() or setParamList() or setParamListFix(). A correlation id can be used as the unique
+ * modified using the convenience functions appendParam() or appendFixParam() or setParamList() or setParamListFix(). A correlation id can be used as the unique
  * identifier to tag all data associated with this request.
  */
 class Request {
@@ -189,7 +189,7 @@ class Request {
 
   void appendParam(const std::map<std::string, std::string>& param) { this->paramList.push_back(param); }
 
-  void appendParamFix(const std::vector<std::pair<int, std::string>>& param) { this->paramListFix.push_back(param); }
+  void appendFixParam(const std::vector<std::pair<int, std::string>>& param) { this->paramListFix.push_back(param); }
 
   void appendParamListFix(const std::vector<std::vector<std::pair<int, std::string>>>& paramList) {
     this->paramListFix.insert(std::end(this->paramListFix), std::begin(paramList), std::end(paramList));

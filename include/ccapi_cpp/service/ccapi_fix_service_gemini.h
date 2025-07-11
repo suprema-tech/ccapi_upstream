@@ -33,7 +33,7 @@ class FixServiceGemini : public FixService<beast::tcp_stream> {
     return {
         {hff::tag::SenderCompID, CCAPI_GEMINI_API_SENDER_COMP_ID},
         {hff::tag::TargetCompID, CCAPI_GEMINI_API_TARGET_COMP_ID},
-        {hff::tag::MsgSeqNum, std::to_string(++this->sequenceSentByConnectionIdMap[connectionId])},
+        {hff::tag::MsgSeqNum, std::to_string(++this->fixRequestIdByConnectionIdMap[connectionId])},
         {hff::tag::SendingTime, nowFixTimeStr},
     };
   }

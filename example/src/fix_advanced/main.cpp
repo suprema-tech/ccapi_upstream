@@ -12,7 +12,7 @@ class MyEventHandler : public EventHandler {
       auto message = event.getMessageList().at(0);
       if (message.getType() == Message::Type::AUTHORIZATION_SUCCESS) {
         Request request(Request::Operation::FIX, "coinbase", "", "same correlation id for subscription and request");
-        request.appendParamFix({
+        request.appendFixParam({
             {35, "D"},
             {11, "6d4eb0fb-2229-469f-873e-557dd78ac11e"},
             {55, "BTC-USD"},

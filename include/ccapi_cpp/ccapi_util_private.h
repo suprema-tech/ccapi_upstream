@@ -884,7 +884,7 @@ class UtilSystem {
     }
   }
 
-  static std::string getEnvAsString(const std::string variableName, const std::string defaultValue = "") {
+  static std::string getEnvAsString(const std::string variableName, const std::string& defaultValue = "") {
     const char* env_p = std::getenv(variableName.c_str());
     if (env_p) {
       return std::string(env_p);

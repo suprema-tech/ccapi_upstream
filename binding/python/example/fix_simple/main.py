@@ -14,7 +14,7 @@ class MyEventHandler(EventHandler):
             message = event.getMessageList()[0]
             if message.getType() == Message.Type_AUTHORIZATION_SUCCESS:
                 request = Request(Request.Operation_FIX, "coinbase", "", "same correlation id for subscription and request")
-                request.appendParamFix(
+                request.appendFixParam(
                     [
                         (35, "D"),
                         (11, "6d4eb0fb-2229-469f-873e-557dd78ac11e"),
