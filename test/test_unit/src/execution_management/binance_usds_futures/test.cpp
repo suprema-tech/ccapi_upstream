@@ -323,7 +323,7 @@ TEST_F(ExecutionManagementServiceBinanceUsdsFuturesTest, convertRequestGetAccoun
   EXPECT_EQ(req.method(), http::verb::get);
   verifyApiKey(req, this->credential.at(CCAPI_BINANCE_USDS_FUTURES_API_KEY));
   auto splitted = UtilString::split(std::string(req.target()), "?");
-  EXPECT_EQ(splitted.at(0), "/fapi/v2/account");
+  EXPECT_EQ(splitted.at(0), "/fapi/v3/account");
   auto paramMap = Url::convertQueryStringToMap(splitted.at(1));
   EXPECT_EQ(paramMap.at("timestamp"), std::to_string(this->timestamp));
   verifySignature(splitted.at(1), this->credential.at(CCAPI_BINANCE_USDS_FUTURES_API_SECRET));
@@ -443,7 +443,7 @@ TEST_F(ExecutionManagementServiceBinanceUsdsFuturesTest, convertTextMessageToMes
                 "entryPrice": "0.00000",
                 "maxNotional": "250000",
                 "positionSide": "BOTH",
-                "positionAmt": "0",
+                "positionAmt": "10",
                 "updateTime": 0
             }
         ]
@@ -458,7 +458,7 @@ TEST_F(ExecutionManagementServiceBinanceUsdsFuturesTest, convertTextMessageToMes
   Element element = elementList.at(0);
   EXPECT_EQ(element.getValue(CCAPI_INSTRUMENT), "BTCUSDT");
   EXPECT_EQ(element.getValue(CCAPI_EM_POSITION_SIDE), "BOTH");
-  EXPECT_EQ(element.getValue(CCAPI_EM_POSITION_QUANTITY), "0");
+  EXPECT_EQ(element.getValue(CCAPI_EM_POSITION_QUANTITY), "10");
   EXPECT_DOUBLE_EQ(std::stod(element.getValue(CCAPI_EM_POSITION_ENTRY_PRICE)), 0);
 }
 
