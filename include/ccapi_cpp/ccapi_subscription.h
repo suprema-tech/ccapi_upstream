@@ -15,10 +15,8 @@ namespace ccapi {
  */
 class Subscription {
  public:
-  Subscription() {}
-
-  Subscription(const std::string& exchange, const std::string& instrument, const std::string& field, const std::string& options = "",
-               const std::string& correlationId = "", const std::map<std::string, std::string>& credential = {})
+  explicit Subscription(const std::string& exchange = "", const std::string& instrument = "", const std::string& field = "", const std::string& options = "",
+                        const std::string& correlationId = "", const std::map<std::string, std::string>& credential = {})
       : exchange(exchange), instrument(instrument), field(field), correlationId(correlationId), credential(credential) {
     auto originalInstrumentSet = UtilString::splitToSet(instrument, ",");
     std::copy_if(originalInstrumentSet.begin(), originalInstrumentSet.end(), std::inserter(this->instrumentSet, this->instrumentSet.end()),
@@ -126,6 +124,12 @@ class Subscription {
   std::pair<long long, long long> getTimeSentPair() const { return UtilTime::divide(timeSent); }
 
   const std::string& getMarginType() const { return marginType; }
+
+  void setExchange(const std::string& exchange) { this->exchange = exchange; }
+
+  void setInstrument(const std::string& instrument) { this->instrument = instrument; }
+
+  void setField(const std::string& field) { this->field = field; }
 
   void setTimeSent(TimePoint timeSent) { this->timeSent = timeSent; }
 

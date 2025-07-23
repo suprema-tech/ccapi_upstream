@@ -139,10 +139,8 @@ class Request {
     return output;
   }
 
-  Request() {}
-
-  explicit Request(Operation operation, const std::string& exchange = "", const std::string& instrument = "", const std::string& correlationId = "",
-                   const std::map<std::string, std::string>& credential = {})
+  explicit Request(Operation operation = Operation::UNKNOWN, const std::string& exchange = "", const std::string& instrument = "",
+                   const std::string& correlationId = "", const std::map<std::string, std::string>& credential = {})
       : operation(operation), exchange(exchange), instrument(instrument), correlationId(correlationId), credential(credential) {
     if (operation == Operation::CUSTOM) {
       this->serviceName = CCAPI_UNKNOWN;
