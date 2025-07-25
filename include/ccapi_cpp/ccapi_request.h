@@ -164,12 +164,11 @@ class Request {
       shortCredential.insert(std::make_pair(x.first, UtilString::firstNCharacter(x.second, CCAPI_CREDENTIAL_DISPLAY_LENGTH)));
     }
     std::string output =
-        "Request [exchange = " + exchange + ", marginType = " + marginType + ", instrument = " + instrument + ", serviceName = " + serviceName +
-        ", correlationId = " + correlationId +
+        "Request [operation = " + operationToString(operation) + ", exchange = " + exchange + ", marginType = " + marginType + ", instrument = " + instrument +
+        ", serviceName = " + serviceName + ", correlationId = " + correlationId +
         (this->serviceName == CCAPI_FIX ? ", paramListFix = " + ccapi::toString(paramListFix) : ", paramList = " + ccapi::toString(paramList)) +
-        ", credential = " + ccapi::toString(shortCredential) + ", operation = " + operationToString(operation) +
-        ", timeSent = " + UtilTime::getISOTimestamp(timeSent) + ", index = " + ccapi::toString(index) + ", localIpAddress = " + localIpAddress +
-        ", baseUrl = " + baseUrl + "]";
+        ", credential = " + ccapi::toString(shortCredential) + ", timeSent = " + UtilTime::getISOTimestamp(timeSent) + ", index = " + ccapi::toString(index) +
+        ", localIpAddress = " + localIpAddress + ", baseUrl = " + baseUrl + "]";
     return output;
   }
 
