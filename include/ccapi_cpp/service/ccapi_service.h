@@ -918,11 +918,11 @@ class Service : public std::enable_shared_from_this<Service> {
     }
   }
 
-  void appendSymbolId(rj::Value& rjValue, rj::Document::AllocatorType& allocator, const std::string& symbolId, const std::string symbolIdCalled) {
+  void appendSymbolId(rj::Value& rjValue, rj::Document::AllocatorType& allocator, const std::string& symbolId, const std::string& symbolIdCalled) {
     rjValue.AddMember(rj::Value(symbolIdCalled.c_str(), allocator).Move(), rj::Value(symbolId.c_str(), allocator).Move(), allocator);
   }
 
-  void appendSymbolId(std::string& queryString, const std::string& symbolId, const std::string symbolIdCalled) {
+  void appendSymbolId(std::string& queryString, const std::string& symbolId, const std::string& symbolIdCalled) {
     if (!symbolId.empty()) {
       queryString += symbolIdCalled;
       queryString += "=";

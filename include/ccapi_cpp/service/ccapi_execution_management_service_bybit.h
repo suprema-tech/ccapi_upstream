@@ -58,7 +58,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
     req.set("X-BAPI-SIGN", signature);
   }
 
-  void signRequest(http::request<http::string_body>& req, const std::string aString, const TimePoint& now,
+  void signRequest(http::request<http::string_body>& req, const std::string& aString, const TimePoint& now,
                    const std::map<std::string, std::string>& credential) {
     auto apiKey = mapGetWithDefault(credential, this->apiKeyName);
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);

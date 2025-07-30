@@ -875,7 +875,7 @@ inline uint_fast32_t UtilAlgorithm::crc(InputIterator first, InputIterator last)
 
 class UtilSystem {
  public:
-  static bool getEnvAsBool(const std::string variableName, const bool defaultValue = false) {
+  static bool getEnvAsBool(const std::string& variableName, const bool defaultValue = false) {
     const char* env_p = std::getenv(variableName.c_str());
     if (env_p) {
       return UtilString::toLower(env_p) == "true";
@@ -884,7 +884,7 @@ class UtilSystem {
     }
   }
 
-  static std::string getEnvAsString(const std::string variableName, const std::string& defaultValue = "") {
+  static std::string getEnvAsString(const std::string& variableName, const std::string& defaultValue = "") {
     const char* env_p = std::getenv(variableName.c_str());
     if (env_p) {
       return std::string(env_p);
@@ -893,7 +893,7 @@ class UtilSystem {
     }
   }
 
-  static int getEnvAsInt(const std::string variableName, const int defaultValue = 0) {
+  static int getEnvAsInt(const std::string& variableName, const int defaultValue = 0) {
     const char* env_p = std::getenv(variableName.c_str());
     if (env_p) {
       return std::stoi(std::string(env_p));
@@ -902,7 +902,7 @@ class UtilSystem {
     }
   }
 
-  static long getEnvAsLong(const std::string variableName, const long defaultValue = 0) {
+  static long getEnvAsLong(const std::string& variableName, const long defaultValue = 0) {
     const char* env_p = std::getenv(variableName.c_str());
     if (env_p) {
       return std::stol(std::string(env_p));
@@ -911,7 +911,7 @@ class UtilSystem {
     }
   }
 
-  static float getEnvAsFloat(const std::string variableName, const float defaultValue = 0) {
+  static float getEnvAsFloat(const std::string& variableName, const float defaultValue = 0) {
     const char* env_p = std::getenv(variableName.c_str());
     if (env_p) {
       return std::stof(std::string(env_p));
@@ -920,7 +920,7 @@ class UtilSystem {
     }
   }
 
-  static double getEnvAsDouble(const std::string variableName, const double defaultValue = 0) {
+  static double getEnvAsDouble(const std::string& variableName, const double defaultValue = 0) {
     const char* env_p = std::getenv(variableName.c_str());
     if (env_p) {
       return std::stod(std::string(env_p));
