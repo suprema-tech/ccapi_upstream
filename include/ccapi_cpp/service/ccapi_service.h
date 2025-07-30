@@ -1462,7 +1462,7 @@ class Service : public std::enable_shared_from_this<Service> {
     } else if (kind == boost::beast::websocket::frame_type::pong) {
       this->onPong(wsConnectionPtr, payload);
     } else if (kind == boost::beast::websocket::frame_type::close) {
-      this->onClose(wsConnectionPtr, ErrorCode());
+      this->onClose(wsConnectionPtr, {});
     }
   }
 
