@@ -1,5 +1,5 @@
 # Notice
-* New release has about 20% reduction in cpu usage.
+* Small breaking change: renamed `toStringPretty` to `toPrettyString`.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -54,12 +54,6 @@
 <!---toc end-->
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-
-
-
-
-
 
 # ccapi
 * A header-only C++ library for streaming market data and executing trades directly from cryptocurrency exchanges (i.e. the connections are between your server and the exchange server without anything in-between).
