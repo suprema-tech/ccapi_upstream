@@ -29,7 +29,7 @@ const intervalId = setInterval(() => {
   const eventList = session.getEventQueue().purge()
   for (let i = 0; i < eventList.size(); i++) {
     const event = eventList.get(i)
-    console.log(`Received an event of type any:\n${event.toStringPretty(2, 2)}`)
+    console.log(`Received an event of type any:\n${event.toPrettyString(2, 2)}`)
     if (event.getType() == Event.Type_AUTHORIZATION_STATUS) {
       const message = event.getMessageList().get(0)
       if (message.getType() == Message.Type_AUTHORIZATION_SUCCESS) {
@@ -48,7 +48,7 @@ const intervalId = setInterval(() => {
       }
     }
     else if (event.getType() == ccapi.Event.Type_FIX) {
-      console.log(`Received an event of type FIX:\n${event.toStringPretty(2, 2)}`)
+      console.log(`Received an event of type FIX:\n${event.toPrettyString(2, 2)}`)
     }
   }
 }, 1)

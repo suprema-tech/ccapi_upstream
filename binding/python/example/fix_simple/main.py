@@ -10,7 +10,7 @@ class MyEventHandler(EventHandler):
 
     def processEvent(self, event: Event, session: Session) -> None:
         if event.getType() == Event.Type_AUTHORIZATION_STATUS:
-            print(f"Received an event of type AUTHORIZATION_STATUS:\n{event.toStringPretty(2, 2)}")
+            print(f"Received an event of type AUTHORIZATION_STATUS:\n{event.toPrettyString(2, 2)}")
             message = event.getMessageList()[0]
             if message.getType() == Message.Type_AUTHORIZATION_SUCCESS:
                 request = Request(Request.Operation_FIX, "coinbase", "", "same correlation id for subscription and request")
@@ -28,7 +28,7 @@ class MyEventHandler(EventHandler):
                 )
                 session.sendRequestByFix(request)
         elif event.getType() == Event.Type_FIX:
-            print(f"Received an event of type FIX:\n{event.toStringPretty(2, 2)}")
+            print(f"Received an event of type FIX:\n{event.toPrettyString(2, 2)}")
 
 
 if __name__ == "__main__":

@@ -252,7 +252,7 @@ class Message {
     return output;
   }
 
-  std::string toStringPretty(const int space = 2, const int leftToIndent = 0, const bool indentFirstLine = true) const {
+  std::string toPrettyString(const int space = 2, const int leftToIndent = 0, const bool indentFirstLine = true) const {
     std::string sl(leftToIndent, ' ');
     std::string ss(leftToIndent + space, ' ');
     std::string output = (indentFirstLine ? sl : "") + "Message [\n" + ss + "type = " + typeToString(type) + ",\n" + ss +

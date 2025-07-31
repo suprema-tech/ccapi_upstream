@@ -98,13 +98,13 @@ class Element {
     return output;
   }
 
-  std::string toStringPretty(const int space = 2, const int leftToIndent = 0, const bool indentFirstLine = true) const {
+  std::string toPrettyString(const int space = 2, const int leftToIndent = 0, const bool indentFirstLine = true) const {
     std::string sl(leftToIndent, ' ');
     std::string ss(leftToIndent + space, ' ');
     std::string output = isFix ? (indentFirstLine ? sl : "") + "Element [\n" + ss +
-                                     "tagValueList = " + ccapi::toStringPretty(tagValueList, space, space + leftToIndent, false) + "\n" + sl + "]"
+                                     "tagValueList = " + ccapi::toPrettyString(tagValueList, space, space + leftToIndent, false) + "\n" + sl + "]"
                                : (indentFirstLine ? sl : "") + "Element [\n" + ss +
-                                     "nameValueMap = " + ccapi::toStringPretty(nameValueMap, space, space + leftToIndent, false) + "\n" + sl + "]";
+                                     "nameValueMap = " + ccapi::toPrettyString(nameValueMap, space, space + leftToIndent, false) + "\n" + sl + "]";
     return output;
   }
 #ifdef SWIG

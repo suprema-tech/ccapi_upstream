@@ -232,7 +232,7 @@ Logger* Logger::logger = nullptr;  // This line is needed.
 class MyEventHandler : public EventHandler {
  public:
   void processEvent(const Event& event, Session* sessionPtr) override {
-    std::cout << "Received an event:\n" + event.toStringPretty(2, 2) << std::endl;
+    std::cout << "Received an event:\n" + event.toPrettyString(2, 2) << std::endl;
   }
 };
 
@@ -311,7 +311,7 @@ class MyEventHandler : public EventHandler {
  public:
   void processEvent(const Event& event, Session* sessionPtr) override {
     if (event.getType() == Event::Type::SUBSCRIPTION_STATUS) {
-      std::cout << "Received an event of type SUBSCRIPTION_STATUS:\n" + event.toStringPretty(2, 2) << std::endl;
+      std::cout << "Received an event of type SUBSCRIPTION_STATUS:\n" + event.toPrettyString(2, 2) << std::endl;
     } else if (event.getType() == Event::Type::SUBSCRIPTION_DATA) {
       for (const auto& message : event.getMessageList()) {
         std::cout << std::string("Best bid and ask at ") + UtilTime::getISOTimestamp(message.getTime()) + " are:" << std::endl;
@@ -505,7 +505,7 @@ Logger* Logger::logger = nullptr;  // This line is needed.
 class MyEventHandler : public EventHandler {
  public:
   void processEvent(const Event& event, Session* sessionPtr) override {
-    std::cout << "Received an event:\n" + event.toStringPretty(2, 2) << std::endl;
+    std::cout << "Received an event:\n" + event.toPrettyString(2, 2) << std::endl;
   }
 };
 
@@ -605,7 +605,7 @@ class MyEventHandler : public EventHandler {
  public:
   void processEvent(const Event& event, Session* sessionPtr) override {
     if (event.getType() == Event::Type::SUBSCRIPTION_STATUS) {
-      std::cout << "Received an event of type SUBSCRIPTION_STATUS:\n" + event.toStringPretty(2, 2) << std::endl;
+      std::cout << "Received an event of type SUBSCRIPTION_STATUS:\n" + event.toPrettyString(2, 2) << std::endl;
       auto message = event.getMessageList().at(0);
       if (message.getType() == Message::Type::SUBSCRIPTION_STARTED) {
         Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDT");
@@ -618,7 +618,7 @@ class MyEventHandler : public EventHandler {
         sessionPtr->sendRequest(request);
       }
     } else if (event.getType() == Event::Type::SUBSCRIPTION_DATA) {
-      std::cout << "Received an event of type SUBSCRIPTION_DATA:\n" + event.toStringPretty(2, 2) << std::endl;
+      std::cout << "Received an event of type SUBSCRIPTION_DATA:\n" + event.toPrettyString(2, 2) << std::endl;
     }
   }
 };
@@ -850,7 +850,7 @@ class MyEventHandler : public EventHandler {
  public:
   void processEvent(const Event& event, Session* sessionPtr) override {
     if (event.getType() == Event::Type::AUTHORIZATION_STATUS) {
-      std::cout << "Received an event of type AUTHORIZATION_STATUS:\n" + event.toStringPretty(2, 2) << std::endl;
+      std::cout << "Received an event of type AUTHORIZATION_STATUS:\n" + event.toPrettyString(2, 2) << std::endl;
       auto message = event.getMessageList().at(0);
       if (message.getType() == Message::Type::AUTHORIZATION_SUCCESS) {
         Request request(Request::Operation::FIX, "okx", "", "same correlation id for subscription and request");
@@ -867,7 +867,7 @@ class MyEventHandler : public EventHandler {
         sessionPtr->sendRequestByFix(request);
       }
     } else if (event.getType() == Event::Type::FIX) {
-      std::cout << "Received an event of type FIX:\n" + event.toStringPretty(2, 2) << std::endl;
+      std::cout << "Received an event of type FIX:\n" + event.toPrettyString(2, 2) << std::endl;
     }
   }
 };

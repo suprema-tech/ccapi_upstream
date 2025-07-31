@@ -15,7 +15,7 @@ public class Main {
     @Override
     public void processEvent(Event event, Session session) {
       if (event.getType() == Event.Type.AUTHORIZATION_STATUS) {
-        System.out.println(String.format("Received an event of type AUTHORIZATION_STATUS:\n%s", event.toStringPretty(2, 2)));
+        System.out.println(String.format("Received an event of type AUTHORIZATION_STATUS:\n%s", event.toPrettyString(2, 2)));
         var message = event.getMessageList().get(0);
         if (message.getType() == Message.Type.AUTHORIZATION_SUCCESS) {
           var request = new Request(Request.Operation.FIX, "coinbase", "", "same correlation id for subscription and request");
@@ -32,7 +32,7 @@ public class Main {
           session.sendRequestByFix(request);
         }
       } else if (event.getType() == Event.Type.FIX) {
-        System.out.println(String.format("Received an event of type FIX:\n%s", event.toStringPretty(2, 2)));
+        System.out.println(String.format("Received an event of type FIX:\n%s", event.toPrettyString(2, 2)));
       }
           }
   }

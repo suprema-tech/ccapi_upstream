@@ -10,7 +10,7 @@ class MyEventHandler(EventHandler):
 
     def processEvent(self, event: Event, session: Session) -> None:
         if event.getType() == Event.Type_SUBSCRIPTION_STATUS:
-            print(f"Received an event of type SUBSCRIPTION_STATUS:\n{event.toStringPretty(2, 2)}")
+            print(f"Received an event of type SUBSCRIPTION_STATUS:\n{event.toPrettyString(2, 2)}")
             message = event.getMessageList()[0]
             if message.getType() == Message.Type_SUBSCRIPTION_STARTED:
                 request = Request(Request.Operation_CREATE_ORDER, "coinbase", "BTC-USD")
@@ -23,7 +23,7 @@ class MyEventHandler(EventHandler):
                 )
                 session.sendRequest(request)
         elif event.getType() == Event.Type_SUBSCRIPTION_DATA:
-            print(f"Received an event of type SUBSCRIPTION_DATA:\n{event.toStringPretty(2, 2)}")
+            print(f"Received an event of type SUBSCRIPTION_DATA:\n{event.toPrettyString(2, 2)}")
 
 
 if __name__ == "__main__":

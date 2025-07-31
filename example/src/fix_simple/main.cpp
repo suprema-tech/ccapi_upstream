@@ -22,7 +22,7 @@ class MyEventHandler : public EventHandler {
  MyEventHandler(const std::string& fixSubscriptionCorrelationId):fixSubscriptionCorrelationId(fixSubscriptionCorrelationId){}
   void processEvent(const Event& event, Session* sessionPtr) override {
     if (event.getType() == Event::Type::AUTHORIZATION_STATUS) {
-      std::cout << "Received an event of type AUTHORIZATION_STATUS:\n" + event.toStringPretty(2, 2) << std::endl;
+      std::cout << "Received an event of type AUTHORIZATION_STATUS:\n" + event.toPrettyString(2, 2) << std::endl;
       auto message = event.getMessageList().at(0);
       if (message.getType() == Message::Type::AUTHORIZATION_SUCCESS) {
         Request request(Request::Operation::FIX, "binance");
@@ -39,7 +39,7 @@ class MyEventHandler : public EventHandler {
         sessionPtr->sendRequestByFix(this->fixSubscriptionCorrelationId, request);
       }
     } else if (event.getType() == Event::Type::FIX) {
-      std::cout << "Received an event of type FIX:\n" + event.toStringPretty(2, 2) << std::endl;
+      std::cout << "Received an event of type FIX:\n" + event.toPrettyString(2, 2) << std::endl;
     }
   }
 

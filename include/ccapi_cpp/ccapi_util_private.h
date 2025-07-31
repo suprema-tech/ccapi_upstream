@@ -1521,9 +1521,9 @@ typename std::enable_if<std::is_same<decltype(std::declval<const T&>().toString(
 }
 
 template <typename T>
-typename std::enable_if<std::is_same<decltype(std::declval<const T&>().toStringPretty()), std::string>::value, std::string>::type toStringPretty(
+typename std::enable_if<std::is_same<decltype(std::declval<const T&>().toPrettyString()), std::string>::value, std::string>::type toPrettyString(
     const T& t, const int space = 2, const int leftToIndent = 0, const bool indentFirstLine = true) {
-  return t.toStringPretty(space, leftToIndent, indentFirstLine);
+  return t.toPrettyString(space, leftToIndent, indentFirstLine);
 }
 
 template <typename T>
@@ -1532,7 +1532,7 @@ typename std::enable_if<std::is_integral<T>::value, std::string>::type toString(
 }
 
 template <typename T>
-typename std::enable_if<std::is_same<decltype(std::to_string(std::declval<T&>())), std::string>::value, std::string>::type toStringPretty(
+typename std::enable_if<std::is_same<decltype(std::to_string(std::declval<T&>())), std::string>::value, std::string>::type toPrettyString(
     const T& t, const int space = 2, const int leftToIndent = 0, const bool indentFirstLine = true) {
   std::string sl(leftToIndent, ' ');
   std::string output = (indentFirstLine ? sl : "") + std::to_string(t);
@@ -1564,7 +1564,7 @@ typename std::enable_if<std::is_same<T, std::string_view>::value, std::string>::
 // }
 
 template <typename T>
-typename std::enable_if<std::is_same<T, std::string>::value, std::string>::type toStringPretty(const T& t, const int space = 2, const int leftToIndent = 0,
+typename std::enable_if<std::is_same<T, std::string>::value, std::string>::type toPrettyString(const T& t, const int space = 2, const int leftToIndent = 0,
                                                                                                const bool indentFirstLine = true) {
   std::string sl(leftToIndent, ' ');
   std::string output = (indentFirstLine ? sl : "") + t;
@@ -1572,7 +1572,7 @@ typename std::enable_if<std::is_same<T, std::string>::value, std::string>::type 
 }
 
 template <typename T>
-typename std::enable_if<std::is_same<T, std::string_view>::value, std::string>::type toStringPretty(const T& t, const int space = 2, const int leftToIndent = 0,
+typename std::enable_if<std::is_same<T, std::string_view>::value, std::string>::type toPrettyString(const T& t, const int space = 2, const int leftToIndent = 0,
                                                                                                     const bool indentFirstLine = true) {
   std::string sl(leftToIndent, ' ');
   std::string output = (indentFirstLine ? sl : "") + std::string(t);
@@ -1676,15 +1676,15 @@ inline std::string toString(const std::map<K, V>& c) {
 }
 
 template <typename K, typename V>
-std::string toStringPretty(const std::map<K, V>& c, const int space = 2, const int leftToIndent = 0, const bool indentFirstLine = true) {
+std::string toPrettyString(const std::map<K, V>& c, const int space = 2, const int leftToIndent = 0, const bool indentFirstLine = true) {
   std::string sl(leftToIndent, ' ');
   std::string output = (indentFirstLine ? sl : "") + "{\n";
   auto size = c.size();
   auto i = 0;
   for (const auto& elem : c) {
-    output += toStringPretty(elem.first, space, space + leftToIndent, true);
+    output += toPrettyString(elem.first, space, space + leftToIndent, true);
     output += " = ";
-    output += toStringPretty(elem.second, space, space + leftToIndent, false);
+    output += toPrettyString(elem.second, space, space + leftToIndent, false);
     if (i < size - 1) {
       output += ",\n";
     }
@@ -1777,13 +1777,13 @@ inline std::string toString(const std::vector<T>& c) {
 }
 
 template <typename T>
-std::string toStringPretty(const std::vector<T>& c, const int space = 2, const int leftToIndent = 0, const bool indentFirstLine = true) {
+std::string toPrettyString(const std::vector<T>& c, const int space = 2, const int leftToIndent = 0, const bool indentFirstLine = true) {
   std::string sl(leftToIndent, ' ');
   std::string output = (indentFirstLine ? sl : "") + "[\n";
   auto size = c.size();
   auto i = 0;
   for (const auto& elem : c) {
-    output += toStringPretty(elem, space, space + leftToIndent, true);
+    output += toPrettyString(elem, space, space + leftToIndent, true);
     if (i < size - 1) {
       output += ",\n";
     }
@@ -1825,7 +1825,7 @@ std::string firstNToStringPretty(const std::vector<T>& c, const size_t n, const 
     if (i >= n) {
       break;
     }
-    output += toStringPretty(elem, space, space + leftToIndent, true);
+    output += toPrettyString(elem, space, space + leftToIndent, true);
     if (i < size - 1) {
       output += ",\n";
     }
