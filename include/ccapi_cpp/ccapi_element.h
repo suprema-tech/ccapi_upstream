@@ -31,11 +31,11 @@ class Element {
   template <typename S>
   void insert(int tag, S&& value) {
     if constexpr (std::is_same_v<std::decay_t<S>, std::string>) {
-        // Already a std::string — emplace directly
-        tagValueList.emplace_back(tag, std::forward<S>(value));
+      // Already a std::string — emplace directly
+      tagValueList.emplace_back(tag, std::forward<S>(value));
     } else {
-        // Convert to std::string
-        tagValueList.emplace_back(tag, std::string(std::forward<S>(value)));
+      // Convert to std::string
+      tagValueList.emplace_back(tag, std::string(std::forward<S>(value)));
     }
   }
 
@@ -52,16 +52,16 @@ class Element {
     }
   }
 
-//   template <typename S>
-//   void insert_or_assign(int tag, S&& value) {
-//     if constexpr (std::is_same_v<std::decay_t<S>, std::string>) {
-//       // If already std::string, move to avoid copy
-//       tagValueList.insert_or_assign(tag, std::forward<S>(value));
-//     } else {
-//       // Otherwise, construct std::string from value (string_view, literal, etc.)
-//       tagValueList.insert_or_assign(tag, std::string(std::forward<S>(value)));
-//     }
-//   }
+  //   template <typename S>
+  //   void insert_or_assign(int tag, S&& value) {
+  //     if constexpr (std::is_same_v<std::decay_t<S>, std::string>) {
+  //       // If already std::string, move to avoid copy
+  //       tagValueList.insert_or_assign(tag, std::forward<S>(value));
+  //     } else {
+  //       // Otherwise, construct std::string from value (string_view, literal, etc.)
+  //       tagValueList.insert_or_assign(tag, std::string(std::forward<S>(value)));
+  //     }
+  //   }
 
   //   void emplace(std::string& name, std::string& value) { this->nameValueMap.emplace(std::move(name), std::move(value)); }
 
@@ -70,27 +70,20 @@ class Element {
   bool has(std::string_view name) const { return this->nameValueMap.find(name) != this->nameValueMap.end(); }
 
   bool has(int tag) const {
-    return std::any_of(
-        tagValueList.begin(),
-        tagValueList.end(),
-        [tag](const auto& pair) {
-            return pair.first == tag;
-        }
-    );
-}
+    return std::any_of(tagValueList.begin(), tagValueList.end(), [tag](const auto& pair) { return pair.first == tag; });
+  }
 
   std::string getValue(std::string_view name, const std::string& valueDefault = "") const {
     auto it = this->nameValueMap.find(name);
     return it == this->nameValueMap.end() ? valueDefault : it->second;
   }
 
-    std::string getValue(int tag, const std::string& valueDefault = "") const {
-        for (const auto& [key, value] : tagValueList) {
-            if (key == tag)
-                return value;
-        }
-        return valueDefault;
+  std::string getValue(int tag, const std::string& valueDefault = "") const {
+    for (const auto& [key, value] : tagValueList) {
+      if (key == tag) return value;
     }
+    return valueDefault;
+  }
 
   std::string toString() const {
     std::string output =

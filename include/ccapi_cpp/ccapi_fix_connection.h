@@ -2,6 +2,7 @@
 #define INCLUDE_CCAPI_CPP_CCAPI_FIX_CONNECTION_H_
 #include <string>
 #include <variant>
+
 #include "ccapi_cpp/ccapi_logger.h"
 #include "ccapi_cpp/ccapi_subscription.h"
 namespace beast = boost::beast;
@@ -14,11 +15,10 @@ namespace ccapi {
 
 class FixConnection {
  public:
- FixConnection(const FixConnection&) = delete;
+  FixConnection(const FixConnection&) = delete;
   FixConnection& operator=(const FixConnection&) = delete;
 
-  FixConnection(const std::string& host, const std::string& port, const Subscription& subscription)
-      : host(host), port(port), subscription(subscription) {
+  FixConnection(const std::string& host, const std::string& port, const Subscription& subscription) : host(host), port(port), subscription(subscription) {
     this->id = subscription.getCorrelationId();
     this->url = host + ":" + port;
     this->isSecure = host.rfind("tcp+ssl", 0) == 0;
@@ -82,7 +82,7 @@ class FixConnection {
   Subscription subscription;
   Status status{Status::UNKNOWN};
   std::variant<std::shared_ptr<beast::ssl_stream<beast::tcp_stream>>, std::shared_ptr<beast::tcp_stream>> streamPtr;
-      bool isSecure{};
+  bool isSecure{};
 };
 
 } /* namespace ccapi */

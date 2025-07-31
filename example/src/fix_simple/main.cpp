@@ -19,7 +19,8 @@ Logger* Logger::logger = &myLogger;
 
 class MyEventHandler : public EventHandler {
  public:
- MyEventHandler(const std::string& fixSubscriptionCorrelationId):fixSubscriptionCorrelationId(fixSubscriptionCorrelationId){}
+  MyEventHandler(const std::string& fixSubscriptionCorrelationId) : fixSubscriptionCorrelationId(fixSubscriptionCorrelationId) {}
+
   void processEvent(const Event& event, Session* sessionPtr) override {
     if (event.getType() == Event::Type::AUTHORIZATION_STATUS) {
       std::cout << "Received an event of type AUTHORIZATION_STATUS:\n" + event.toPrettyString(2, 2) << std::endl;
@@ -43,7 +44,7 @@ class MyEventHandler : public EventHandler {
     }
   }
 
-  private:
+ private:
   std::string fixSubscriptionCorrelationId;
 };
 

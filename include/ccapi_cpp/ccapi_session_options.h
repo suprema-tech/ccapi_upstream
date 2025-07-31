@@ -32,8 +32,8 @@ class SessionOptions {
                          ", httpRequestTimeoutMilliseconds = " + ccapi::toString(httpRequestTimeoutMilliseconds) +
                          ", httpConnectionPoolMaxSize = " + ccapi::toString(httpConnectionPoolMaxSize) +
                          ", httpConnectionKeepAliveTimeoutSeconds = " + ccapi::toString(httpConnectionKeepAliveTimeoutSeconds) +
-                         ", enableOneHttpConnectionPerRequest = " + ccapi::toString(enableOneHttpConnectionPerRequest)+
-                         ", websocketConnectTimeoutMilliseconds = " + ccapi::toString(websocketConnectTimeoutMilliseconds)+
+                         ", enableOneHttpConnectionPerRequest = " + ccapi::toString(enableOneHttpConnectionPerRequest) +
+                         ", websocketConnectTimeoutMilliseconds = " + ccapi::toString(websocketConnectTimeoutMilliseconds) +
                          ", fixConnectTimeoutMilliseconds = " + ccapi::toString(fixConnectTimeoutMilliseconds) + "]";
     return output;
   }

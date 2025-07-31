@@ -31,7 +31,7 @@ class Url {
     return output;
   }
 
-  static std::string urlEncode(const std::string& value) {
+  static std::string urlEncode(const std::string &value) {
     std::ostringstream escaped;
     escaped.fill('0');
     escaped << std::hex;
@@ -50,7 +50,7 @@ class Url {
     return escaped.str();
   }
 
-  static std::string urlDecode(const std::string& value) {
+  static std::string urlDecode(const std::string &value) {
     std::string ret;
     char ch;
     int i, ii;
@@ -67,7 +67,7 @@ class Url {
     return (ret);
   }
 
-  static std::map<std::string, std::string> convertQueryStringToMap(const std::string& input) {
+  static std::map<std::string, std::string> convertQueryStringToMap(const std::string &input) {
     std::map<std::string, std::string> output;
     for (const auto &x : UtilString::split(input, "&")) {
       auto y = UtilString::split(x, "=");
@@ -104,7 +104,7 @@ class Url {
     return output;
   }
 
-  static std::map<std::string, std::string> convertFormUrlEncodedToMap(const std::string& input) {
+  static std::map<std::string, std::string> convertFormUrlEncodedToMap(const std::string &input) {
     std::map<std::string, std::string> output;
     for (const auto &x : UtilString::split(input, "&")) {
       auto y = UtilString::split(x, "=");

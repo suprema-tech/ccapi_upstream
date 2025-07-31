@@ -699,7 +699,8 @@ class Session {
           auto subscriptionList = subscriptionListByExchange.second;
           std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
           if (serviceByExchangeMap.find(exchange) == serviceByExchangeMap.end()) {
-            this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, "please enable exchange: " + exchange + " for subscriptionList "+toString(subscriptionList));
+            this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE,
+                          "please enable exchange: " + exchange + " for subscriptionList " + toString(subscriptionList));
             return;
           }
           serviceByExchangeMap.at(exchange)->subscribe(subscriptionList);
@@ -716,7 +717,8 @@ class Session {
           auto subscriptionList = subscriptionListByExchange.second;
           std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
           if (serviceByExchangeMap.find(exchange) == serviceByExchangeMap.end()) {
-            this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, "please enable exchange: " + exchange + " for subscriptionList "+toString(subscriptionList));
+            this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE,
+                          "please enable exchange: " + exchange + " for subscriptionList " + toString(subscriptionList));
             return;
           }
           serviceByExchangeMap.at(exchange)->subscribe(subscriptionList);
@@ -726,28 +728,28 @@ class Session {
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
 
-//   virtual void subscribe(Subscription& subscription) {
-//     auto serviceName = subscription.getServiceName();
-//     CCAPI_LOGGER_DEBUG("serviceName = " + serviceName);
-//     if (this->serviceByServiceNameExchangeMap.find(serviceName) == this->serviceByServiceNameExchangeMap.end()) {
-//       this->onError(Event::Type::FIX_STATUS, Message::Type::FIX_FAILURE,
-//                     "please enable service: " + serviceName + ", and the exchanges that you want for subscription " + toString(subscription));
-//       return;
-//     }
-//     auto exchange = subscription.getExchange();
-//     std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
-//     if (serviceByExchangeMap.find(exchange) == serviceByExchangeMap.end()) {
-//       this->onError(Event::Type::FIX_STATUS, Message::Type::FIX_FAILURE, "please enable exchange: " + exchange+" for subscription " + toString(subscription));
-//       return;
-//     }
-//     serviceByExchangeMap.at(exchange)->subscribe(subscription);
-//   }
+  //   virtual void subscribe(Subscription& subscription) {
+  //     auto serviceName = subscription.getServiceName();
+  //     CCAPI_LOGGER_DEBUG("serviceName = " + serviceName);
+  //     if (this->serviceByServiceNameExchangeMap.find(serviceName) == this->serviceByServiceNameExchangeMap.end()) {
+  //       this->onError(Event::Type::FIX_STATUS, Message::Type::FIX_FAILURE,
+  //                     "please enable service: " + serviceName + ", and the exchanges that you want for subscription " + toString(subscription));
+  //       return;
+  //     }
+  //     auto exchange = subscription.getExchange();
+  //     std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
+  //     if (serviceByExchangeMap.find(exchange) == serviceByExchangeMap.end()) {
+  //       this->onError(Event::Type::FIX_STATUS, Message::Type::FIX_FAILURE, "please enable exchange: " + exchange+" for subscription " +
+  //       toString(subscription)); return;
+  //     }
+  //     serviceByExchangeMap.at(exchange)->subscribe(subscription);
+  //   }
 
-//   virtual void subscribe(std::vector<Subscription>& subscriptionList) {
-//     for (auto& x : subscriptionList) {
-//       this->subscribe(x);
-//     }
-//   }
+  //   virtual void subscribe(std::vector<Subscription>& subscriptionList) {
+  //     for (auto& x : subscriptionList) {
+  //       this->subscribe(x);
+  //     }
+  //   }
 
   virtual void onEvent(Event& event, Queue<Event>* eventQueue) {
     CCAPI_LOGGER_FUNCTION_ENTER;

@@ -227,7 +227,7 @@ class Message {
       case Type::FIX_FAILURE:
         output = "FIX_FAILURE";
         break;
-    case Type::FIX_FAILURE_DUE_TO_CONNECTION_FAILURE:
+      case Type::FIX_FAILURE_DUE_TO_CONNECTION_FAILURE:
         output = "FIX_FAILURE_DUE_TO_CONNECTION_FAILURE";
         break;
       case Type::GENERIC_PUBLIC_REQUEST:

@@ -10,7 +10,7 @@ namespace ccapi {
 class FixServiceBinance : public FixService {
  public:
   FixServiceBinance(std::function<void(Event&, Queue<Event>*)> eventHandler, SessionOptions sessionOptions, SessionConfigs sessionConfigs,
-                     ServiceContextPtr serviceContextPtr)
+                    ServiceContextPtr serviceContextPtr)
       : FixService(eventHandler, sessionOptions, sessionConfigs, serviceContextPtr) {
     this->exchangeName = CCAPI_EXCHANGE_NAME_BINANCE;
     this->baseUrlFix = this->sessionConfigs.getUrlFixBase().at(this->exchangeName);
@@ -20,8 +20,7 @@ class FixServiceBinance : public FixService {
     this->fixApiKeyName = CCAPI_BINANCE_FIX_API_KEY;
     this->fixApiPrivateKeyPathName = CCAPI_BINANCE_FIX_API_PRIVATE_KEY_PATH;
     this->fixApiPrivateKeyPasswordName = CCAPI_BINANCE_FIX_API_PRIVATE_KEY_PASSWORD;
-    this->setupCredential({this->fixApiKeyName, this->fixApiPrivateKeyPathName,
-                           this->fixApiPrivateKeyPasswordName});
+    this->setupCredential({this->fixApiKeyName, this->fixApiPrivateKeyPathName, this->fixApiPrivateKeyPasswordName});
     this->protocolVersion = CCAPI_FIX_PROTOCOL_VERSION_BINANCE;
     this->targetCompID = "SPOT";
   }
