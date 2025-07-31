@@ -57,12 +57,12 @@ class FixService : public Service {
 
           const auto& fieldSet = subscription.getFieldSet();
           if (fieldSet.find(CCAPI_FIX_MARKET_DATA) != fieldSet.end()) {
-            auto fixConnectionPtr = std::make_shared<FixConnection>(that->baseUrlFixMarketData, "", std::vector<Subscription>{subscription});
+            auto fixConnectionPtr = std::make_shared<FixConnection>(that->baseUrlFixMarketData, "", subscription);
             that->setFixConnectionStream(fixConnectionPtr);
             CCAPI_LOGGER_WARN("about to subscribe with new fixConnectionPtr " + toString(*fixConnectionPtr));
             that->connect(fixConnectionPtr);
           } else {
-            auto fixConnectionPtr = std::make_shared<FixConnection>(that->baseUrlFix, "", std::vector<Subscription>{subscription});
+            auto fixConnectionPtr = std::make_shared<FixConnection>(that->baseUrlFix, "", subscription);
             that->setFixConnectionStream(fixConnectionPtr);
             CCAPI_LOGGER_WARN("about to subscribe with new fixConnectionPtr " + toString(*fixConnectionPtr));
             that->connect(fixConnectionPtr);
@@ -141,7 +141,7 @@ class FixService : public Service {
     CCAPI_LOGGER_TRACE("fixConnectionPtr->host = " + fixConnectionPtr->host);
     CCAPI_LOGGER_TRACE("fixConnectionPtr->port = " + fixConnectionPtr->port);
     newResolverPtr->async_resolve(fixConnectionPtr->host, fixConnectionPtr->port,
-                                  beast::bind_front_handler(&FixService::onResolveFix, shared_from_this(), fixConnectionPtr, newResolverPtr));
+                                  beast::bind_front_handler(&FixService::onResolveFix, shared_from_base<FixService>(), fixConnectionPtr, newResolverPtr));
   }
 
   void onResolveFix(std::shared_ptr<FixConnection> fixConnectionPtr, std::shared_ptr<tcp::resolver> newResolverPtr, beast::error_code ec,
@@ -176,7 +176,7 @@ class FixService : public Service {
           CCAPI_LOGGER_TRACE("before async_connect");
 
           beast::get_lowest_layer(*streamPtr)
-              .async_connect(tcpResolverResults, beast::bind_front_handler(&FixService::onConnectFix, shared_from_this(), fixConnectionPtr));
+              .async_connect(tcpResolverResults, beast::bind_front_handler(&FixService::onConnectFix, shared_from_base<FixService>(), fixConnectionPtr));
 
           CCAPI_LOGGER_TRACE("after async_connect");
         },
@@ -200,7 +200,7 @@ class FixService : public Service {
                 CCAPI_LOGGER_TRACE("before ssl async_handshake");
 
                 streamPtr->async_handshake(ssl::stream_base::client,
-                                                        beast::bind_front_handler(&FixService::onSslHandshakeFix, shared_from_this(), fixConnectionPtr));
+                                                        beast::bind_front_handler(&FixService::onSslHandshakeFix, shared_from_base<FixService>(), fixConnectionPtr));
 
                 CCAPI_LOGGER_TRACE("after ssl async_handshake");
             } else {

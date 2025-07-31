@@ -1580,6 +1580,18 @@ typename std::enable_if<std::is_same<T, std::string_view>::value, std::string>::
 }
 
 template <typename T>
+typename std::enable_if<
+    std::is_same<T, std::pair<int, std::string>>::value,
+    std::string>::type
+toPrettyString(const T& p, const int space = 2, const int leftToIndent = 0, const bool indentFirstLine = true) {
+  std::string indent(leftToIndent, ' ');
+  std::string result;
+  if (indentFirstLine) result += indent;
+  result += "(" + std::to_string(p.first) + ", \"" + p.second + "\")";
+  return result;
+}
+
+template <typename T>
 typename std::enable_if<std::is_same<T, TimePoint>::value, std::string>::type toString(const T& t) {
   auto timePair = UtilTime::divide(t);
   return "(" + std::to_string(timePair.first) + "," + std::to_string(timePair.second) + ")";
