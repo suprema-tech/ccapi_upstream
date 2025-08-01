@@ -326,8 +326,8 @@ class FixService : public Service {
         try {
           CCAPI_LOGGER_DEBUG("received " + printableString(reader.message_begin(), reader.message_end() - reader.message_begin()));
           auto it = reader.message_type();
-          auto messageType = it->value().as_string();
-          CCAPI_LOGGER_DEBUG("received a " + messageType + " message");
+          auto messageType = it->value().as_string_view();
+          CCAPI_LOGGER_DEBUG("received a " + std::string(messageType) + " message");
           element.insert(it->tag(), messageType);
           if (messageType == "0") {
             shouldEmitEvent = false;
@@ -339,16 +339,16 @@ class FixService : public Service {
               this->writeMessage(fixConnectionPtr, nowFixTimeStr,
                                  {{
                                      {hff::tag::MsgType, "0"},
-                                     {hff::tag::TestReqID, it->value().as_string()},
+                                     {hff::tag::TestReqID, std::string(it->value().as_string_view())},
                                  }});
             }
           } else {
             it = it + 5;
             while (it->tag() != hffix::tag::CheckSum) {
-              element.insert(it->tag(), it->value().as_string());
+              element.insert(it->tag(), it->value().as_string_view());
               ++it;
             }
-            if (reader.find_with_hint(hff::tag::MsgSeqNum, it) && it->value().as_string() == "1") {
+            if (reader.find_with_hint(hff::tag::MsgSeqNum, it) && it->value().as_string_view() == "1") {
               if (messageType == "A") {
                 event.setType(Event::Type::AUTHORIZATION_STATUS);
                 message.setType(Message::Type::AUTHORIZATION_SUCCESS);

@@ -30,38 +30,58 @@ class FixServiceBinance : public FixService {
 
  protected:
 #endif
-  virtual std::vector<std::pair<int, std::string>> createCommonParam(std::shared_ptr<FixConnection> fixConnectionPtr, const std::string& nowFixTimeStr) {
+  std::string createSenderCompId(std::shared_ptr<FixConnection> fixConnectionPtr) {
+    return fixConnectionPtr->id.length() > 8 ? fixConnectionPtr->id.substr(0, 8) : fixConnectionPtr->id;
+  }
+
+  std::vector<std::pair<int, std::string>> createCommonParam(std::shared_ptr<FixConnection> fixConnectionPtr, const std::string& nowFixTimeStr) override {
     return {
-        // {hff::tag::SenderCompID, mapGetWithDefault(this->credentialByConnectionIdMap[connectionId], this->apiKeyName)},
+        {hff::tag::SenderCompID, this->createSenderCompId(fixConnectionPtr)},
         {hff::tag::TargetCompID, this->targetCompID},
         {hff::tag::MsgSeqNum, std::to_string(++this->fixMsgSeqNumByConnectionIdMap[fixConnectionPtr->id])},
         {hff::tag::SendingTime, nowFixTimeStr},
     };
   }
 
-  virtual std::vector<std::pair<int, std::string>> createLogonParam(std::shared_ptr<FixConnection> fixConnectionPtr, const std::string& nowFixTimeStr,
-                                                                    const std::map<int, std::string> logonOptionMap = {}) {
+  std::vector<std::pair<int, std::string>> createLogonParam(std::shared_ptr<FixConnection> fixConnectionPtr, const std::string& nowFixTimeStr,
+                                                            const std::map<int, std::string> logonOptionMap = {}) override {
     std::vector<std::pair<int, std::string>> param;
-    auto msgType = "A";
+    std::string msgType = "A";
     param.push_back({hff::tag::MsgType, msgType});
     param.push_back({hff::tag::EncryptMethod, "0"});
     param.push_back({hff::tag::HeartBtInt, std::to_string(this->sessionOptions.heartbeatFixIntervalMilliseconds / 1000)});
-    // auto credential = this->credentialByConnectionIdMap[connectionId];
-    // auto apiPassphrase = mapGetWithDefault(credential, this->apiPassphraseName);
-    // param.push_back({hff::tag::Password, apiPassphrase});
-    // auto msgSeqNum = std::to_string(1);
-    // auto senderCompID = mapGetWithDefault(credential, this->apiKeyName);
-    // auto targetCompID = this->targetCompID;
-    // std::vector<std::string> prehashFieldList{nowFixTimeStr, msgType, msgSeqNum, senderCompID, targetCompID, apiPassphrase};
-    // auto prehashStr = UtilString::join(prehashFieldList, "\x01");
-    // auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    // auto rawData = UtilAlgorithm::base64Encode(Hmac::hmac(Hmac::ShaVersion::SHA256, UtilAlgorithm::base64Decode(apiSecret), prehashStr));
-    // param.push_back({hff::tag::RawData, rawData});
-    // for (const auto& x : logonOptionMap) {
-    //   param.push_back({x.first, x.second});
-    // }
+    const auto& credential = fixConnectionPtr->credential;
+    const auto& msgSeqNum = std::to_string(1);
+    const auto& senderCompID = this->createSenderCompId(fixConnectionPtr);
+    const auto& targetCompID = this->targetCompID;
+    std::vector<std::string> prehashFieldList{msgType, senderCompID, targetCompID, msgSeqNum, nowFixTimeStr};
+    const auto& payload = UtilString::join(prehashFieldList, "\x01");
+
+    auto it = credential.find(this->fixApiPrivateKeyPathName);
+    if (it == credential.end()) {
+      throw std::runtime_error("Missing credential: " + this->fixApiPrivateKeyPathName);
+    }
+    std::string password;
+    if (auto it = credential.find(this->fixApiPrivateKeyPasswordName); it != credential.end()) {
+      password = it->second;
+    }
+    EVP_PKEY* pkey = UtilAlgorithm::loadPrivateKey(UtilAlgorithm::readFile(it->second), password);
+    std::string signature = UtilAlgorithm::signPayload(pkey, payload);
+    param.push_back({hff::tag::RawDataLength, std::to_string(signature.length())});
+    param.push_back({hff::tag::RawData, signature});
+    param.push_back({hff::tag::ResetSeqNumFlag, "Y"});
+    param.push_back({hff::tag::Username, credential.at(this->fixApiKeyName)});
+    param.push_back({kMessageHandlingTag, "1"});
+    for (const auto& x : logonOptionMap) {
+      param.push_back({x.first, x.second});
+    }
     return param;
   }
+
+#ifndef CCAPI_EXPOSE_INTERNAL
+ protected:
+#endif
+  static constexpr int kMessageHandlingTag = 25035;
 };
 
 } /* namespace ccapi */

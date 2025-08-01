@@ -572,11 +572,11 @@ class UtilAlgorithm {
 
  public:
   static std::string toBase62(size_t value) {
-    static constexpr char base62Chars[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    static constexpr char kBase62Chars[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
     std::string result;
     do {
-      result += base62Chars[value % 62];
+      result += kBase62Chars[value % 62];
       value /= 62;
     } while (value);
     std::reverse(result.begin(), result.end());

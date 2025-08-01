@@ -22,10 +22,9 @@ class MyEventHandler : public EventHandler {
   MyEventHandler(const std::string& fixSubscriptionCorrelationId) : fixSubscriptionCorrelationId(fixSubscriptionCorrelationId) {}
 
   void processEvent(const Event& event, Session* sessionPtr) override {
-    if (event.getType() == Event::Type::AUTHORIZATION_STATUS) {
-      std::cout << "Received an event of type AUTHORIZATION_STATUS:\n" + event.toPrettyString(2, 2) << std::endl;
-      auto message = event.getMessageList().at(0);
-      if (message.getType() == Message::Type::AUTHORIZATION_SUCCESS) {
+    std::cout << "Received an event:\n" + event.toPrettyString(2, 2) << std::endl;
+    if (!willSendRequest) {
+      sessionPtr->setTimer("id", 1000, nullptr, [this, sessionPtr]() {
         Request request(Request::Operation::FIX, "binance");
         request.appendFixParam({
             {35, "D"},
@@ -38,14 +37,14 @@ class MyEventHandler : public EventHandler {
             {59, "1"},
         });
         sessionPtr->sendRequestByFix(this->fixSubscriptionCorrelationId, request);
-      }
-    } else if (event.getType() == Event::Type::FIX) {
-      std::cout << "Received an event of type FIX:\n" + event.toPrettyString(2, 2) << std::endl;
+      });
+      willSendRequest = true;
     }
   }
 
  private:
   std::string fixSubscriptionCorrelationId;
+  bool willSendRequest{};
 };
 
 } /* namespace ccapi */
