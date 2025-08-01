@@ -15,7 +15,7 @@ class MarketDataServiceBitget : public MarketDataServiceBitgetBase {
     this->baseUrlWs = sessionConfigs.getUrlWebsocketBase().at(this->exchangeName) + "/v2/ws/public";
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
     this->getRecentTradesTarget = "/api/v2/spot/market/fills";
     this->getHistoricalTradesTarget = "/api/v2/spot/market/fills-history";
     this->getInstrumentTarget = "/api/v2/spot/public/symbols";

@@ -47,27 +47,33 @@ class FixService : public Service {
     aPortFix = hostPort.second;
   }
 
-  void subscribe(Subscription& subscription) override {
+  // each subscription creates a unique FIX connection
+  void subscribe(std::vector<Subscription>& subscriptionList) override {
     CCAPI_LOGGER_FUNCTION_ENTER;
-    CCAPI_LOGGER_DEBUG("this->baseUrlFix = " + this->baseUrlFix);
     if (this->shouldContinue.load()) {
-      boost::asio::post(*this->serviceContextPtr->ioContextPtr, [that = shared_from_base<FixService>(), subscription]() mutable {
-        auto now = UtilTime::now();
-        subscription.setTimeSent(now);
+      for (auto& subscription : subscriptionList) {
+        boost::asio::post(*this->serviceContextPtr->ioContextPtr, [that = shared_from_base<FixService>(), subscription]() mutable {
+          auto now = UtilTime::now();
+          subscription.setTimeSent(now);
+          auto credential = subscription.getCredential();
+          if (credential.empty()) {
+            credential = that->credentialDefault;
+          }
 
-        const auto& fieldSet = subscription.getFieldSet();
-        if (fieldSet.find(CCAPI_FIX_MARKET_DATA) != fieldSet.end()) {
-          auto fixConnectionPtr = std::make_shared<FixConnection>(that->baseUrlFixMarketData, "", subscription);
-          that->setFixConnectionStream(fixConnectionPtr);
-          CCAPI_LOGGER_WARN("about to subscribe with new fixConnectionPtr " + toString(*fixConnectionPtr));
-          that->connect(fixConnectionPtr);
-        } else {
-          auto fixConnectionPtr = std::make_shared<FixConnection>(that->baseUrlFix, "", subscription);
-          that->setFixConnectionStream(fixConnectionPtr);
-          CCAPI_LOGGER_WARN("about to subscribe with new fixConnectionPtr " + toString(*fixConnectionPtr));
-          that->connect(fixConnectionPtr);
-        }
-      });
+          const auto& fieldSet = subscription.getFieldSet();
+          if (fieldSet.find(CCAPI_FIX_MARKET_DATA) != fieldSet.end()) {
+            auto fixConnectionPtr = std::make_shared<FixConnection>(that->baseUrlFixMarketData, subscription, credential);
+            that->setFixConnectionStream(fixConnectionPtr);
+            CCAPI_LOGGER_WARN("about to subscribe with new fixConnectionPtr " + toString(*fixConnectionPtr));
+            that->connect(fixConnectionPtr);
+          } else {
+            auto fixConnectionPtr = std::make_shared<FixConnection>(that->baseUrlFix, subscription, credential);
+            that->setFixConnectionStream(fixConnectionPtr);
+            CCAPI_LOGGER_WARN("about to subscribe with new fixConnectionPtr " + toString(*fixConnectionPtr));
+            that->connect(fixConnectionPtr);
+          }
+        });
+      }
     }
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
@@ -87,9 +93,7 @@ class FixService : public Service {
     this->writeMessageBufferByConnectionIdMap.erase(connectionId);
     this->writeMessageBufferWrittenLengthByConnectionIdMap.erase(connectionId);
     this->fixConnectionPtrByIdMap.erase(connectionId);
-    this->credentialByConnectionIdMap.erase(connectionId);
     auto urlBase = fixConnectionPtr->url;
-    this->connectNumRetryOnFailByConnectionUrlMap.erase(urlBase);
     this->fixMsgSeqNumByConnectionIdMap.erase(fixConnectionPtr->id);
   }
 
@@ -249,7 +253,6 @@ class FixService : public Service {
     if (credential.empty()) {
       credential = this->credentialDefault;
     }
-    this->credentialByConnectionIdMap[connectionId] = credential;
     auto& readMessageBuffer = this->readMessageBufferByConnectionIdMap[connectionId];
     auto& readMessageBufferReadLength = this->readMessageBufferReadLengthByConnectionIdMap[connectionId];
     CCAPI_LOGGER_TRACE("about to start read");
@@ -262,7 +265,7 @@ class FixService : public Service {
         logonOptionMap.insert({std::stoi(x.first), x.second});
       }
     }
-    auto param = this->createLogonParam(connectionId, nowFixTimeStr, logonOptionMap);
+    auto param = this->createLogonParam(fixConnectionPtr, nowFixTimeStr, logonOptionMap);
     this->writeMessage(fixConnectionPtr, nowFixTimeStr, {param});
   }
 
@@ -476,7 +479,7 @@ class FixService : public Service {
     auto& writeMessageBufferWrittenLength = this->writeMessageBufferWrittenLengthByConnectionIdMap[connectionId];
     size_t n = writeMessageBufferWrittenLength;
     for (const auto& param : paramList) {
-      auto commonParam = this->createCommonParam(connectionId, nowFixTimeStr);
+      auto commonParam = this->createCommonParam(fixConnectionPtr, nowFixTimeStr);
       hff::message_writer messageWriter(writeMessageBuffer.data() + n, writeMessageBuffer.data() + writeMessageBuffer.size());
       messageWriter.push_back_header(this->protocolVersion.c_str());
       auto it = param.begin();
@@ -622,9 +625,11 @@ class FixService : public Service {
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
 
-  virtual std::vector<std::pair<int, std::string>> createCommonParam(const std::string& connectionId, const std::string& nowFixTimeStr) { return {}; }
+  virtual std::vector<std::pair<int, std::string>> createCommonParam(std::shared_ptr<FixConnection> fixConnectionPtr, const std::string& nowFixTimeStr) {
+    return {};
+  }
 
-  virtual std::vector<std::pair<int, std::string>> createLogonParam(const std::string& connectionId, const std::string& nowFixTimeStr,
+  virtual std::vector<std::pair<int, std::string>> createLogonParam(std::shared_ptr<FixConnection> fixConnectionPtr, const std::string& nowFixTimeStr,
                                                                     const std::map<int, std::string> logonOptionMap = {}) {
     return {};
   }
@@ -683,7 +688,6 @@ class FixService : public Service {
   std::map<std::string, std::array<char, CCAPI_FIX_WRITE_BUFFER_SIZE>> writeMessageBufferByConnectionIdMap;
   std::map<std::string, size_t> writeMessageBufferWrittenLengthByConnectionIdMap;
   std::map<std::string, std::shared_ptr<FixConnection>> fixConnectionPtrByIdMap;
-  std::map<std::string, std::map<std::string, std::string>> credentialByConnectionIdMap;
   std::string fixApiKeyName;
   std::string fixApiPrivateKeyPathName;
   std::string fixApiPrivateKeyPasswordName;

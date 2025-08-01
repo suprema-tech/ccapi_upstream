@@ -15,7 +15,7 @@ class MarketDataServiceAscendex : public MarketDataService {
     this->baseUrlWs = sessionConfigs.getUrlWebsocketBase().at(this->exchangeName) + "/api/pro/v1/stream";
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
     this->getRecentTradesTarget = "/api/pro/v1/trades";
     this->getInstrumentTarget = "/api/pro/v1/products";
     this->getInstrumentsTarget = "/api/pro/v1/products";

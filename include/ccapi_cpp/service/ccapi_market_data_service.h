@@ -57,7 +57,6 @@ class MarketDataService : public Service {
   // subscriptions are grouped and each group creates a unique websocket connection
   void subscribe(std::vector<Subscription>& subscriptionList) override {
     CCAPI_LOGGER_FUNCTION_ENTER;
-    CCAPI_LOGGER_DEBUG("this->baseUrlWs = " + this->baseUrlWs);
     if (this->shouldContinue.load()) {
       for (auto& x : this->groupSubscriptionListByInstrumentGroup(subscriptionList)) {
         auto instrumentGroup = x.first;

@@ -15,7 +15,7 @@ class ExecutionManagementServiceGateioPerpetualFutures : public ExecutionManagem
     this->baseUrlWs = sessionConfigs.getUrlWebsocketBase().at(this->exchangeName) + "/v4/ws/";
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
     this->apiKeyName = CCAPI_GATEIO_PERPETUAL_FUTURES_API_KEY;
     this->apiSecretName = CCAPI_GATEIO_PERPETUAL_FUTURES_API_SECRET;
     this->setupCredential({this->apiKeyName, this->apiSecretName});

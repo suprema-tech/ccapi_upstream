@@ -16,8 +16,8 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
     this->baseUrlWsOrderEntry = sessionConfigs.getUrlWebsocketOrderEntryBase().at(this->exchangeName) + CCAPI_BYBIT_WS_ORDER_ENTRY_PATH;
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
-    this->setHostWsFromUrlWsOrderEntry(this->baseUrlWsOrderEntry);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWsOrderEntry(this->baseUrlWsOrderEntry);
     this->apiKeyName = CCAPI_BYBIT_API_KEY;
     this->apiSecretName = CCAPI_BYBIT_API_SECRET;
     this->setupCredential({this->apiKeyName, this->apiSecretName});

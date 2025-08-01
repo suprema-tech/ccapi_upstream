@@ -15,7 +15,7 @@ class MarketDataServiceDeribit : public MarketDataService {
     this->baseUrlWs = sessionConfigs.getUrlWebsocketBase().at(this->exchangeName) + "/ws/api/v2";
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
     this->restTarget = "/api/v2";
     this->getRecentTradesTarget = "/public/get_last_trades_by_instrument";
     this->getInstrumentTarget = "/public/get_instrument";

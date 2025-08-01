@@ -14,7 +14,7 @@ class ExecutionManagementServiceMexcFutures : public ExecutionManagementService 
     this->baseUrlWs = sessionConfigs.getUrlWebsocketBase().at(this->exchangeName) + "/ws";
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
     this->apiKeyName = CCAPI_MEXC_FUTURES_API_KEY;
     this->apiSecretName = CCAPI_MEXC_FUTURES_API_SECRET;
     this->setupCredential({this->apiKeyName, this->apiSecretName});

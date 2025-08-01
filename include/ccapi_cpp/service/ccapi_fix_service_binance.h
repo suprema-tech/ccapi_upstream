@@ -30,36 +30,36 @@ class FixServiceBinance : public FixService {
 
  protected:
 #endif
-  virtual std::vector<std::pair<int, std::string>> createCommonParam(const std::string& connectionId, const std::string& nowFixTimeStr) {
+  virtual std::vector<std::pair<int, std::string>> createCommonParam(std::shared_ptr<FixConnection> fixConnectionPtr, const std::string& nowFixTimeStr) {
     return {
-        {hff::tag::SenderCompID, mapGetWithDefault(this->credentialByConnectionIdMap[connectionId], this->apiKeyName)},
+        // {hff::tag::SenderCompID, mapGetWithDefault(this->credentialByConnectionIdMap[connectionId], this->apiKeyName)},
         {hff::tag::TargetCompID, this->targetCompID},
-        {hff::tag::MsgSeqNum, std::to_string(++this->fixMsgSeqNumByConnectionIdMap[connectionId])},
+        {hff::tag::MsgSeqNum, std::to_string(++this->fixMsgSeqNumByConnectionIdMap[fixConnectionPtr->id])},
         {hff::tag::SendingTime, nowFixTimeStr},
     };
   }
 
-  virtual std::vector<std::pair<int, std::string>> createLogonParam(const std::string& connectionId, const std::string& nowFixTimeStr,
+  virtual std::vector<std::pair<int, std::string>> createLogonParam(std::shared_ptr<FixConnection> fixConnectionPtr, const std::string& nowFixTimeStr,
                                                                     const std::map<int, std::string> logonOptionMap = {}) {
     std::vector<std::pair<int, std::string>> param;
     auto msgType = "A";
     param.push_back({hff::tag::MsgType, msgType});
     param.push_back({hff::tag::EncryptMethod, "0"});
     param.push_back({hff::tag::HeartBtInt, std::to_string(this->sessionOptions.heartbeatFixIntervalMilliseconds / 1000)});
-    auto credential = this->credentialByConnectionIdMap[connectionId];
-    auto apiPassphrase = mapGetWithDefault(credential, this->apiPassphraseName);
-    param.push_back({hff::tag::Password, apiPassphrase});
-    auto msgSeqNum = std::to_string(1);
-    auto senderCompID = mapGetWithDefault(credential, this->apiKeyName);
-    auto targetCompID = this->targetCompID;
-    std::vector<std::string> prehashFieldList{nowFixTimeStr, msgType, msgSeqNum, senderCompID, targetCompID, apiPassphrase};
-    auto prehashStr = UtilString::join(prehashFieldList, "\x01");
-    auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
-    auto rawData = UtilAlgorithm::base64Encode(Hmac::hmac(Hmac::ShaVersion::SHA256, UtilAlgorithm::base64Decode(apiSecret), prehashStr));
-    param.push_back({hff::tag::RawData, rawData});
-    for (const auto& x : logonOptionMap) {
-      param.push_back({x.first, x.second});
-    }
+    // auto credential = this->credentialByConnectionIdMap[connectionId];
+    // auto apiPassphrase = mapGetWithDefault(credential, this->apiPassphraseName);
+    // param.push_back({hff::tag::Password, apiPassphrase});
+    // auto msgSeqNum = std::to_string(1);
+    // auto senderCompID = mapGetWithDefault(credential, this->apiKeyName);
+    // auto targetCompID = this->targetCompID;
+    // std::vector<std::string> prehashFieldList{nowFixTimeStr, msgType, msgSeqNum, senderCompID, targetCompID, apiPassphrase};
+    // auto prehashStr = UtilString::join(prehashFieldList, "\x01");
+    // auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
+    // auto rawData = UtilAlgorithm::base64Encode(Hmac::hmac(Hmac::ShaVersion::SHA256, UtilAlgorithm::base64Decode(apiSecret), prehashStr));
+    // param.push_back({hff::tag::RawData, rawData});
+    // for (const auto& x : logonOptionMap) {
+    //   param.push_back({x.first, x.second});
+    // }
     return param;
   }
 };
