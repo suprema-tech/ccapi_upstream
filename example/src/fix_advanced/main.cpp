@@ -9,30 +9,31 @@ class MyEventHandler : public EventHandler {
   MyEventHandler(const std::string& fixSubscriptionCorrelationId) : fixSubscriptionCorrelationId(fixSubscriptionCorrelationId) {}
 
   void processEvent(const Event& event, Session* sessionPtr) override {
-    if (event.getType() == Event::Type::AUTHORIZATION_STATUS) {
-      std::cout << "Received an event of type AUTHORIZATION_STATUS:\n" + event.toPrettyString(2, 2) << std::endl;
-      auto message = event.getMessageList().at(0);
-      if (message.getType() == Message::Type::AUTHORIZATION_SUCCESS) {
+    std::cout << "Received an event:\n" + event.toPrettyString(2, 2) << std::endl;
+    if (!willSendRequest) {
+      sessionPtr->setTimer("id", 1000, nullptr, [this, sessionPtr]() {
         Request request(Request::Operation::FIX, "binance");
         request.appendFixParam({
-            {35, "D"},
-            {11, "6d4eb0fb-2229-469f-873e-557dd78ac11e"},
-            {55, "BTC-USD"},
-            {54, "1"},
-            {44, "20000"},
-            {38, "0.001"},
-            {40, "2"},
-            {59, "1"},
+            {35, "V"},
+            {262, "BOOK_TICKER_STREAM"},
+            {263, "1"},
+            {264, "1"},
+            {266, "Y"},
+            {146, "1"},
+            {55, "BTCUSDT"},
+            {267, "2"},
+            {269, "0"},
+            {269, "1"},
         });
         sessionPtr->sendRequestByFix(this->fixSubscriptionCorrelationId, request);
-      }
-    } else if (event.getType() == Event::Type::FIX) {
-      std::cout << "Received an event of type FIX:\n" + event.toPrettyString(2, 2) << std::endl;
+      });
+      willSendRequest = true;
     }
   }
 
  private:
   std::string fixSubscriptionCorrelationId;
+  bool willSendRequest{};
 };
 
 } /* namespace ccapi */
@@ -60,10 +61,10 @@ int main(int argc, char** argv) {
   std::string fixSubscriptionCorrelationId("any");
   MyEventHandler eventHandler(fixSubscriptionCorrelationId);
   Session session(sessionOptions, sessionConfigs, &eventHandler);
-  Subscription subscription("binance", "", "FIX", "8013=S&9406=Y",
-                            fixSubscriptionCorrelationId);  // https://developers.binance.com/docs/binance-spot-api-docs/fix-api#logon-a
+  Subscription subscription("binance", "", "FIX_MARKET_DATA", "", fixSubscriptionCorrelationId);
   session.subscribe(subscription);
   std::this_thread::sleep_for(std::chrono::seconds(10));
   session.stop();
+  std::cout << "Bye" << std::endl;
   return EXIT_SUCCESS;
 }

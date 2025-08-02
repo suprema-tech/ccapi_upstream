@@ -2,20 +2,7 @@
 
 namespace ccapi {
 
-class MyLogger final : public Logger {
- public:
-  void logMessage(const std::string& severity, const std::string& threadId, const std::string& timeISO, const std::string& fileName,
-                  const std::string& lineNumber, const std::string& message) override {
-    std::lock_guard<std::mutex> lock(m);
-    std::cout << threadId << ": [" << timeISO << "] {" << fileName << ":" << lineNumber << "} " << severity << std::string(8, ' ') << message << std::endl;
-  }
-
- private:
-  std::mutex m;
-};
-
-MyLogger myLogger;
-Logger* Logger::logger = &myLogger;
+Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
  public:
@@ -28,11 +15,11 @@ class MyEventHandler : public EventHandler {
         Request request(Request::Operation::FIX, "binance");
         request.appendFixParam({
             {35, "D"},
-            {11, "6d4eb0fb-2229-469f-873e-557dd78ac11e"},
+            {11, request.generateNextClientOrderId()},
             {55, "BTCUSDT"},
             {54, "1"},
-            {44, "20000"},
-            {38, "0.001"},
+            {44, "100000"},
+            {38, "0.0001"},
             {40, "2"},
             {59, "1"},
         });

@@ -1,5 +1,6 @@
 # Notice
 * Small breaking change: renamed `toStringPretty` to `toPrettyString`.
+* Added FIX API support for binance.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -837,70 +838,111 @@ For a specific exchange and instrument, submit a simple limit order.
 [C++](example/src/fix_simple/main.cpp) / [Python](binding/python/example/fix_simple/main.py) / [Java](binding/java/example/fix_simple/Main.java) / [C#](binding/csharp/example/fix_simple/MainProgram.cs) / [Go](binding/go/example/fix_simple/main.go) / [Javascript](binding/javascript/example/fix_simple/index.js)
 ```
 #include "ccapi_cpp/ccapi_session.h"
+
 namespace ccapi {
 
-Logger* Logger::logger = nullptr;  // This line is needed.
+class MyLogger final : public Logger {
+ public:
+  void logMessage(const std::string& severity, const std::string& threadId, const std::string& timeISO, const std::string& fileName,
+                  const std::string& lineNumber, const std::string& message) override {
+    std::lock_guard<std::mutex> lock(m);
+    std::cout << threadId << ": [" << timeISO << "] {" << fileName << ":" << lineNumber << "} " << severity << std::string(8, ' ') << message << std::endl;
+  }
+
+ private:
+  std::mutex m;
+};
+
+MyLogger myLogger;
+Logger* Logger::logger = &myLogger;
+
 class MyEventHandler : public EventHandler {
  public:
+  MyEventHandler(const std::string& fixSubscriptionCorrelationId) : fixSubscriptionCorrelationId(fixSubscriptionCorrelationId) {}
+
   void processEvent(const Event& event, Session* sessionPtr) override {
     if (event.getType() == Event::Type::AUTHORIZATION_STATUS) {
       std::cout << "Received an event of type AUTHORIZATION_STATUS:\n" + event.toPrettyString(2, 2) << std::endl;
       auto message = event.getMessageList().at(0);
       if (message.getType() == Message::Type::AUTHORIZATION_SUCCESS) {
-        Request request(Request::Operation::FIX, "okx", "", "same correlation id for subscription and request");
+        Request request(Request::Operation::FIX, "binance");
         request.appendFixParam({
             {35, "D"},
             {11, "6d4eb0fb-2229-469f-873e-557dd78ac11e"},
-            {55, "BTC-USDT"},
+            {55, "BTC-USD"},
             {54, "1"},
             {44, "20000"},
             {38, "0.001"},
             {40, "2"},
             {59, "1"},
         });
-        sessionPtr->sendRequestByFix(request);
+        sessionPtr->sendRequestByFix(this->fixSubscriptionCorrelationId, request);
       }
     } else if (event.getType() == Event::Type::FIX) {
       std::cout << "Received an event of type FIX:\n" + event.toPrettyString(2, 2) << std::endl;
     }
   }
+
+ private:
+  std::string fixSubscriptionCorrelationId;
 };
 
 } /* namespace ccapi */
+
 using ::ccapi::MyEventHandler;
 using ::ccapi::Session;
 using ::ccapi::SessionConfigs;
 using ::ccapi::SessionOptions;
 using ::ccapi::Subscription;
 using ::ccapi::UtilSystem;
+
 int main(int argc, char** argv) {
-  if (UtilSystem::getEnvAsString("OKX_API_KEY").empty()) {
-    std::cerr << "Please set environment variable OKX_API_KEY" << std::endl;
+  if (UtilSystem::getEnvAsString("BINANCE_FIX_API_KEY").empty()) {
+    std::cerr << "Please set environment variable BINANCE_FIX_API_KEY" << std::endl;
     return EXIT_FAILURE;
   }
-  if (UtilSystem::getEnvAsString("OKX_API_SECRET").empty()) {
-    std::cerr << "Please set environment variable OKX_API_SECRET" << std::endl;
-    return EXIT_FAILURE;
-  }
-  if (UtilSystem::getEnvAsString("OKX_API_PASSPHRASE").empty()) {
-    std::cerr << "Please set environment variable OKX_API_PASSPHRASE" << std::endl;
+  if (UtilSystem::getEnvAsString("BINANCE_FIX_API_PRIVATE_KEY_PATH").empty()) {
+    std::cerr << "Please set environment variable BINANCE_FIX_API_PRIVATE_KEY_PATH" << std::endl;
     return EXIT_FAILURE;
   }
   SessionOptions sessionOptions;
+  sessionOptions.heartbeatFixIntervalMilliseconds = 30000;  // Note the unit is millisecond
+  sessionOptions.heartbeatFixTimeoutMilliseconds = 5000;    // Note the unit is millisecond, should be less than heartbeatFixIntervalMilliseconds
   SessionConfigs sessionConfigs;
-  MyEventHandler eventHandler;
+  std::string fixSubscriptionCorrelationId("any");
+  MyEventHandler eventHandler(fixSubscriptionCorrelationId);
   Session session(sessionOptions, sessionConfigs, &eventHandler);
-  Subscription subscription("okx", "", "FIX", "", "same correlation id for subscription and request");
+  Subscription subscription("binance", "", "FIX", "8013=S&9406=Y",
+                            fixSubscriptionCorrelationId);  // https://developers.binance.com/docs/binance-spot-api-docs/fix-api#logon-a
   session.subscribe(subscription);
   std::this_thread::sleep_for(std::chrono::seconds(10));
   session.stop();
-  std::cout << "Bye" << std::endl;
   return EXIT_SUCCESS;
 }
 ```
 **Output:**
 ```console
-Received an event of type AUTHORIZATION_STATUS:
+Received an event:
+  Event [
+    type = SESSION_STATUS,
+    messageList = [
+      Message [
+        type = SESSION_CONNECTION_UP,
+        recapType = UNKNOWN,
+        time = 1970-01-01T00:00:00.000000000Z,
+        timeReceived = 2025-08-02T05:32:27.276351820Z,
+        elementList = [
+          Element [
+            tagValueList = [
+
+            ]
+          ]
+        ],
+        correlationIdList = [ any ],
+      ]
+    ]
+  ]
+Received an event:
   Event [
     type = AUTHORIZATION_STATUS,
     messageList = [
@@ -908,22 +950,22 @@ Received an event of type AUTHORIZATION_STATUS:
         type = AUTHORIZATION_SUCCESS,
         recapType = UNKNOWN,
         time = 1970-01-01T00:00:00.000000000Z,
-        timeReceived = 2021-05-25T05:05:15.892366000Z,
+        timeReceived = 2025-08-02T05:32:27.279333577Z,
         elementList = [
           Element [
-            tagValueMap = {
-              96 = 0srtt0WetUTYHiTpvyWnC+XKKHCzQQIJ/8G9lE4KVxM=,
-              98 = 0,
-              108 = 15,
-              554 = 26abh7of52i
-            }
+            tagValueList = [
+              (35, "A"),
+              (98, "0"),
+              (108, "60"),
+              (25037, "043bde93-187b-4791-ad8e-f82a9188dd1a")
+            ]
           ]
         ],
-        correlationIdList = [ same correlation id for subscription and request ]
+        correlationIdList = [ any ],
       ]
     ]
   ]
-Received an event of type FIX:
+Received an event:
   Event [
     type = FIX,
     messageList = [
@@ -931,25 +973,36 @@ Received an event of type FIX:
         type = FIX,
         recapType = UNKNOWN,
         time = 1970-01-01T00:00:00.000000000Z,
-        timeReceived = 2021-05-25T05:05:15.984090000Z,
+        timeReceived = 2025-08-02T05:32:28.280030845Z,
         elementList = [
           Element [
-            tagValueMap = {
-              11 = 6d4eb0fb-2229-469f-873e-557dd78ac11e,
-              17 = b7caec79-1bc8-460e-af28-6489cf12f45e,
-              20 = 0,
-              37 = 458acfe5-bdea-46d2-aa87-933cda84163f,
-              38 = 0.001,
-              39 = 0,
-              44 = 20000,
-              54 = 1,
-              55 = BTC-USDT,
-              60 = 20210525-05:05:16.008,
-              150 = 0
-            }
+            tagValueList = [
+              (35, "8"),
+              (17, "99562025401"),
+              (11, "x-XHKUG2CH-1754112748000"),
+              (37, "46872802898"),
+              (38, "0.00010000"),
+              (40, "2"),
+              (54, "1"),
+              (55, "BTCUSDT"),
+              (44, "100000.00000000"),
+              (59, "1"),
+              (60, "20250802-05:32:28.278968"),
+              (25018, "20250802-05:32:28.278968"),
+              (25001, "3"),
+              (150, "0"),
+              (14, "0.00000000"),
+              (151, "0.00010000"),
+              (25017, "0.00000000"),
+              (1057, "Y"),
+              (32, "0.00000000"),
+              (39, "0"),
+              (636, "Y"),
+              (25023, "20250802-05:32:28.278968")
+            ]
           ]
         ],
-        correlationIdList = [ same correlation id for subscription and request ]
+        correlationIdList = [ any ],
       ]
     ]
   ]

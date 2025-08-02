@@ -264,6 +264,35 @@ class Request {
       }
     }
   }
+
+  std::string generateNextClientOrderId() {
+    static int64_t lastClientOrderIdUnixTimestampInSeconds = 0;
+    static int64_t lastClientOrderIdSequenceNumber = 0;
+
+    const auto& now = UtilTime::now();
+    const auto& unixTimestampInSeconds = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+
+    if (lastClientOrderIdUnixTimestampInSeconds != unixTimestampInSeconds) {
+      lastClientOrderIdUnixTimestampInSeconds = unixTimestampInSeconds;
+      lastClientOrderIdSequenceNumber = 0;
+    } else {
+      ++lastClientOrderIdSequenceNumber;
+    }
+
+    std::string nextClientOrderId;
+    if (this->exchange == CCAPI_EXCHANGE_NAME_BINANCE) {
+      nextClientOrderId += "x-";
+      nextClientOrderId += CCAPI_BINANCE_API_LINK_ID;
+      nextClientOrderId += "-";
+    } else if (this->exchange == CCAPI_EXCHANGE_NAME_BINANCE_USDS_FUTURES || this->exchange == CCAPI_EXCHANGE_NAME_BINANCE_COIN_FUTURES) {
+      nextClientOrderId += "x-";
+      nextClientOrderId += CCAPI_BINANCE_USDS_FUTURES_API_LINK_ID;
+      nextClientOrderId += "-";
+    }
+    nextClientOrderId += std::to_string(lastClientOrderIdUnixTimestampInSeconds);
+    nextClientOrderId += UtilString::leftPadTo(std::to_string(lastClientOrderIdSequenceNumber), CCAPI_EM_CLIENT_ORDER_ID_SEQUENCE_NUMBER_PAD_TO_LENGTH, '0');
+    return nextClientOrderId;
+  }
 #ifndef CCAPI_EXPOSE_INTERNAL
 
  private:

@@ -16,7 +16,7 @@ class MyEventHandler : public EventHandler {
             {"SIDE", "BUY"},
             {"LIMIT_PRICE", "20000"},
             {"QUANTITY", "0.001"},
-            {"CLIENT_ORDER_ID", "6d4eb0fb"},
+            {"CLIENT_ORDER_ID", request.generateNextClientOrderId()},
         });
         sessionPtr->sendRequest(request);
       }
