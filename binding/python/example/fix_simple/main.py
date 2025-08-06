@@ -13,7 +13,7 @@ class MyEventHandler(EventHandler):
             print(f"Received an event of type AUTHORIZATION_STATUS:\n{event.toPrettyString(2, 2)}")
             message = event.getMessageList()[0]
             if message.getType() == Message.Type_AUTHORIZATION_SUCCESS:
-                request = Request(Request.Operation_FIX, "coinbase", "", "same correlation id for subscription and request")
+                request = Request(Request.Operation_FIX, "coinbase", "", "any")
                 request.appendFixParam(
                     [
                         (35, "D"),
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     option = SessionOptions()
     config = SessionConfigs()
     session = Session(option, config, eventHandler)
-    subscription = Subscription("coinbase", "", "FIX", "", "same correlation id for subscription and request")
+    subscription = Subscription("coinbase", "", "FIX", "", "any")
     session.subscribe(subscription)
     time.sleep(10)
     session.stop()
