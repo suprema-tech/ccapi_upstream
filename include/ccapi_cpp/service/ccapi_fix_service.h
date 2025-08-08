@@ -112,9 +112,11 @@ class FixService : public Service {
     auto timerPtr = std::make_shared<boost::asio::steady_timer>(*this->serviceContextPtr->ioContextPtr, std::chrono::milliseconds(seconds * 1000));
     timerPtr->async_wait([fixConnectionPtr, that = shared_from_base<FixService>(), urlBase](ErrorCode const& ec) {
       if (that->fixConnectionPtrByIdMap.find(fixConnectionPtr->id) == that->fixConnectionPtrByIdMap.end()) {
-        if (ec && ec != boost::asio::error::operation_aborted) {
-          CCAPI_LOGGER_ERROR("fixConnectionPtr = " + toString(*fixConnectionPtr) + ", connect retry on fail timer error: " + ec.message());
-          that->onError(Event::Type::FIX_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
+        if (ec) {
+          if (ec != boost::asio::error::operation_aborted) {
+            CCAPI_LOGGER_ERROR("fixConnectionPtr = " + toString(*fixConnectionPtr) + ", connect retry on fail timer error: " + ec.message());
+            that->onError(Event::Type::FIX_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
+          }
         } else {
           CCAPI_LOGGER_INFO("about to retry");
           that->connect(fixConnectionPtr);
@@ -142,9 +144,6 @@ class FixService : public Service {
 
   void startResolveFix(std::shared_ptr<FixConnection> fixConnectionPtr) {
     auto newResolverPtr = std::make_shared<tcp::resolver>(*this->serviceContextPtr->ioContextPtr);
-    CCAPI_LOGGER_TRACE("fixConnectionPtr = " + fixConnectionPtr->toString());
-    CCAPI_LOGGER_TRACE("fixConnectionPtr->host = " + fixConnectionPtr->host);
-    CCAPI_LOGGER_TRACE("fixConnectionPtr->port = " + fixConnectionPtr->port);
     newResolverPtr->async_resolve(fixConnectionPtr->host, fixConnectionPtr->port,
                                   beast::bind_front_handler(&FixService::onResolveFix, shared_from_base<FixService>(), fixConnectionPtr, newResolverPtr));
   }
@@ -169,7 +168,6 @@ class FixService : public Service {
           }
 
           if constexpr (std::is_same_v<StreamType, beast::ssl_stream<beast::tcp_stream>>) {
-            // Set SNI hostname (only for WSS)
             if (!SSL_set_tlsext_host_name(streamPtr->native_handle(), fixConnectionPtr->host.c_str())) {
               beast::error_code ec{static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()};
               CCAPI_LOGGER_DEBUG("error SSL_set_tlsext_host_name: " + ec.message());
@@ -224,6 +222,14 @@ class FixService : public Service {
       return;
     }
     CCAPI_LOGGER_TRACE("handshaked");
+
+    std::visit(
+        [&](auto& streamPtr) {
+          auto& stream = *streamPtr;
+          beast::get_lowest_layer(stream).expires_never();
+        },
+        fixConnectionPtr->streamPtr);
+
     this->onOpen(fixConnectionPtr);
   }
 
@@ -289,19 +295,7 @@ class FixService : public Service {
     auto nowFixTimeStr = UtilTime::convertTimePointToFIXTime(now);
     if (ec) {
       CCAPI_LOGGER_TRACE("fail");
-      Event event;
-      event.setType(Event::Type::SESSION_STATUS);
-      Message message;
-      message.setTimeReceived(now);
-      message.setType(Message::Type::SESSION_CONNECTION_DOWN);
-      message.setCorrelationIdList({fixConnectionPtr->subscription.getCorrelationId()});
-      Element element(true);
-      auto& connectionId = fixConnectionPtr->id;
-      element.insert(CCAPI_CONNECTION_ID, connectionId);
-      element.insert(CCAPI_CONNECTION_URL, fixConnectionPtr->url);
-      message.setElementList({element});
-      event.setMessageList({message});
-      this->eventHandler(event, nullptr);
+      // this->close(fixConnectionPtr);
       this->onClose(fixConnectionPtr, ec);
       return;
     }
@@ -353,9 +347,17 @@ class FixService : public Service {
               if (messageType == "A") {
                 event.setType(Event::Type::AUTHORIZATION_STATUS);
                 message.setType(Message::Type::AUTHORIZATION_SUCCESS);
+                if (this->pingTimerByMethodByConnectionIdMap.find(fixConnectionPtr->id) != this->pingTimerByMethodByConnectionIdMap.end()) {
+                  for (const auto& x : this->pingTimerByMethodByConnectionIdMap.at(fixConnectionPtr->id)) {
+                    x.second->cancel();
+                  }
+                  this->pingTimerByMethodByConnectionIdMap.erase(fixConnectionPtr->id);
+                }
+
                 this->setPingPongTimer(
                     PingPongMethod::FIX_PROTOCOL_LEVEL, fixConnectionPtr,
                     [that = shared_from_base<FixService>()](std::shared_ptr<FixConnection> fixConnectionPtr) {
+                      CCAPI_LOGGER_TRACE("pingMethod is triggered");
                       auto now = UtilTime::now();
                       auto nowFixTimeStr = UtilTime::convertTimePointToFIXTime(now);
                       that->writeMessage(
@@ -377,7 +379,7 @@ class FixService : public Service {
               event.setType(Event::Type::FIX);
               message.setType(Message::Type::FIX);
               if (messageType == "5") {
-                if (fixConnectionPtr->status == FixConnection::Status::CLOSING) {
+                if (fixConnectionPtr->status == FixConnection::Status::OPEN) {
                   this->writeMessage(fixConnectionPtr, nowFixTimeStr,
                                      {{
                                          {hff::tag::MsgType, "5"},
@@ -441,19 +443,8 @@ class FixService : public Service {
     auto& connectionId = fixConnectionPtr->id;
     if (ec) {
       CCAPI_LOGGER_TRACE("fail");
-      Event event;
-      event.setType(Event::Type::SESSION_STATUS);
-      Message message;
-      message.setTimeReceived(now);
-      message.setType(Message::Type::SESSION_CONNECTION_DOWN);
-      message.setCorrelationIdList({fixConnectionPtr->subscription.getCorrelationId()});
-      Element element(true);
-      auto& connectionId = fixConnectionPtr->id;
-      element.insert(CCAPI_CONNECTION_ID, connectionId);
-      element.insert(CCAPI_CONNECTION_URL, fixConnectionPtr->url);
-      message.setElementList({element});
-      event.setMessageList({message});
-      this->eventHandler(event, nullptr);
+      ErrorCode ec;
+      //   this->close(fixConnectionPtr);
       this->onClose(fixConnectionPtr, ec);
       return;
     }
@@ -547,6 +538,7 @@ class FixService : public Service {
     if (pingIntervalMilliseconds <= pongTimeoutMilliseconds) {
       return;
     }
+    CCAPI_LOGGER_DEBUG("fixConnectionPtr->status = " + FixConnection::statusToString(fixConnectionPtr->status));
     if (fixConnectionPtr->status == FixConnection::Status::OPEN) {
       if (pingNow) {
         pingMethod(fixConnectionPtr);
@@ -560,9 +552,11 @@ class FixService : public Service {
                                                                   std::chrono::milliseconds(pingIntervalMilliseconds - pongTimeoutMilliseconds));
       timerPtr->async_wait([fixConnectionPtr, that = shared_from_base<FixService>(), pingMethod, pongTimeoutMilliseconds, method](ErrorCode const& ec) {
         if (that->fixConnectionPtrByIdMap.find(fixConnectionPtr->id) != that->fixConnectionPtrByIdMap.end()) {
-          if (ec && ec != boost::asio::error::operation_aborted) {
-            CCAPI_LOGGER_ERROR("fixConnectionPtr = " + toString(*fixConnectionPtr) + ", ping timer error: " + ec.message());
-            that->onError(Event::Type::FIX_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
+          if (ec) {
+            if (ec != boost::asio::error::operation_aborted) {
+              CCAPI_LOGGER_ERROR("fixConnectionPtr = " + toString(*fixConnectionPtr) + ", ping timer error: " + ec.message());
+              that->onError(Event::Type::FIX_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
+            }
           } else {
             if (that->fixConnectionPtrByIdMap.at(fixConnectionPtr->id)->status == FixConnection::Status::OPEN) {
               ErrorCode ec;
@@ -582,23 +576,22 @@ class FixService : public Service {
                   std::make_shared<boost::asio::steady_timer>(*that->serviceContextPtr->ioContextPtr, std::chrono::milliseconds(pongTimeoutMilliseconds));
               timerPtr->async_wait([fixConnectionPtr, that, pingMethod, pongTimeoutMilliseconds, method](ErrorCode const& ec) {
                 if (that->fixConnectionPtrByIdMap.find(fixConnectionPtr->id) != that->fixConnectionPtrByIdMap.end()) {
-                  if (ec && ec != boost::asio::error::operation_aborted) {
-                    CCAPI_LOGGER_ERROR("fixConnectionPtr = " + toString(*fixConnectionPtr) + ", pong timeout timer error: " + ec.message());
-                    that->onError(Event::Type::FIX_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
+                  if (ec) {
+                    if (ec != boost::asio::error::operation_aborted) {
+                      CCAPI_LOGGER_ERROR("fixConnectionPtr = " + toString(*fixConnectionPtr) + ", pong timeout timer error: " + ec.message());
+                      that->onError(Event::Type::FIX_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
+                    }
                   } else {
                     if (that->fixConnectionPtrByIdMap.at(fixConnectionPtr->id)->status == FixConnection::Status::OPEN) {
                       auto now = UtilTime::now();
+
                       if (that->lastPongTpByMethodByConnectionIdMap.find(fixConnectionPtr->id) != that->lastPongTpByMethodByConnectionIdMap.end() &&
                           that->lastPongTpByMethodByConnectionIdMap.at(fixConnectionPtr->id).find(method) !=
                               that->lastPongTpByMethodByConnectionIdMap.at(fixConnectionPtr->id).end() &&
                           std::chrono::duration_cast<std::chrono::milliseconds>(now -
                                                                                 that->lastPongTpByMethodByConnectionIdMap.at(fixConnectionPtr->id).at(method))
                                   .count() >= pongTimeoutMilliseconds) {
-                        ErrorCode ec;
-                        that->close(fixConnectionPtr, ec);
-                        if (ec) {
-                          that->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, ec, "shutdown");
-                        }
+                        that->close(fixConnectionPtr);
                       } else {
                         that->setPingPongTimer(method, fixConnectionPtr, pingMethod);
                       }
@@ -625,12 +618,11 @@ class FixService : public Service {
     return {};
   }
 
-  void close(std::shared_ptr<FixConnection> fixConnectionPtr, ErrorCode& ec) {
-    if (fixConnectionPtr->status == FixConnection::Status::CLOSING) {
-      CCAPI_LOGGER_WARN("fix connection is already in the state of closing");
+  void close(std::shared_ptr<FixConnection> fixConnectionPtr) {
+    CCAPI_LOGGER_DEBUG("fixConnectionPtr->status = " + FixConnection::statusToString(fixConnectionPtr->status));
+    if (fixConnectionPtr->status == FixConnection::Status::CLOSING || fixConnectionPtr->status == FixConnection::Status::CLOSED) {
       return;
     }
-    fixConnectionPtr->status = FixConnection::Status::CLOSING;
 
     std::visit(
         [&](auto& streamPtr) {
@@ -642,10 +634,17 @@ class FixService : public Service {
                              }});
         },
         fixConnectionPtr->streamPtr);
+
+    fixConnectionPtr->status = FixConnection::Status::CLOSING;
   }
 
   virtual void onClose(std::shared_ptr<FixConnection> fixConnectionPtr, ErrorCode ec) {
     CCAPI_LOGGER_FUNCTION_ENTER;
+    CCAPI_LOGGER_DEBUG("fixConnectionPtr->status = " + FixConnection::statusToString(fixConnectionPtr->status));
+    if (fixConnectionPtr->status == FixConnection::Status::CLOSING || fixConnectionPtr->status == FixConnection::Status::CLOSED) {
+      return;
+    }
+
     auto now = UtilTime::now();
     fixConnectionPtr->status = FixConnection::Status::CLOSED;
     CCAPI_LOGGER_INFO("connection " + toString(*fixConnectionPtr) + " is closed");
@@ -690,8 +689,8 @@ class FixService : public Service {
   std::string hostFixMarketData;
   std::string portFixMarketData;
   std::string protocolVersion;
-  std::string senderCompID;
-  std::string targetCompID;
+  std::string senderCompId;
+  std::string targetCompId;
 
   std::map<std::string, unsigned int> fixMsgSeqNumByConnectionIdMap;
   std::map<std::string, std::shared_ptr<FixConnection>> fixConnectionPtrByCorrelationIdMap;

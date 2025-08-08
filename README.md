@@ -841,20 +841,7 @@ For a specific exchange and instrument, submit a simple limit order.
 
 namespace ccapi {
 
-class MyLogger final : public Logger {
- public:
-  void logMessage(const std::string& severity, const std::string& threadId, const std::string& timeISO, const std::string& fileName,
-                  const std::string& lineNumber, const std::string& message) override {
-    std::lock_guard<std::mutex> lock(m);
-    std::cout << threadId << ": [" << timeISO << "] {" << fileName << ":" << lineNumber << "} " << severity << std::string(8, ' ') << message << std::endl;
-  }
-
- private:
-  std::mutex m;
-};
-
-MyLogger myLogger;
-Logger* Logger::logger = &myLogger;
+Logger* Logger::logger = nullptr;  // This line is needed.
 
 class MyEventHandler : public EventHandler {
  public:
@@ -1054,7 +1041,7 @@ Logger* Logger::logger = &myLogger;
 
 #### Set timer
 
-[C++](example/src/utility_set_timer/main.cpp)
+[C++](example/src/set_timer/main.cpp)
 
 To perform an asynchronous wait, use the utility method `setTimer` in class `Session`. The handlers are invoked in the same threads as the `processEvent` method in the `EventHandler` class. The `id` of the timer should be unique. `delayMilliseconds` can be 0.
 ```
@@ -1064,6 +1051,16 @@ sessionPtr->setTimer(
       std::cout << std::string("Timer error handler is triggered at ") + UtilTime::getISOTimestamp(UtilTime::now()) << std::endl;
     },
     []() { std::cout << std::string("Timer success handler is triggered at ") + UtilTime::getISOTimestamp(UtilTime::now()) << std::endl; });
+```
+
+#### Heartbeat
+
+[C++](example/src/heartbeat/main.cpp)
+
+To receive heartbeat events, instantiate a `Subscription` object with field `HEARTBEAT` and subscribe it.
+```
+Subscription subscription("", "", "HEARTBEAT", "HEARTBEAT_INTERVAL_MILLISECONDS=1000");
+session.subscribe(subscription);
 ```
 
 ## Performance Tuning

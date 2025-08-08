@@ -25,7 +25,7 @@ class FixServiceCoinbase : public FixService<beast::ssl_stream<beast::tcp_stream
     this->apiPassphraseName = CCAPI_COINBASE_API_PASSPHRASE;
     this->setupCredential({this->apiKeyName, this->apiSecretName, this->apiPassphraseName});
     this->protocolVersion = CCAPI_FIX_PROTOCOL_VERSION_COINBASE;
-    this->targetCompID = "Coinbase";
+    this->targetCompId = "Coinbase";
   }
 
   virtual ~FixServiceCoinbase() {}
@@ -36,7 +36,7 @@ class FixServiceCoinbase : public FixService<beast::ssl_stream<beast::tcp_stream
   virtual std::vector<std::pair<int, std::string>> createCommonParam(const std::string& connectionId, const std::string& nowFixTimeStr) {
     return {
         {hff::tag::SenderCompID, mapGetWithDefault(this->credentialByConnectionIdMap[connectionId], this->apiKeyName)},
-        {hff::tag::TargetCompID, this->targetCompID},
+        {hff::tag::TargetCompID, this->targetCompId},
         {hff::tag::MsgSeqNum, std::to_string(++this->fixMsgSeqNumByConnectionIdMap[connectionId])},
         {hff::tag::SendingTime, nowFixTimeStr},
     };
@@ -53,9 +53,9 @@ class FixServiceCoinbase : public FixService<beast::ssl_stream<beast::tcp_stream
     auto apiPassphrase = mapGetWithDefault(credential, this->apiPassphraseName);
     param.push_back({hff::tag::Password, apiPassphrase});
     auto msgSeqNum = std::to_string(this->fixMsgSeqNumByConnectionIdMap[connectionId] + 1);
-    auto senderCompID = mapGetWithDefault(credential, this->apiKeyName);
-    auto targetCompID = this->targetCompID;
-    std::vector<std::string> prehashFieldList{nowFixTimeStr, msgType, msgSeqNum, senderCompID, targetCompID, apiPassphrase};
+    auto senderCompId = mapGetWithDefault(credential, this->apiKeyName);
+    auto targetCompId = this->targetCompId;
+    std::vector<std::string> prehashFieldList{nowFixTimeStr, msgType, msgSeqNum, senderCompId, targetCompId, apiPassphrase};
     auto prehashStr = UtilString::join(prehashFieldList, "\x01");
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
     auto rawData = UtilAlgorithm::base64Encode(Hmac::hmac(Hmac::ShaVersion::SHA256, UtilAlgorithm::base64Decode(apiSecret), prehashStr));

@@ -1211,9 +1211,11 @@ class MarketDataService : public Service {
         timerPtr->async_wait([wsConnectionPtr, channelId, symbolId, field, optionMap, correlationIdList, previousConflateTp, interval, gracePeriod,
                               this](ErrorCode const& ec) {
           if (this->wsConnectionPtrByIdMap.find(wsConnectionPtr->id) != this->wsConnectionPtrByIdMap.end()) {
-            if (ec && ec != boost::asio::error::operation_aborted) {
-              CCAPI_LOGGER_ERROR("wsConnection = " + toString(*wsConnectionPtr) + ", conflate timer error: " + ec.message());
-              this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
+            if (ec) {
+              if (ec != boost::asio::error::operation_aborted) {
+                CCAPI_LOGGER_ERROR("wsConnection = " + toString(*wsConnectionPtr) + ", conflate timer error: " + ec.message());
+                this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
+              }
             } else {
               if (
 

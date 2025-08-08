@@ -212,18 +212,18 @@
 #ifdef CCAPI_ENABLE_EXCHANGE_BINANCE
 #include "ccapi_cpp/service/ccapi_fix_service_binance.h"
 #endif
-#ifdef CCAPI_ENABLE_EXCHANGE_COINBASE
-#include "ccapi_cpp/service/ccapi_fix_service_coinbase.h"
-#endif
-#ifdef CCAPI_ENABLE_EXCHANGE_GEMINI
-#include "ccapi_cpp/service/ccapi_fix_service_gemini.h"
-#endif
-#ifdef CCAPI_ENABLE_EXCHANGE_FTX
-#include "ccapi_cpp/service/ccapi_fix_service_ftx.h"
-#endif
-#ifdef CCAPI_ENABLE_EXCHANGE_FTX_US
-#include "ccapi_cpp/service/ccapi_fix_service_ftx_us.h"
-#endif
+// #ifdef CCAPI_ENABLE_EXCHANGE_COINBASE
+// #include "ccapi_cpp/service/ccapi_fix_service_coinbase.h"
+// #endif
+// #ifdef CCAPI_ENABLE_EXCHANGE_GEMINI
+// #include "ccapi_cpp/service/ccapi_fix_service_gemini.h"
+// #endif
+// #ifdef CCAPI_ENABLE_EXCHANGE_FTX
+// #include "ccapi_cpp/service/ccapi_fix_service_ftx.h"
+// #endif
+// #ifdef CCAPI_ENABLE_EXCHANGE_FTX_US
+// #include "ccapi_cpp/service/ccapi_fix_service_ftx_us.h"
+// #endif
 // #ifdef CCAPI_ENABLE_EXCHANGE_DERIBIT
 // #include "ccapi_cpp/service/ccapi_fix_service_deribit.h"
 // #endif
@@ -609,6 +609,9 @@ class Session {
       for (const auto& [_, delayTimer] : this->delayTimerByIdMap) {
         delayTimer->cancel();
       }
+      if (heartbeatTimerPtr) {
+        heartbeatTimerPtr->cancel();
+      }
       for (const auto& x : this->serviceByServiceNameExchangeMap) {
         for (const auto& y : x.second) {
           y.second->stop();
@@ -621,6 +624,28 @@ class Session {
     }
   }
 
+  typedef boost::system::error_code ErrorCode;
+
+  virtual void setHeartbeatTimer(long heartbeatIntervalMilliseconds) {
+    auto timerPtr =
+        std::make_shared<boost::asio::steady_timer>(*this->serviceContextPtr->ioContextPtr, std::chrono::milliseconds(heartbeatIntervalMilliseconds));
+    timerPtr->async_wait([this, heartbeatIntervalMilliseconds](ErrorCode const& ec) {
+      if (ec) {
+        if (ec != boost::asio::error::operation_aborted) {
+          std::string errorMessage = "heartbeat timer error: " + ec.message();
+          CCAPI_LOGGER_ERROR(errorMessage);
+          this->onError(Event::Type::SESSION_STATUS, Message::Type::GENERIC_ERROR, errorMessage);
+        }
+      } else {
+        Event event;
+        event.setType(Event::Type::HEARTBEAT);
+        this->onEvent(event, nullptr);
+        this->setHeartbeatTimer(heartbeatIntervalMilliseconds);
+      }
+    });
+    this->heartbeatTimerPtr = timerPtr;
+  }
+
   virtual void subscribe(Subscription& subscription) {
     std::vector<Subscription> subscriptionList;
     subscriptionList.push_back(subscription);
@@ -630,6 +655,11 @@ class Session {
   virtual void subscribe(std::vector<Subscription>& subscriptionList) {
     CCAPI_LOGGER_FUNCTION_ENTER;
     for (auto& subscription : subscriptionList) {
+      CCAPI_LOGGER_TRACE("subscription = " + toString(subscription));
+      if (subscription.getField() == CCAPI_HEARTBEAT) {
+        this->setHeartbeatTimer(std::stol(subscription.getOptionMap().at(CCAPI_HEARTBEAT_INTERVAL_MILLISECONDS)));
+        continue;
+      }
       auto exchange = subscription.getExchange();
       if (exchange == CCAPI_EXCHANGE_NAME_BYBIT) {
         auto instrumentType = subscription.getInstrumentType();
@@ -659,6 +689,9 @@ class Session {
     }
     std::map<std::string, std::vector<Subscription>> subscriptionListByServiceNameMap;
     for (const auto& subscription : subscriptionList) {
+      if (subscription.getField() == CCAPI_HEARTBEAT) {
+        continue;
+      }
       auto serviceName = subscription.getServiceName();
       subscriptionListByServiceNameMap[serviceName].push_back(subscription);
     }
@@ -1001,6 +1034,7 @@ class Session {
   bool useInternalServiceContextPtr{};
   std::function<void(Event& event, Queue<Event>* eventQueue)> onEventFunc;
   std::map<std::string, std::shared_ptr<steady_timer>> delayTimerByIdMap;
+  std::shared_ptr<steady_timer> heartbeatTimerPtr{nullptr};
 };
 
 } /* namespace ccapi */

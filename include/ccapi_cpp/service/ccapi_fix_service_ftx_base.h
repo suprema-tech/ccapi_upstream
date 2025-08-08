@@ -21,7 +21,7 @@ class FixServiceFtxBase : public FixService<beast::ssl_stream<beast::tcp_stream>
   virtual std::vector<std::pair<int, std::string>> createCommonParam(const std::string& connectionId, const std::string& nowFixTimeStr) {
     return {
         {hff::tag::SenderCompID, mapGetWithDefault(this->credentialByConnectionIdMap[connectionId], this->apiKeyName)},
-        {hff::tag::TargetCompID, this->targetCompID},
+        {hff::tag::TargetCompID, this->targetCompId},
         {hff::tag::MsgSeqNum, std::to_string(++this->fixMsgSeqNumByConnectionIdMap[connectionId])},
         {hff::tag::SendingTime, nowFixTimeStr},
     };
@@ -36,9 +36,9 @@ class FixServiceFtxBase : public FixService<beast::ssl_stream<beast::tcp_stream>
     param.push_back({hff::tag::HeartBtInt, "30"});
     auto msgSeqNum = std::to_string(this->fixMsgSeqNumByConnectionIdMap[connectionId] + 1);
     auto credential = this->credentialByConnectionIdMap[connectionId];
-    auto senderCompID = mapGetWithDefault(credential, this->apiKeyName);
-    auto targetCompID = this->targetCompID;
-    std::vector<std::string> prehashFieldList{nowFixTimeStr, msgType, msgSeqNum, senderCompID, targetCompID};
+    auto senderCompId = mapGetWithDefault(credential, this->apiKeyName);
+    auto targetCompId = this->targetCompId;
+    std::vector<std::string> prehashFieldList{nowFixTimeStr, msgType, msgSeqNum, senderCompId, targetCompId};
     auto prehashStr = UtilString::join(prehashFieldList, "\x01");
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);
     std::string rawData = Hmac::hmac(Hmac::ShaVersion::SHA256, apiSecret, prehashStr, true);

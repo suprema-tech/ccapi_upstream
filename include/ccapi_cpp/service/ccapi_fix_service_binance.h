@@ -22,7 +22,7 @@ class FixServiceBinance : public FixService {
     this->fixApiPrivateKeyPasswordName = CCAPI_BINANCE_FIX_API_PRIVATE_KEY_PASSWORD;
     this->setupCredential({this->fixApiKeyName, this->fixApiPrivateKeyPathName, this->fixApiPrivateKeyPasswordName});
     this->protocolVersion = CCAPI_FIX_PROTOCOL_VERSION_BINANCE;
-    this->targetCompID = "SPOT";
+    this->targetCompId = "SPOT";
   }
 
   virtual ~FixServiceBinance() {}
@@ -30,14 +30,16 @@ class FixServiceBinance : public FixService {
 
  protected:
 #endif
-  std::string createSenderCompId(std::shared_ptr<FixConnection> fixConnectionPtr) {
-    return fixConnectionPtr->id.length() > 8 ? fixConnectionPtr->id.substr(0, 8) : fixConnectionPtr->id;
+  std::string createSenderCompId() {
+    static uint8_t nextSenderCompId = 0;
+    this->senderCompId = std::to_string(++nextSenderCompId);
+    return this->senderCompId;
   }
 
   std::vector<std::pair<int, std::string>> createCommonParam(std::shared_ptr<FixConnection> fixConnectionPtr, const std::string& nowFixTimeStr) override {
     return {
-        {hff::tag::SenderCompID, this->createSenderCompId(fixConnectionPtr)},
-        {hff::tag::TargetCompID, this->targetCompID},
+        {hff::tag::SenderCompID, this->senderCompId},
+        {hff::tag::TargetCompID, this->targetCompId},
         {hff::tag::MsgSeqNum, std::to_string(++this->fixMsgSeqNumByConnectionIdMap[fixConnectionPtr->id])},
         {hff::tag::SendingTime, nowFixTimeStr},
     };
@@ -52,9 +54,8 @@ class FixServiceBinance : public FixService {
     param.push_back({hff::tag::HeartBtInt, std::to_string(this->sessionOptions.heartbeatFixIntervalMilliseconds / 1000)});
     const auto& credential = fixConnectionPtr->credential;
     const auto& msgSeqNum = std::to_string(1);
-    const auto& senderCompID = this->createSenderCompId(fixConnectionPtr);
-    const auto& targetCompID = this->targetCompID;
-    std::vector<std::string> prehashFieldList{msgType, senderCompID, targetCompID, msgSeqNum, nowFixTimeStr};
+    this->senderCompId = this->createSenderCompId();
+    std::vector<std::string> prehashFieldList{msgType, this->senderCompId, this->targetCompId, msgSeqNum, nowFixTimeStr};
     const auto& payload = UtilString::join(prehashFieldList, "\x01");
 
     auto it = credential.find(this->fixApiPrivateKeyPathName);

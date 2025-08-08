@@ -224,9 +224,11 @@ class Service : public std::enable_shared_from_this<Service> {
     if (delayMilliseconds > 0) {
       auto timerPtr = std::make_shared<net::steady_timer>(*this->serviceContextPtr->ioContextPtr, std::chrono::milliseconds(delayMilliseconds));
       timerPtr->async_wait([that = shared_from_this(), request, req, retry, eventQueuePtr](ErrorCode const& ec) mutable {
-        if (ec && ec != boost::asio::error::operation_aborted) {
-          CCAPI_LOGGER_ERROR("request = " + toString(request) + ", sendRequest timer error: " + ec.message());
-          that->onError(Event::Type::REQUEST_STATUS, Message::Type::GENERIC_ERROR, ec, "timer", {request.getCorrelationId()}, eventQueuePtr);
+        if (ec) {
+          if (ec != boost::asio::error::operation_aborted) {
+            CCAPI_LOGGER_ERROR("request = " + toString(request) + ", sendRequest timer error: " + ec.message());
+            that->onError(Event::Type::REQUEST_STATUS, Message::Type::GENERIC_ERROR, ec, "timer", {request.getCorrelationId()}, eventQueuePtr);
+          }
         } else {
           auto now = UtilTime::now();
           request.setTimeSent(now);
@@ -595,8 +597,8 @@ class Service : public std::enable_shared_from_this<Service> {
       timerPtr = std::make_shared<boost::asio::steady_timer>(*this->serviceContextPtr->ioContextPtr,
                                                              std::chrono::milliseconds(this->sessionOptions.httpRequestTimeoutMilliseconds));
       timerPtr->async_wait([httpConnectionPtr](ErrorCode const& ec) {
-        if (ec && ec != boost::asio::error::operation_aborted) {
-          if (ec != net::error::make_error_code(net::error::basic_errors::operation_aborted)) {
+        if (ec) {
+          if (ec != boost::asio::error::operation_aborted) {
             CCAPI_LOGGER_ERROR("httpConnectionPtr = " + toString(*httpConnectionPtr) + ", connect timeout timer error: " + ec.message());
           }
         } else {
@@ -1296,9 +1298,11 @@ class Service : public std::enable_shared_from_this<Service> {
     timerPtr->async_wait([wsConnectionPtr, that = shared_from_this(), urlBase](ErrorCode const& ec) {
       WsConnection& thisWsConnection = *wsConnectionPtr;
       if (that->wsConnectionPtrByIdMap.find(thisWsConnection.id) == that->wsConnectionPtrByIdMap.end()) {
-        if (ec && ec != boost::asio::error::operation_aborted) {
-          CCAPI_LOGGER_ERROR("wsConnection = " + toString(thisWsConnection) + ", connect retry on fail timer error: " + ec.message());
-          that->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
+        if (ec) {
+          if (ec != boost::asio::error::operation_aborted) {
+            CCAPI_LOGGER_ERROR("wsConnection = " + toString(thisWsConnection) + ", connect retry on fail timer error: " + ec.message());
+            that->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
+          }
         } else {
           CCAPI_LOGGER_INFO("about to retry");
           try {
@@ -1526,9 +1530,11 @@ class Service : public std::enable_shared_from_this<Service> {
                                                           std::chrono::milliseconds(pingIntervalMilliseconds - pongTimeoutMilliseconds));
       timerPtr->async_wait([wsConnectionPtr, that = shared_from_this(), pingMethod, pongTimeoutMilliseconds, method](ErrorCode const& ec) {
         if (that->wsConnectionPtrByIdMap.find(wsConnectionPtr->id) != that->wsConnectionPtrByIdMap.end()) {
-          if (ec && ec != boost::asio::error::operation_aborted) {
-            CCAPI_LOGGER_ERROR("wsConnection = " + toString(*wsConnectionPtr) + ", ping timer error: " + ec.message());
-            that->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
+          if (ec) {
+            if (ec != boost::asio::error::operation_aborted) {
+              CCAPI_LOGGER_ERROR("wsConnection = " + toString(*wsConnectionPtr) + ", ping timer error: " + ec.message());
+              that->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
+            }
           } else {
             if (that->wsConnectionPtrByIdMap.at(wsConnectionPtr->id)->status == WsConnection::Status::OPEN) {
               ErrorCode ec;
@@ -1547,9 +1553,11 @@ class Service : public std::enable_shared_from_this<Service> {
               auto timerPtr = std::make_shared<net::steady_timer>(*that->serviceContextPtr->ioContextPtr, std::chrono::milliseconds(pongTimeoutMilliseconds));
               timerPtr->async_wait([wsConnectionPtr, that, pingMethod, pongTimeoutMilliseconds, method](ErrorCode const& ec) {
                 if (that->wsConnectionPtrByIdMap.find(wsConnectionPtr->id) != that->wsConnectionPtrByIdMap.end()) {
-                  if (ec && ec != boost::asio::error::operation_aborted) {
-                    CCAPI_LOGGER_ERROR("wsConnection = " + toString(*wsConnectionPtr) + ", pong time out timer error: " + ec.message());
-                    that->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
+                  if (ec) {
+                    if (ec != boost::asio::error::operation_aborted) {
+                      CCAPI_LOGGER_ERROR("wsConnection = " + toString(*wsConnectionPtr) + ", pong time out timer error: " + ec.message());
+                      that->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
+                    }
                   } else {
                     if (that->wsConnectionPtrByIdMap.at(wsConnectionPtr->id)->status == WsConnection::Status::OPEN) {
                       auto now = UtilTime::now();

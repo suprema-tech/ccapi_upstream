@@ -20,8 +20,8 @@ class FixServiceGemini : public FixService<beast::tcp_stream> {
       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
     }
     this->protocolVersion = CCAPI_FIX_PROTOCOL_VERSION_GEMINI;
-    this->senderCompID = CCAPI_GEMINI_API_SENDER_COMP_ID;
-    this->targetCompID = CCAPI_GEMINI_API_TARGET_COMP_ID;
+    this->senderCompId = CCAPI_GEMINI_API_SENDER_COMP_ID;
+    this->targetCompId = CCAPI_GEMINI_API_TARGET_COMP_ID;
   }
 
   virtual ~FixServiceGemini() {}

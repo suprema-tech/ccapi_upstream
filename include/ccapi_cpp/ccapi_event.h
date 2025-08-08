@@ -25,6 +25,7 @@ class Event {
     AUTHORIZATION_STATUS,
     FIX,
     FIX_STATUS,
+    HEARTBEAT,
   };
 
   static std::string typeToString(Type type) {
@@ -56,6 +57,9 @@ class Event {
         break;
       case Type::FIX_STATUS:
         output = "FIX_STATUS";
+        break;
+      case Type::HEARTBEAT:
+        output = "HEARTBEAT";
         break;
       default:
         CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);

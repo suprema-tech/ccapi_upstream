@@ -86,8 +86,8 @@ class Element {
   }
 
   std::string toString() const {
-    std::string output =
-        isFix ? "Element [tagValueList = " + ccapi::toString(tagValueList) + "]" : "Element [nameValueMap = " + ccapi::toString(nameValueMap) + "]";
+    std::string output = isFix ? "Element [tagValueList = " + ccapi::toString(tagValueList) + ", nameValueMap = " + ccapi::toString(nameValueMap) + "]"
+                               : "Element [nameValueMap = " + ccapi::toString(nameValueMap) + "]";
     return output;
   }
 
@@ -95,7 +95,8 @@ class Element {
     std::string sl(leftToIndent, ' ');
     std::string ss(leftToIndent + space, ' ');
     std::string output = isFix ? (indentFirstLine ? sl : "") + "Element [\n" + ss +
-                                     "tagValueList = " + ccapi::toPrettyString(tagValueList, space, space + leftToIndent, false) + "\n" + sl + "]"
+                                     "tagValueList = " + ccapi::toPrettyString(tagValueList, space, space + leftToIndent, false) + ",\n" + ss +
+                                     "nameValueMap = " + ccapi::toPrettyString(nameValueMap, space, space + leftToIndent, false) + "\n" + sl + "]"
                                : (indentFirstLine ? sl : "") + "Element [\n" + ss +
                                      "nameValueMap = " + ccapi::toPrettyString(nameValueMap, space, space + leftToIndent, false) + "\n" + sl + "]";
     return output;
