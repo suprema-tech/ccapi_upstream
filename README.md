@@ -49,12 +49,14 @@
       * [Thread safety](#thread-safety)
       * [Enable library logging](#enable-library-logging)
       * [Set timer](#set-timer)
+      * [Heartbeat](#heartbeat)
   * [Performance Tuning](#performance-tuning)
   * [Known Issues and Workarounds](#known-issues-and-workarounds)
 
 <!---toc end-->
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 # ccapi
 * A header-only C++ library for streaming market data and executing trades directly from cryptocurrency exchanges (i.e. the connections are between your server and the exchange server without anything in-between).
@@ -848,30 +850,29 @@ class MyEventHandler : public EventHandler {
   MyEventHandler(const std::string& fixSubscriptionCorrelationId) : fixSubscriptionCorrelationId(fixSubscriptionCorrelationId) {}
 
   void processEvent(const Event& event, Session* sessionPtr) override {
-    if (event.getType() == Event::Type::AUTHORIZATION_STATUS) {
-      std::cout << "Received an event of type AUTHORIZATION_STATUS:\n" + event.toPrettyString(2, 2) << std::endl;
-      auto message = event.getMessageList().at(0);
-      if (message.getType() == Message::Type::AUTHORIZATION_SUCCESS) {
+    std::cout << "Received an event:\n" + event.toPrettyString(2, 2) << std::endl;
+    if (!willSendRequest) {
+      sessionPtr->setTimer("id", 1000, nullptr, [this, sessionPtr]() {
         Request request(Request::Operation::FIX, "binance");
         request.appendFixParam({
             {35, "D"},
-            {11, "6d4eb0fb-2229-469f-873e-557dd78ac11e"},
-            {55, "BTC-USD"},
+            {11, request.generateNextClientOrderId()},
+            {55, "BTCUSDT"},
             {54, "1"},
-            {44, "20000"},
-            {38, "0.001"},
+            {44, "100000"},
+            {38, "0.0001"},
             {40, "2"},
             {59, "1"},
         });
         sessionPtr->sendRequestByFix(this->fixSubscriptionCorrelationId, request);
-      }
-    } else if (event.getType() == Event::Type::FIX) {
-      std::cout << "Received an event of type FIX:\n" + event.toPrettyString(2, 2) << std::endl;
+      });
+      willSendRequest = true;
     }
   }
 
  private:
   std::string fixSubscriptionCorrelationId;
+  bool willSendRequest{};
 };
 
 } /* namespace ccapi */
@@ -893,17 +894,15 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
   SessionOptions sessionOptions;
-  sessionOptions.heartbeatFixIntervalMilliseconds = 30000;  // Note the unit is millisecond
-  sessionOptions.heartbeatFixTimeoutMilliseconds = 5000;    // Note the unit is millisecond, should be less than heartbeatFixIntervalMilliseconds
   SessionConfigs sessionConfigs;
   std::string fixSubscriptionCorrelationId("any");
   MyEventHandler eventHandler(fixSubscriptionCorrelationId);
   Session session(sessionOptions, sessionConfigs, &eventHandler);
-  Subscription subscription("binance", "", "FIX", "8013=S&9406=Y",
-                            fixSubscriptionCorrelationId);  // https://developers.binance.com/docs/binance-spot-api-docs/fix-api#logon-a
+  Subscription subscription("binance", "", "FIX", "", fixSubscriptionCorrelationId);
   session.subscribe(subscription);
   std::this_thread::sleep_for(std::chrono::seconds(10));
   session.stop();
+  std::cout << "Bye" << std::endl;
   return EXIT_SUCCESS;
 }
 ```
@@ -917,12 +916,16 @@ Received an event:
         type = SESSION_CONNECTION_UP,
         recapType = UNKNOWN,
         time = 1970-01-01T00:00:00.000000000Z,
-        timeReceived = 2025-08-02T05:32:27.276351820Z,
+        timeReceived = 2025-08-08T18:50:06.816550779Z,
         elementList = [
           Element [
             tagValueList = [
 
-            ]
+            ],
+            nameValueMap = {
+              CONNECTION_ID = IF8j4HbdLP0,
+              CONNECTION_URL = tcp+tls://fix-oe.binance.com:9000
+            }
           ]
         ],
         correlationIdList = [ any ],
@@ -937,15 +940,18 @@ Received an event:
         type = AUTHORIZATION_SUCCESS,
         recapType = UNKNOWN,
         time = 1970-01-01T00:00:00.000000000Z,
-        timeReceived = 2025-08-02T05:32:27.279333577Z,
+        timeReceived = 2025-08-08T18:50:06.819417404Z,
         elementList = [
           Element [
             tagValueList = [
               (35, "A"),
               (98, "0"),
               (108, "60"),
-              (25037, "043bde93-187b-4791-ad8e-f82a9188dd1a")
-            ]
+              (25037, "e9ed8253-8f49-4a1b-bba9-718ff73991e5")
+            ],
+            nameValueMap = {
+
+            }
           ]
         ],
         correlationIdList = [ any ],
@@ -960,22 +966,22 @@ Received an event:
         type = FIX,
         recapType = UNKNOWN,
         time = 1970-01-01T00:00:00.000000000Z,
-        timeReceived = 2025-08-02T05:32:28.280030845Z,
+        timeReceived = 2025-08-08T18:50:07.820112736Z,
         elementList = [
           Element [
             tagValueList = [
               (35, "8"),
-              (17, "99562025401"),
-              (11, "x-XHKUG2CH-1754112748000"),
-              (37, "46872802898"),
+              (17, "100146443390"),
+              (11, "x-XHKUG2CH-1754679007000"),
+              (37, "47156106695"),
               (38, "0.00010000"),
               (40, "2"),
               (54, "1"),
               (55, "BTCUSDT"),
               (44, "100000.00000000"),
               (59, "1"),
-              (60, "20250802-05:32:28.278968"),
-              (25018, "20250802-05:32:28.278968"),
+              (60, "20250808-18:50:07.819027"),
+              (25018, "20250808-18:50:07.819027"),
               (25001, "3"),
               (150, "0"),
               (14, "0.00000000"),
@@ -985,8 +991,11 @@ Received an event:
               (32, "0.00000000"),
               (39, "0"),
               (636, "Y"),
-              (25023, "20250802-05:32:28.278968")
-            ]
+              (25023, "20250808-18:50:07.819027")
+            ],
+            nameValueMap = {
+
+            }
           ]
         ],
         correlationIdList = [ any ],
