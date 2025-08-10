@@ -15,7 +15,7 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
     this->baseUrlWs = sessionConfigs.getUrlWebsocketBase().at(this->exchangeName) + "/ws/v2";
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
     this->apiKeyName = CCAPI_HUOBI_API_KEY;
     this->apiSecretName = CCAPI_HUOBI_API_SECRET;
     this->setupCredential({this->apiKeyName, this->apiSecretName});

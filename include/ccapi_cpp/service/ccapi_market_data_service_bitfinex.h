@@ -15,7 +15,7 @@ class MarketDataServiceBitfinex : public MarketDataService {
     this->baseUrlWs = std::string(CCAPI_BITFINEX_PUBLIC_URL_WS_BASE) + "/ws/2";
     this->baseUrlRest = CCAPI_BITFINEX_PUBLIC_URL_REST_BASE;
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
     this->getRecentTradesTarget = "/v2/trades/{Symbol}/hist";
     this->getInstrumentsTarget = CCAPI_BITFINEX_GET_INSTRUMENTS_PATH;
     this->getInstrumentTarget = CCAPI_BITFINEX_GET_INSTRUMENTS_PATH;

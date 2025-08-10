@@ -224,9 +224,11 @@ class Service : public std::enable_shared_from_this<Service> {
     if (delayMilliseconds > 0) {
       auto timerPtr = std::make_shared<net::steady_timer>(*this->serviceContextPtr->ioContextPtr, std::chrono::milliseconds(delayMilliseconds));
       timerPtr->async_wait([that = shared_from_this(), request, req, retry, eventQueuePtr](ErrorCode const& ec) mutable {
-        if (ec && ec != boost::asio::error::operation_aborted) {
-          CCAPI_LOGGER_ERROR("request = " + toString(request) + ", sendRequest timer error: " + ec.message());
-          that->onError(Event::Type::REQUEST_STATUS, Message::Type::GENERIC_ERROR, ec, "timer", {request.getCorrelationId()}, eventQueuePtr);
+        if (ec) {
+          if (ec != boost::asio::error::operation_aborted) {
+            CCAPI_LOGGER_ERROR("request = " + toString(request) + ", sendRequest timer error: " + ec.message());
+            that->onError(Event::Type::REQUEST_STATUS, Message::Type::GENERIC_ERROR, ec, "timer", {request.getCorrelationId()}, eventQueuePtr);
+          }
         } else {
           auto now = UtilTime::now();
           request.setTimeSent(now);
@@ -250,9 +252,9 @@ class Service : public std::enable_shared_from_this<Service> {
 
   virtual void sendRequestByWebsocket(const std::string& websocketOrderEntrySubscriptionCorrelationId, Request& request, const TimePoint& now) {}
 
-  virtual void sendRequestByFix(Request& request, const TimePoint& now) {}
+  virtual void sendRequestByFix(const std::string& fixOrderEntrySubscriptionCorrelationId, Request& request, const TimePoint& now) {}
 
-  virtual void subscribeByFix(Subscription& subscription) {}
+  virtual void subscribe(Subscription& subscription) {}
 
   void onError(const Event::Type eventType, const Message::Type messageType, const std::string& errorMessage,
                const std::vector<std::string> correlationIdList = {}, Queue<Event>* eventQueuePtr = nullptr) {
@@ -313,17 +315,17 @@ class Service : public std::enable_shared_from_this<Service> {
     this->portRest = hostPort.second;
   }
 
-  void setHostWsFromUrlWs(std::string baseUrlWs) {
-    auto hostPort = this->extractHostFromUrl(baseUrlWs);
-    this->hostWs = hostPort.first;
-    this->portWs = hostPort.second;
-  }
+  //   void setHostWsFromUrlWs(std::string baseUrlWs) {
+  //     auto hostPort = this->extractHostFromUrl(baseUrlWs);
+  //     this->hostWs = hostPort.first;
+  //     this->portWs = hostPort.second;
+  //   }
 
-  void setHostWsFromUrlWsOrderEntry(std::string baseUrlWsOrderEntry) {
-    auto hostPort = this->extractHostFromUrl(baseUrlWs);
-    this->hostWsOrderEntry = hostPort.first;
-    this->portWsOrderEntry = hostPort.second;
-  }
+  //   void setHostWsFromUrlWsOrderEntry(std::string baseUrlWsOrderEntry) {
+  //     auto hostPort = this->extractHostFromUrl(baseUrlWs);
+  //     this->hostWsOrderEntry = hostPort.first;
+  //     this->portWsOrderEntry = hostPort.second;
+  //   }
 
   std::pair<std::string, std::string> extractHostFromUrl(std::string baseUrl) {
     std::string host;
@@ -357,7 +359,7 @@ class Service : public std::enable_shared_from_this<Service> {
     oss << req;
     CCAPI_LOGGER_DEBUG("req = \n" + oss.str());
 #endif
-    std::shared_ptr<beast::ssl_stream<beast::tcp_stream>> streamPtr(nullptr);
+    std::shared_ptr<beast::ssl_stream<beast::tcp_stream>> streamPtr{nullptr};
     try {
       streamPtr = this->createStream<beast::ssl_stream<beast::tcp_stream>>(this->serviceContextPtr->ioContextPtr, this->serviceContextPtr->sslContextPtr,
                                                                            this->hostRest);
@@ -385,7 +387,7 @@ class Service : public std::enable_shared_from_this<Service> {
     oss << req;
     CCAPI_LOGGER_DEBUG("req = \n" + oss.str());
 #endif
-    std::shared_ptr<beast::ssl_stream<beast::tcp_stream>> streamPtr(nullptr);
+    std::shared_ptr<beast::ssl_stream<beast::tcp_stream>> streamPtr{nullptr};
     try {
       streamPtr = this->createStream<beast::ssl_stream<beast::tcp_stream>>(this->serviceContextPtr->ioContextPtr, this->serviceContextPtr->sslContextPtr, host);
     } catch (const beast::error_code& ec) {
@@ -595,8 +597,8 @@ class Service : public std::enable_shared_from_this<Service> {
       timerPtr = std::make_shared<boost::asio::steady_timer>(*this->serviceContextPtr->ioContextPtr,
                                                              std::chrono::milliseconds(this->sessionOptions.httpRequestTimeoutMilliseconds));
       timerPtr->async_wait([httpConnectionPtr](ErrorCode const& ec) {
-        if (ec && ec != boost::asio::error::operation_aborted) {
-          if (ec != net::error::make_error_code(net::error::basic_errors::operation_aborted)) {
+        if (ec) {
+          if (ec != boost::asio::error::operation_aborted) {
             CCAPI_LOGGER_ERROR("httpConnectionPtr = " + toString(*httpConnectionPtr) + ", connect timeout timer error: " + ec.message());
           }
         } else {
@@ -826,7 +828,7 @@ class Service : public std::enable_shared_from_this<Service> {
                                                              this->httpConnectionPool[localIpAddress][requestBaseUrl].back()->lastReceiveDataTp)
                     .count() >= this->sessionOptions.httpConnectionKeepAliveTimeoutSeconds) {
           this->httpConnectionPool[localIpAddress][requestBaseUrl].clear();
-          std::shared_ptr<beast::ssl_stream<beast::tcp_stream>> streamPtr(nullptr);
+          std::shared_ptr<beast::ssl_stream<beast::tcp_stream>> streamPtr{nullptr};
           try {
             streamPtr = this->createStream<beast::ssl_stream<beast::tcp_stream>>(this->serviceContextPtr->ioContextPtr, this->serviceContextPtr->sslContextPtr,
                                                                                  this->hostRest);
@@ -918,11 +920,11 @@ class Service : public std::enable_shared_from_this<Service> {
     }
   }
 
-  void appendSymbolId(rj::Value& rjValue, rj::Document::AllocatorType& allocator, const std::string& symbolId, const std::string symbolIdCalled) {
+  void appendSymbolId(rj::Value& rjValue, rj::Document::AllocatorType& allocator, const std::string& symbolId, const std::string& symbolIdCalled) {
     rjValue.AddMember(rj::Value(symbolIdCalled.c_str(), allocator).Move(), rj::Value(symbolId.c_str(), allocator).Move(), allocator);
   }
 
-  void appendSymbolId(std::string& queryString, const std::string& symbolId, const std::string symbolIdCalled) {
+  void appendSymbolId(std::string& queryString, const std::string& symbolId, const std::string& symbolIdCalled) {
     if (!symbolId.empty()) {
       queryString += symbolIdCalled;
       queryString += "=";
@@ -964,9 +966,7 @@ class Service : public std::enable_shared_from_this<Service> {
   virtual void connect(std::shared_ptr<WsConnection> wsConnectionPtr) {
     CCAPI_LOGGER_FUNCTION_ENTER;
     wsConnectionPtr->status = WsConnection::Status::CONNECTING;
-    CCAPI_LOGGER_DEBUG("connection initialization on id " + wsConnectionPtr->id);
-    std::string url = wsConnectionPtr->url;
-    CCAPI_LOGGER_DEBUG("url = " + url);
+    CCAPI_LOGGER_DEBUG("wsConnectionPtr = " + wsConnectionPtr->toString());
     this->startResolveWs(wsConnectionPtr);
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
@@ -1298,9 +1298,11 @@ class Service : public std::enable_shared_from_this<Service> {
     timerPtr->async_wait([wsConnectionPtr, that = shared_from_this(), urlBase](ErrorCode const& ec) {
       WsConnection& thisWsConnection = *wsConnectionPtr;
       if (that->wsConnectionPtrByIdMap.find(thisWsConnection.id) == that->wsConnectionPtrByIdMap.end()) {
-        if (ec && ec != boost::asio::error::operation_aborted) {
-          CCAPI_LOGGER_ERROR("wsConnection = " + toString(thisWsConnection) + ", connect retry on fail timer error: " + ec.message());
-          that->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
+        if (ec) {
+          if (ec != boost::asio::error::operation_aborted) {
+            CCAPI_LOGGER_ERROR("wsConnection = " + toString(thisWsConnection) + ", connect retry on fail timer error: " + ec.message());
+            that->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
+          }
         } else {
           CCAPI_LOGGER_INFO("about to retry");
           try {
@@ -1464,7 +1466,7 @@ class Service : public std::enable_shared_from_this<Service> {
     } else if (kind == boost::beast::websocket::frame_type::pong) {
       this->onPong(wsConnectionPtr, payload);
     } else if (kind == boost::beast::websocket::frame_type::close) {
-      this->onClose(wsConnectionPtr, ErrorCode());
+      this->onClose(wsConnectionPtr, {});
     }
   }
 
@@ -1528,9 +1530,11 @@ class Service : public std::enable_shared_from_this<Service> {
                                                           std::chrono::milliseconds(pingIntervalMilliseconds - pongTimeoutMilliseconds));
       timerPtr->async_wait([wsConnectionPtr, that = shared_from_this(), pingMethod, pongTimeoutMilliseconds, method](ErrorCode const& ec) {
         if (that->wsConnectionPtrByIdMap.find(wsConnectionPtr->id) != that->wsConnectionPtrByIdMap.end()) {
-          if (ec && ec != boost::asio::error::operation_aborted) {
-            CCAPI_LOGGER_ERROR("wsConnection = " + toString(*wsConnectionPtr) + ", ping timer error: " + ec.message());
-            that->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
+          if (ec) {
+            if (ec != boost::asio::error::operation_aborted) {
+              CCAPI_LOGGER_ERROR("wsConnection = " + toString(*wsConnectionPtr) + ", ping timer error: " + ec.message());
+              that->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
+            }
           } else {
             if (that->wsConnectionPtrByIdMap.at(wsConnectionPtr->id)->status == WsConnection::Status::OPEN) {
               ErrorCode ec;
@@ -1549,9 +1553,11 @@ class Service : public std::enable_shared_from_this<Service> {
               auto timerPtr = std::make_shared<net::steady_timer>(*that->serviceContextPtr->ioContextPtr, std::chrono::milliseconds(pongTimeoutMilliseconds));
               timerPtr->async_wait([wsConnectionPtr, that, pingMethod, pongTimeoutMilliseconds, method](ErrorCode const& ec) {
                 if (that->wsConnectionPtrByIdMap.find(wsConnectionPtr->id) != that->wsConnectionPtrByIdMap.end()) {
-                  if (ec && ec != boost::asio::error::operation_aborted) {
-                    CCAPI_LOGGER_ERROR("wsConnection = " + toString(*wsConnectionPtr) + ", pong time out timer error: " + ec.message());
-                    that->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
+                  if (ec) {
+                    if (ec != boost::asio::error::operation_aborted) {
+                      CCAPI_LOGGER_ERROR("wsConnection = " + toString(*wsConnectionPtr) + ", pong time out timer error: " + ec.message());
+                      that->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::GENERIC_ERROR, ec, "timer");
+                    }
                   } else {
                     if (that->wsConnectionPtrByIdMap.at(wsConnectionPtr->id)->status == WsConnection::Status::OPEN) {
                       auto now = UtilTime::now();
@@ -1613,10 +1619,10 @@ class Service : public std::enable_shared_from_this<Service> {
   tcp::resolver resolver, resolverWs;
   std::string hostRest;
   std::string portRest;
-  std::string hostWs;
-  std::string portWs;
-  std::string hostWsOrderEntry;
-  std::string portWsOrderEntry;
+  //   std::string hostWs;
+  //   std::string portWs;
+  //   std::string hostWsOrderEntry;
+  //   std::string portWsOrderEntry;
   // tcp::resolver::results_type tcpResolverResultsRest, tcpResolverResultsWs;
   std::map<std::string, std::map<std::string, std::deque<std::shared_ptr<HttpConnection>>>> httpConnectionPool;
   std::map<std::string, std::string> credentialDefault;

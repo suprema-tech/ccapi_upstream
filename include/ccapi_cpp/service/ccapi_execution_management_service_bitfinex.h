@@ -15,7 +15,7 @@ class ExecutionManagementServiceBitfinex : public ExecutionManagementService {
     this->baseUrlWs = std::string(CCAPI_BITFINEX_PRIVATE_URL_WS_BASE) + "/ws/2";
     this->baseUrlRest = CCAPI_BITFINEX_PRIVATE_URL_REST_BASE;
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
     this->apiKeyName = CCAPI_BITFINEX_API_KEY;
     this->apiSecretName = CCAPI_BITFINEX_API_SECRET;
     this->setupCredential({this->apiKeyName, this->apiSecretName});

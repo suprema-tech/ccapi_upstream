@@ -35,6 +35,8 @@ class SessionConfigs {
 
   const std::map<std::string, std::string>& getUrlFixBase() const { return urlFixBase; }
 
+  const std::map<std::string, std::string>& getUrlFixMarketDataBase() const { return urlFixMarketDataBase; }
+
   const std::map<std::string, int>& getInitialSequenceByExchangeMap() const { return initialSequenceByExchangeMap; }
 
   const std::map<std::string, std::string>& getCredential() const { return credential; }
@@ -44,6 +46,8 @@ class SessionConfigs {
   void setUrlRestBase(const std::map<std::string, std::string>& urlRestBase) { this->urlRestBase = urlRestBase; }
 
   void setUrlFixBase(const std::map<std::string, std::string>& urlFixBase) { this->urlFixBase = urlFixBase; }
+
+  void setUrlFixMarketDataBase(const std::map<std::string, std::string>& urlFixMarketDataBase) { this->urlFixMarketDataBase = urlFixMarketDataBase; }
 
   void setCredential(const std::map<std::string, std::string>& credential) { this->credential = credential; }
 #ifndef CCAPI_EXPOSE_INTERNAL
@@ -417,10 +421,10 @@ class SessionConfigs {
 
   void initializUrlFixBase() {
     this->urlFixBase = {
-        {CCAPI_EXCHANGE_NAME_COINBASE, CCAPI_COINBASE_URL_FIX_BASE},
-        {CCAPI_EXCHANGE_NAME_FTX, CCAPI_FTX_URL_FIX_BASE},
-        {CCAPI_EXCHANGE_NAME_FTX_US, CCAPI_FTX_US_URL_FIX_BASE},
-        {CCAPI_EXCHANGE_NAME_DERIBIT, CCAPI_DERIBIT_URL_FIX_BASE},
+        {CCAPI_EXCHANGE_NAME_BINANCE, CCAPI_BINANCE_URL_FIX_BASE},
+    };
+    this->urlFixMarketDataBase = {
+        {CCAPI_EXCHANGE_NAME_BINANCE, CCAPI_BINANCE_URL_FIX_MARKET_DATA_BASE},
     };
   }
 
@@ -430,6 +434,7 @@ class SessionConfigs {
   std::map<std::string, std::string> urlWebsocketOrderEntryBase;
   std::map<std::string, std::string> urlRestBase;
   std::map<std::string, std::string> urlFixBase;
+  std::map<std::string, std::string> urlFixMarketDataBase;
   std::map<std::string, int> initialSequenceByExchangeMap;
   std::map<std::string, std::string> credential;
 };

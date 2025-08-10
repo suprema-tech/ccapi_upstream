@@ -25,6 +25,7 @@ class Event {
     AUTHORIZATION_STATUS,
     FIX,
     FIX_STATUS,
+    HEARTBEAT,
   };
 
   static std::string typeToString(Type type) {
@@ -57,6 +58,9 @@ class Event {
       case Type::FIX_STATUS:
         output = "FIX_STATUS";
         break;
+      case Type::HEARTBEAT:
+        output = "HEARTBEAT";
+        break;
       default:
         CCAPI_LOGGER_FATAL(CCAPI_UNSUPPORTED_VALUE);
     }
@@ -68,11 +72,11 @@ class Event {
     return output;
   }
 
-  std::string toStringPretty(const int space = 2, const int leftToIndent = 0, const bool indentFirstLine = true) const {
+  std::string toPrettyString(const int space = 2, const int leftToIndent = 0, const bool indentFirstLine = true) const {
     std::string sl(leftToIndent, ' ');
     std::string ss(leftToIndent + space, ' ');
     std::string output = (indentFirstLine ? sl : "") + "Event [\n" + ss + "type = " + typeToString(type) + ",\n" + ss +
-                         "messageList = " + ccapi::toStringPretty(messageList, space, leftToIndent + space, false) + "\n" + sl + "]";
+                         "messageList = " + ccapi::toPrettyString(messageList, space, leftToIndent + space, false) + "\n" + sl + "]";
     return output;
   }
 

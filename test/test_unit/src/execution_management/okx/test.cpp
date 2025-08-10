@@ -676,7 +676,7 @@ TEST_F(ExecutionManagementServiceOkxTest, createEventLive) {
 }
 
 TEST_F(ExecutionManagementServiceOkxTest, createEventWebsocketTradePlaceOrder) {
-  Subscription subscription("okx", "BTC-USDT", "ORDER_UPDATE", "", "same correlation id for subscription and request");
+  Subscription subscription("okx", "BTC-USDT", "ORDER_UPDATE", "", "any");
   std::string textMessage = R"(
     {
       "id": "1512",
@@ -711,7 +711,7 @@ TEST_F(ExecutionManagementServiceOkxTest, createEventWebsocketTradePlaceOrder) {
 }
 
 TEST_F(ExecutionManagementServiceOkxTest, createEventWebsocketTradeCancelOrder) {
-  Subscription subscription("okx", "BTC-USDT", "ORDER_UPDATE", "", "same correlation id for subscription and request");
+  Subscription subscription("okx", "BTC-USDT", "ORDER_UPDATE", "", "any");
   std::string textMessage = R"(
     {
       "code": "0",

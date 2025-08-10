@@ -15,7 +15,7 @@ class MarketDataServiceGateio : public MarketDataServiceGateioBase {
     this->baseUrlWs = sessionConfigs.getUrlWebsocketBase().at(this->exchangeName) + "/ws/v4/";
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
     this->apiKeyName = CCAPI_GATEIO_API_KEY;
     this->setupCredential({this->apiKeyName});
     std::string prefix = "/api/v4";

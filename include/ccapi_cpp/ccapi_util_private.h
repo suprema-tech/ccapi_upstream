@@ -572,11 +572,11 @@ class UtilAlgorithm {
 
  public:
   static std::string toBase62(size_t value) {
-    static constexpr char base62Chars[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    static constexpr char kBase62Chars[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
     std::string result;
     do {
-      result += base62Chars[value % 62];
+      result += kBase62Chars[value % 62];
       value /= 62;
     } while (value);
     std::reverse(result.begin(), result.end());
@@ -875,7 +875,7 @@ inline uint_fast32_t UtilAlgorithm::crc(InputIterator first, InputIterator last)
 
 class UtilSystem {
  public:
-  static bool getEnvAsBool(const std::string variableName, const bool defaultValue = false) {
+  static bool getEnvAsBool(const std::string& variableName, const bool defaultValue = false) {
     const char* env_p = std::getenv(variableName.c_str());
     if (env_p) {
       return UtilString::toLower(env_p) == "true";
@@ -884,7 +884,7 @@ class UtilSystem {
     }
   }
 
-  static std::string getEnvAsString(const std::string variableName, const std::string defaultValue = "") {
+  static std::string getEnvAsString(const std::string& variableName, const std::string& defaultValue = "") {
     const char* env_p = std::getenv(variableName.c_str());
     if (env_p) {
       return std::string(env_p);
@@ -893,7 +893,7 @@ class UtilSystem {
     }
   }
 
-  static int getEnvAsInt(const std::string variableName, const int defaultValue = 0) {
+  static int getEnvAsInt(const std::string& variableName, const int defaultValue = 0) {
     const char* env_p = std::getenv(variableName.c_str());
     if (env_p) {
       return std::stoi(std::string(env_p));
@@ -902,7 +902,7 @@ class UtilSystem {
     }
   }
 
-  static long getEnvAsLong(const std::string variableName, const long defaultValue = 0) {
+  static long getEnvAsLong(const std::string& variableName, const long defaultValue = 0) {
     const char* env_p = std::getenv(variableName.c_str());
     if (env_p) {
       return std::stol(std::string(env_p));
@@ -911,7 +911,7 @@ class UtilSystem {
     }
   }
 
-  static float getEnvAsFloat(const std::string variableName, const float defaultValue = 0) {
+  static float getEnvAsFloat(const std::string& variableName, const float defaultValue = 0) {
     const char* env_p = std::getenv(variableName.c_str());
     if (env_p) {
       return std::stof(std::string(env_p));
@@ -920,7 +920,7 @@ class UtilSystem {
     }
   }
 
-  static double getEnvAsDouble(const std::string variableName, const double defaultValue = 0) {
+  static double getEnvAsDouble(const std::string& variableName, const double defaultValue = 0) {
     const char* env_p = std::getenv(variableName.c_str());
     if (env_p) {
       return std::stod(std::string(env_p));
@@ -1521,9 +1521,9 @@ typename std::enable_if<std::is_same<decltype(std::declval<const T&>().toString(
 }
 
 template <typename T>
-typename std::enable_if<std::is_same<decltype(std::declval<const T&>().toStringPretty()), std::string>::value, std::string>::type toStringPretty(
+typename std::enable_if<std::is_same<decltype(std::declval<const T&>().toPrettyString()), std::string>::value, std::string>::type toPrettyString(
     const T& t, const int space = 2, const int leftToIndent = 0, const bool indentFirstLine = true) {
-  return t.toStringPretty(space, leftToIndent, indentFirstLine);
+  return t.toPrettyString(space, leftToIndent, indentFirstLine);
 }
 
 template <typename T>
@@ -1532,7 +1532,7 @@ typename std::enable_if<std::is_integral<T>::value, std::string>::type toString(
 }
 
 template <typename T>
-typename std::enable_if<std::is_same<decltype(std::to_string(std::declval<T&>())), std::string>::value, std::string>::type toStringPretty(
+typename std::enable_if<std::is_same<decltype(std::to_string(std::declval<T&>())), std::string>::value, std::string>::type toPrettyString(
     const T& t, const int space = 2, const int leftToIndent = 0, const bool indentFirstLine = true) {
   std::string sl(leftToIndent, ' ');
   std::string output = (indentFirstLine ? sl : "") + std::to_string(t);
@@ -1564,7 +1564,7 @@ typename std::enable_if<std::is_same<T, std::string_view>::value, std::string>::
 // }
 
 template <typename T>
-typename std::enable_if<std::is_same<T, std::string>::value, std::string>::type toStringPretty(const T& t, const int space = 2, const int leftToIndent = 0,
+typename std::enable_if<std::is_same<T, std::string>::value, std::string>::type toPrettyString(const T& t, const int space = 2, const int leftToIndent = 0,
                                                                                                const bool indentFirstLine = true) {
   std::string sl(leftToIndent, ' ');
   std::string output = (indentFirstLine ? sl : "") + t;
@@ -1572,11 +1572,22 @@ typename std::enable_if<std::is_same<T, std::string>::value, std::string>::type 
 }
 
 template <typename T>
-typename std::enable_if<std::is_same<T, std::string_view>::value, std::string>::type toStringPretty(const T& t, const int space = 2, const int leftToIndent = 0,
+typename std::enable_if<std::is_same<T, std::string_view>::value, std::string>::type toPrettyString(const T& t, const int space = 2, const int leftToIndent = 0,
                                                                                                     const bool indentFirstLine = true) {
   std::string sl(leftToIndent, ' ');
   std::string output = (indentFirstLine ? sl : "") + std::string(t);
   return output;
+}
+
+template <typename T>
+typename std::enable_if<std::is_same<T, std::pair<int, std::string>>::value, std::string>::type toPrettyString(const T& p, const int space = 2,
+                                                                                                               const int leftToIndent = 0,
+                                                                                                               const bool indentFirstLine = true) {
+  std::string indent(leftToIndent, ' ');
+  std::string result;
+  if (indentFirstLine) result += indent;
+  result += "(" + std::to_string(p.first) + ", \"" + p.second + "\")";
+  return result;
 }
 
 template <typename T>
@@ -1676,15 +1687,15 @@ inline std::string toString(const std::map<K, V>& c) {
 }
 
 template <typename K, typename V>
-std::string toStringPretty(const std::map<K, V>& c, const int space = 2, const int leftToIndent = 0, const bool indentFirstLine = true) {
+std::string toPrettyString(const std::map<K, V>& c, const int space = 2, const int leftToIndent = 0, const bool indentFirstLine = true) {
   std::string sl(leftToIndent, ' ');
   std::string output = (indentFirstLine ? sl : "") + "{\n";
   auto size = c.size();
   auto i = 0;
   for (const auto& elem : c) {
-    output += toStringPretty(elem.first, space, space + leftToIndent, true);
+    output += toPrettyString(elem.first, space, space + leftToIndent, true);
     output += " = ";
-    output += toStringPretty(elem.second, space, space + leftToIndent, false);
+    output += toPrettyString(elem.second, space, space + leftToIndent, false);
     if (i < size - 1) {
       output += ",\n";
     }
@@ -1777,13 +1788,13 @@ inline std::string toString(const std::vector<T>& c) {
 }
 
 template <typename T>
-std::string toStringPretty(const std::vector<T>& c, const int space = 2, const int leftToIndent = 0, const bool indentFirstLine = true) {
+std::string toPrettyString(const std::vector<T>& c, const int space = 2, const int leftToIndent = 0, const bool indentFirstLine = true) {
   std::string sl(leftToIndent, ' ');
   std::string output = (indentFirstLine ? sl : "") + "[\n";
   auto size = c.size();
   auto i = 0;
   for (const auto& elem : c) {
-    output += toStringPretty(elem, space, space + leftToIndent, true);
+    output += toPrettyString(elem, space, space + leftToIndent, true);
     if (i < size - 1) {
       output += ",\n";
     }
@@ -1825,7 +1836,7 @@ std::string firstNToStringPretty(const std::vector<T>& c, const size_t n, const 
     if (i >= n) {
       break;
     }
-    output += toStringPretty(elem, space, space + leftToIndent, true);
+    output += toPrettyString(elem, space, space + leftToIndent, true);
     if (i < size - 1) {
       output += ",\n";
     }

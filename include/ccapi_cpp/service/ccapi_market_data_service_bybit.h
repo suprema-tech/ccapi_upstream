@@ -15,7 +15,7 @@ class MarketDataServiceBybit : public MarketDataService {
     this->baseUrlWs = sessionConfigs.getUrlWebsocketBase().at(this->exchangeName) + "/v5/public/{instrumentTypeSubstitute}";
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
     this->getRecentTradesTarget = "/v5/market/recent-trade";
     this->getHistoricalTradesTarget = "/v5/market/recent-trade";
     this->getRecentCandlesticksTarget = "/v5/market/kline";

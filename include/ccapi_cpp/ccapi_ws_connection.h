@@ -41,9 +41,9 @@ class WsConnection {
     }
     std::ostringstream oss;
     std::visit(
-        [&oss](auto&& streamSharedPtr) {
-          if (streamSharedPtr) {
-            oss << streamSharedPtr.get();
+        [&oss](auto&& streamPtr) {
+          if (streamPtr) {
+            oss << streamPtr.get();
           } else {
             oss << "nullptr";
           }
@@ -54,7 +54,7 @@ class WsConnection {
                          ", status = " + statusToString(status) + ", headers = " + ccapi::toString(headers) + ", streamPtr = " + oss.str() +
                          ", remoteCloseCode = " + std::to_string(remoteCloseCode) + ", remoteCloseReason = " + std::string(remoteCloseReason.reason.c_str()) +
                          ", hostHttpHeaderValue = " + ccapi::toString(hostHttpHeaderValue) + ", path = " + ccapi::toString(path) +
-                         ", host = " + ccapi::toString(host) + ", port = " + ccapi::toString(port) + "]";
+                         ", host = " + ccapi::toString(host) + ", port = " + ccapi::toString(port) + ", isSecure = " + ccapi::toString(isSecure) + "]";
     return output;
   }
   enum class Status {

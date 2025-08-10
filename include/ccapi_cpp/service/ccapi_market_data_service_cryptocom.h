@@ -15,7 +15,7 @@ class MarketDataServiceCryptocom : public MarketDataService {
     this->baseUrlWs = sessionConfigs.getUrlWebsocketBase().at(this->exchangeName) + "/v2/market";
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
     this->getRecentTradesTarget = "/v2/public/get-trades";
     this->getInstrumentTarget = "/v2/public/get-instruments";
     this->getInstrumentsTarget = "/v2/public/get-instruments";

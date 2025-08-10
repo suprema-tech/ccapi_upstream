@@ -16,7 +16,7 @@ class MarketDataServiceBitstamp : public MarketDataService {
     this->enableCheckPingPongWebsocketApplicationLevel = false;
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
     this->getRecentTradesTarget = "/api/v2/transactions/{currency_pair}/";  // must have trailing slash
     this->getInstrumentTarget = "/api/v2/trading-pairs-info/";
     this->getInstrumentsTarget = "/api/v2/trading-pairs-info/";

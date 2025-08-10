@@ -15,7 +15,7 @@ class MarketDataServiceKrakenFutures : public MarketDataService {
     this->baseUrlWs = sessionConfigs.getUrlWebsocketBase().at(this->exchangeName) + "/ws/v1";
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
     std::string prefix("/derivatives/api/v3");
     this->getRecentTradesTarget = prefix + "/history";
     this->getInstrumentTarget = prefix + "/instruments";
