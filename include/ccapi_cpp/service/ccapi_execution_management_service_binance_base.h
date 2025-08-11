@@ -525,7 +525,34 @@ class ExecutionManagementServiceBinanceBase : public ExecutionManagementService 
       const auto& fieldSet = subscription.getFieldSet();
       const auto& instrumentSet = subscription.getInstrumentSet();
       std::string type = document["e"].GetString();
-      if (type == (this->isDerivatives ? "ORDER_TRADE_UPDATE" : "executionReport")) {
+      if (type == "TRADE_LITE") {
+        event.setType(Event::Type::SUBSCRIPTION_DATA);
+        const rj::Value& data = document;
+        std::string instrument = data["s"].GetString();
+        if (instrumentSet.empty() || instrumentSet.find(UtilString::toUpper(instrument)) != instrumentSet.end() ||
+            instrumentSet.find(UtilString::toLower(instrument)) != instrumentSet.end()) {
+          if (fieldSet.find(CCAPI_EM_PRIVATE_TRADE_LITE) != fieldSet.end()) {
+            Message message;
+            message.setTimeReceived(timeReceived);
+            message.setCorrelationIdList({subscription.getCorrelationId()});
+            message.setTime(TimePoint(std::chrono::milliseconds(std::stoll(data["E"].GetString()))));
+            message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_PRIVATE_TRADE_LITE);
+            std::vector<Element> elementList;
+            Element element;
+            element.insert(CCAPI_TRADE_ID, data["t"].GetString());
+            element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, data["L"].GetString());
+            element.insert(CCAPI_EM_ORDER_LAST_EXECUTED_SIZE, data["l"].GetString());
+            element.insert(CCAPI_EM_ORDER_SIDE, std::string_view(data["S"].GetString()) == "BUY" ? CCAPI_EM_ORDER_SIDE_BUY : CCAPI_EM_ORDER_SIDE_SELL);
+            element.insert(CCAPI_IS_MAKER, data["m"].GetBool() ? "1" : "0");
+            element.insert(CCAPI_EM_ORDER_ID, data["i"].GetString());
+            element.insert(CCAPI_EM_CLIENT_ORDER_ID, data["c"].GetString());
+            element.insert(CCAPI_EM_ORDER_INSTRUMENT, instrument);
+            elementList.emplace_back(std::move(element));
+            message.setElementList(elementList);
+            messageList.emplace_back(std::move(message));
+          }
+        }
+      } else if (type == (this->isDerivatives ? "ORDER_TRADE_UPDATE" : "executionReport")) {
         event.setType(Event::Type::SUBSCRIPTION_DATA);
         const rj::Value& data = this->isDerivatives ? document["o"] : document;
         std::string executionType = data["x"].GetString();
