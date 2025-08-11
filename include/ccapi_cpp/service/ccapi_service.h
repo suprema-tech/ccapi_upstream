@@ -1413,7 +1413,6 @@ class Service : public std::enable_shared_from_this<Service> {
 
           if (stream.got_text()) {
             boost::beast::string_view textMessage(data, dataSize);
-            std::cout << textMessage << std::endl;
             CCAPI_LOGGER_DEBUG("received a text message: " + std::string(textMessage));
             try {
               this->onTextMessage(wsConnectionPtr, textMessage, now);
