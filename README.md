@@ -1,14 +1,9 @@
-# Notice
-* Small breaking change: renamed `toStringPretty` to `toPrettyString`.
-* Added FIX API support for binance.
-
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 
 **Table of Contents**  *generated with [DocToc](https://github.com/ktechhub/doctoc)*
 
 <!---toc start-->
 
-* [Notice](#notice)
 * [ccapi](#ccapi)
   * [Branches](#branches)
   * [Build](#build)
@@ -56,7 +51,6 @@
 <!---toc end-->
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 
 # ccapi
 * A header-only C++ library for streaming market data and executing trades directly from cryptocurrency exchanges (i.e. the connections are between your server and the exchange server without anything in-between).
@@ -703,7 +697,7 @@ Received an event of type SUBSCRIPTION_DATA:
   ]
 Bye
 ```
-* Subscription fields: `ORDER_UPDATE`, `PRIVATE_TRADE`, `BALANCE_UPDATE`, `POSITION_UPDATE`.
+* Subscription fields: `ORDER_UPDATE`, `PRIVATE_TRADE`, `PRIVATE_TRADE_LITE`, `BALANCE_UPDATE`, `POSITION_UPDATE`.
 
 ### Advanced Execution Management
 
