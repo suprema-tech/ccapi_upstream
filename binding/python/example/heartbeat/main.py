@@ -1,5 +1,5 @@
 import time
-from ccapi import EventHandler, SessionOptions, SessionConfigs, Session, Request, Event
+from ccapi import EventHandler, SessionOptions, SessionConfigs, Session, Subscription, Event
 
 
 class MyEventHandler(EventHandler):
@@ -7,7 +7,8 @@ class MyEventHandler(EventHandler):
         super().__init__()
 
     def processEvent(self, event: Event, session: Session) -> None:
-        print(f"Received an event:\n{event.toPrettyString(2, 2)}")
+        if event.getType() == Event.Type_HEARTBEAT:
+            print(f"Received an event of type HEARTBEAT:\n{event.toPrettyString(2, 2)}")
 
 
 if __name__ == "__main__":
@@ -15,13 +16,8 @@ if __name__ == "__main__":
     option = SessionOptions()
     config = SessionConfigs()
     session = Session(option, config, eventHandler)
-    request = Request(Request.Operation_GET_RECENT_TRADES, "coinbase", "BTC-USD")
-    request.appendParam(
-        {
-            "LIMIT": "1",
-        }
-    )
-    session.sendRequest(request)
+    subscription = Subscription("", "", "HEARTBEAT", "HEARTBEAT_INTERVAL_MILLISECONDS=1000")
+    session.subscribe(subscription)
     time.sleep(10)
     session.stop()
     print("Bye")

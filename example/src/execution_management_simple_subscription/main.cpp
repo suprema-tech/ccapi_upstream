@@ -8,7 +8,7 @@ class MyEventHandler : public EventHandler {
  public:
   void processEvent(const Event& event, Session* sessionPtr) override {
     if (event.getType() == Event::Type::SUBSCRIPTION_STATUS) {
-      std::cout << "Received an event of type SUBSCRIPTION_STATUS:\n" + event.toStringPretty(2, 2) << std::endl;
+      std::cout << "Received an event of type SUBSCRIPTION_STATUS:\n" + event.toPrettyString(2, 2) << std::endl;
       auto message = event.getMessageList().at(0);
       if (message.getType() == Message::Type::SUBSCRIPTION_STARTED) {
         Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDT");
@@ -16,12 +16,12 @@ class MyEventHandler : public EventHandler {
             {"SIDE", "BUY"},
             {"LIMIT_PRICE", "20000"},
             {"QUANTITY", "0.001"},
-            {"CLIENT_ORDER_ID", "6d4eb0fb"},
+            {"CLIENT_ORDER_ID", request.generateNextClientOrderId()},
         });
         sessionPtr->sendRequest(request);
       }
     } else if (event.getType() == Event::Type::SUBSCRIPTION_DATA) {
-      std::cout << "Received an event of type SUBSCRIPTION_DATA:\n" + event.toStringPretty(2, 2) << std::endl;
+      std::cout << "Received an event of type SUBSCRIPTION_DATA:\n" + event.toPrettyString(2, 2) << std::endl;
     }
   }
 };

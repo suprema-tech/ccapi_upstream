@@ -15,7 +15,7 @@ class MarketDataServiceGemini : public MarketDataService {
     this->baseUrlWs = sessionConfigs.getUrlWebsocketBase().at(this->exchangeName) + "/v1/marketdata";
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
     this->getRecentTradesTarget = "/v1/trades/:symbol";
     this->getInstrumentTarget = "/v1/symbols/details/:symbol";
     this->getInstrumentsTarget = "/v1/symbols";

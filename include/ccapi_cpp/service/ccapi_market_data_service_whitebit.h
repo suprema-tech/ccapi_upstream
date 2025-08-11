@@ -15,7 +15,7 @@ class MarketDataServiceWhitebit : public MarketDataService {
     this->baseUrlWs = sessionConfigs.getUrlWebsocketBase().at(this->exchangeName) + "/ws";
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
     this->getRecentTradesTarget = "/api/v4/public/trades/{market}";
     this->getInstrumentsTarget = "/api/v4/public/markets";
     this->methodDepthSubscribe = std::string(CCAPI_WEBSOCKET_WHITEBIT_CHANNEL_MARKET_DEPTH) + "_subscribe";

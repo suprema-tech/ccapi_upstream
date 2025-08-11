@@ -25,7 +25,7 @@ class FixServiceFtxUs : public FixServiceFtxBase {
       CCAPI_LOGGER_FATAL(std::string("e.what() = ") + e.what());
     }
     this->protocolVersion = CCAPI_FIX_PROTOCOL_VERSION_FTX_US;
-    this->targetCompID = "FTXUS";
+    this->targetCompId = "FTXUS";
   }
 
   virtual ~FixServiceFtxUs() {}

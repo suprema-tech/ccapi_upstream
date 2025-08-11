@@ -56,7 +56,7 @@ add_custom_target(
   # falls back to setup.py automatically)
   COMMAND ${Python_EXECUTABLE} -m build --wheel
   # install the freshly-built wheel
-  COMMAND ${Python_EXECUTABLE} -m pip install --upgrade dist/*.whl
+  COMMAND ${Python_EXECUTABLE} -m pip install --force-reinstall dist/*.whl
   # -----------------------
   WORKING_DIRECTORY ${PACKAGING_DIR_FULL})
 add_dependencies(${PYTHON_PACKAGING_TARGET_NAME} ${SWIG_TARGET_NAME})

@@ -1,5 +1,6 @@
 # Notice
-* New release has about 20% reduction in cpu usage.
+* Small breaking change: renamed `toStringPretty` to `toPrettyString`.
+* Added FIX API support for binance.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -48,17 +49,13 @@
       * [Thread safety](#thread-safety)
       * [Enable library logging](#enable-library-logging)
       * [Set timer](#set-timer)
+      * [Heartbeat](#heartbeat)
   * [Performance Tuning](#performance-tuning)
   * [Known Issues and Workarounds](#known-issues-and-workarounds)
 
 <!---toc end-->
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-
-
-
-
 
 
 # ccapi
@@ -69,7 +66,7 @@
 * Supported exchanges:
   * Market Data: ascendex, [binance](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-usds-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-coin-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, [bybit](https://www.bybit.com/invite?ref=XNYP2K), coinbase, [cryptocom](https://crypto.com/exch/tqj4b8x48w), deribit, erisx (Cboe Digital), [gateio](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), [gateio-perpetual-futures](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, mexc-futures, [okx](https://www.okx.com/join/47636709), whitebit.
   * Execution Management: ascendex, [binance](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-usds-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-coin-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, [bybit](https://www.bybit.com/invite?ref=XNYP2K), coinbase, [cryptocom](https://crypto.com/exch/tqj4b8x48w), deribit, erisx (Cboe Digital), [gateio](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), [gateio-perpetual-futures](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, [okx](https://www.okx.com/join/47636709).
-  * FIX: coinbase, gemini.
+  * FIX: [binance](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), coinbase, gemini.
 * Join us on Discord https://discord.gg/b5EKcp9s8T and Medium https://cryptochassis.medium.com.
 
 ## Branches
@@ -232,7 +229,7 @@ Logger* Logger::logger = nullptr;  // This line is needed.
 class MyEventHandler : public EventHandler {
  public:
   void processEvent(const Event& event, Session* sessionPtr) override {
-    std::cout << "Received an event:\n" + event.toStringPretty(2, 2) << std::endl;
+    std::cout << "Received an event:\n" + event.toPrettyString(2, 2) << std::endl;
   }
 };
 
@@ -311,7 +308,7 @@ class MyEventHandler : public EventHandler {
  public:
   void processEvent(const Event& event, Session* sessionPtr) override {
     if (event.getType() == Event::Type::SUBSCRIPTION_STATUS) {
-      std::cout << "Received an event of type SUBSCRIPTION_STATUS:\n" + event.toStringPretty(2, 2) << std::endl;
+      std::cout << "Received an event of type SUBSCRIPTION_STATUS:\n" + event.toPrettyString(2, 2) << std::endl;
     } else if (event.getType() == Event::Type::SUBSCRIPTION_DATA) {
       for (const auto& message : event.getMessageList()) {
         std::cout << std::string("Best bid and ask at ") + UtilTime::getISOTimestamp(message.getTime()) + " are:" << std::endl;
@@ -505,7 +502,7 @@ Logger* Logger::logger = nullptr;  // This line is needed.
 class MyEventHandler : public EventHandler {
  public:
   void processEvent(const Event& event, Session* sessionPtr) override {
-    std::cout << "Received an event:\n" + event.toStringPretty(2, 2) << std::endl;
+    std::cout << "Received an event:\n" + event.toPrettyString(2, 2) << std::endl;
   }
 };
 
@@ -605,7 +602,7 @@ class MyEventHandler : public EventHandler {
  public:
   void processEvent(const Event& event, Session* sessionPtr) override {
     if (event.getType() == Event::Type::SUBSCRIPTION_STATUS) {
-      std::cout << "Received an event of type SUBSCRIPTION_STATUS:\n" + event.toStringPretty(2, 2) << std::endl;
+      std::cout << "Received an event of type SUBSCRIPTION_STATUS:\n" + event.toPrettyString(2, 2) << std::endl;
       auto message = event.getMessageList().at(0);
       if (message.getType() == Message::Type::SUBSCRIPTION_STARTED) {
         Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDT");
@@ -618,7 +615,7 @@ class MyEventHandler : public EventHandler {
         sessionPtr->sendRequest(request);
       }
     } else if (event.getType() == Event::Type::SUBSCRIPTION_DATA) {
-      std::cout << "Received an event of type SUBSCRIPTION_DATA:\n" + event.toStringPretty(2, 2) << std::endl;
+      std::cout << "Received an event of type SUBSCRIPTION_DATA:\n" + event.toPrettyString(2, 2) << std::endl;
     }
   }
 };
@@ -843,61 +840,66 @@ For a specific exchange and instrument, submit a simple limit order.
 [C++](example/src/fix_simple/main.cpp) / [Python](binding/python/example/fix_simple/main.py) / [Java](binding/java/example/fix_simple/Main.java) / [C#](binding/csharp/example/fix_simple/MainProgram.cs) / [Go](binding/go/example/fix_simple/main.go) / [Javascript](binding/javascript/example/fix_simple/index.js)
 ```
 #include "ccapi_cpp/ccapi_session.h"
+
 namespace ccapi {
 
 Logger* Logger::logger = nullptr;  // This line is needed.
+
 class MyEventHandler : public EventHandler {
  public:
+  MyEventHandler(const std::string& fixSubscriptionCorrelationId) : fixSubscriptionCorrelationId(fixSubscriptionCorrelationId) {}
+
   void processEvent(const Event& event, Session* sessionPtr) override {
-    if (event.getType() == Event::Type::AUTHORIZATION_STATUS) {
-      std::cout << "Received an event of type AUTHORIZATION_STATUS:\n" + event.toStringPretty(2, 2) << std::endl;
-      auto message = event.getMessageList().at(0);
-      if (message.getType() == Message::Type::AUTHORIZATION_SUCCESS) {
-        Request request(Request::Operation::FIX, "okx", "", "same correlation id for subscription and request");
-        request.appendParamFix({
+    std::cout << "Received an event:\n" + event.toPrettyString(2, 2) << std::endl;
+    if (!willSendRequest) {
+      sessionPtr->setTimer("id", 1000, nullptr, [this, sessionPtr]() {
+        Request request(Request::Operation::FIX, "binance");
+        request.appendFixParam({
             {35, "D"},
-            {11, "6d4eb0fb-2229-469f-873e-557dd78ac11e"},
-            {55, "BTC-USDT"},
+            {11, request.generateNextClientOrderId()},
+            {55, "BTCUSDT"},
             {54, "1"},
-            {44, "20000"},
-            {38, "0.001"},
+            {44, "100000"},
+            {38, "0.0001"},
             {40, "2"},
             {59, "1"},
         });
-        sessionPtr->sendRequestByFix(request);
-      }
-    } else if (event.getType() == Event::Type::FIX) {
-      std::cout << "Received an event of type FIX:\n" + event.toStringPretty(2, 2) << std::endl;
+        sessionPtr->sendRequestByFix(this->fixSubscriptionCorrelationId, request);
+      });
+      willSendRequest = true;
     }
   }
+
+ private:
+  std::string fixSubscriptionCorrelationId;
+  bool willSendRequest{};
 };
 
 } /* namespace ccapi */
+
 using ::ccapi::MyEventHandler;
 using ::ccapi::Session;
 using ::ccapi::SessionConfigs;
 using ::ccapi::SessionOptions;
 using ::ccapi::Subscription;
 using ::ccapi::UtilSystem;
+
 int main(int argc, char** argv) {
-  if (UtilSystem::getEnvAsString("OKX_API_KEY").empty()) {
-    std::cerr << "Please set environment variable OKX_API_KEY" << std::endl;
+  if (UtilSystem::getEnvAsString("BINANCE_FIX_API_KEY").empty()) {
+    std::cerr << "Please set environment variable BINANCE_FIX_API_KEY" << std::endl;
     return EXIT_FAILURE;
   }
-  if (UtilSystem::getEnvAsString("OKX_API_SECRET").empty()) {
-    std::cerr << "Please set environment variable OKX_API_SECRET" << std::endl;
-    return EXIT_FAILURE;
-  }
-  if (UtilSystem::getEnvAsString("OKX_API_PASSPHRASE").empty()) {
-    std::cerr << "Please set environment variable OKX_API_PASSPHRASE" << std::endl;
+  if (UtilSystem::getEnvAsString("BINANCE_FIX_API_PRIVATE_KEY_PATH").empty()) {
+    std::cerr << "Please set environment variable BINANCE_FIX_API_PRIVATE_KEY_PATH" << std::endl;
     return EXIT_FAILURE;
   }
   SessionOptions sessionOptions;
   SessionConfigs sessionConfigs;
-  MyEventHandler eventHandler;
+  std::string fixSubscriptionCorrelationId("any");
+  MyEventHandler eventHandler(fixSubscriptionCorrelationId);
   Session session(sessionOptions, sessionConfigs, &eventHandler);
-  Subscription subscription("okx", "", "FIX", "", "same correlation id for subscription and request");
-  session.subscribeByFix(subscription);
+  Subscription subscription("binance", "", "FIX", "", fixSubscriptionCorrelationId);
+  session.subscribe(subscription);
   std::this_thread::sleep_for(std::chrono::seconds(10));
   session.stop();
   std::cout << "Bye" << std::endl;
@@ -906,7 +908,31 @@ int main(int argc, char** argv) {
 ```
 **Output:**
 ```console
-Received an event of type AUTHORIZATION_STATUS:
+Received an event:
+  Event [
+    type = SESSION_STATUS,
+    messageList = [
+      Message [
+        type = SESSION_CONNECTION_UP,
+        recapType = UNKNOWN,
+        time = 1970-01-01T00:00:00.000000000Z,
+        timeReceived = 2025-08-08T18:50:06.816550779Z,
+        elementList = [
+          Element [
+            tagValueList = [
+
+            ],
+            nameValueMap = {
+              CONNECTION_ID = IF8j4HbdLP0,
+              CONNECTION_URL = tcp+tls://fix-oe.binance.com:9000
+            }
+          ]
+        ],
+        correlationIdList = [ any ],
+      ]
+    ]
+  ]
+Received an event:
   Event [
     type = AUTHORIZATION_STATUS,
     messageList = [
@@ -914,22 +940,25 @@ Received an event of type AUTHORIZATION_STATUS:
         type = AUTHORIZATION_SUCCESS,
         recapType = UNKNOWN,
         time = 1970-01-01T00:00:00.000000000Z,
-        timeReceived = 2021-05-25T05:05:15.892366000Z,
+        timeReceived = 2025-08-08T18:50:06.819417404Z,
         elementList = [
           Element [
-            tagValueMap = {
-              96 = 0srtt0WetUTYHiTpvyWnC+XKKHCzQQIJ/8G9lE4KVxM=,
-              98 = 0,
-              108 = 15,
-              554 = 26abh7of52i
+            tagValueList = [
+              (35, "A"),
+              (98, "0"),
+              (108, "60"),
+              (25037, "e9ed8253-8f49-4a1b-bba9-718ff73991e5")
+            ],
+            nameValueMap = {
+
             }
           ]
         ],
-        correlationIdList = [ same correlation id for subscription and request ]
+        correlationIdList = [ any ],
       ]
     ]
   ]
-Received an event of type FIX:
+Received an event:
   Event [
     type = FIX,
     messageList = [
@@ -937,25 +966,39 @@ Received an event of type FIX:
         type = FIX,
         recapType = UNKNOWN,
         time = 1970-01-01T00:00:00.000000000Z,
-        timeReceived = 2021-05-25T05:05:15.984090000Z,
+        timeReceived = 2025-08-08T18:50:07.820112736Z,
         elementList = [
           Element [
-            tagValueMap = {
-              11 = 6d4eb0fb-2229-469f-873e-557dd78ac11e,
-              17 = b7caec79-1bc8-460e-af28-6489cf12f45e,
-              20 = 0,
-              37 = 458acfe5-bdea-46d2-aa87-933cda84163f,
-              38 = 0.001,
-              39 = 0,
-              44 = 20000,
-              54 = 1,
-              55 = BTC-USDT,
-              60 = 20210525-05:05:16.008,
-              150 = 0
+            tagValueList = [
+              (35, "8"),
+              (17, "100146443390"),
+              (11, "x-XHKUG2CH-1754679007000"),
+              (37, "47156106695"),
+              (38, "0.00010000"),
+              (40, "2"),
+              (54, "1"),
+              (55, "BTCUSDT"),
+              (44, "100000.00000000"),
+              (59, "1"),
+              (60, "20250808-18:50:07.819027"),
+              (25018, "20250808-18:50:07.819027"),
+              (25001, "3"),
+              (150, "0"),
+              (14, "0.00000000"),
+              (151, "0.00010000"),
+              (25017, "0.00000000"),
+              (1057, "Y"),
+              (32, "0.00000000"),
+              (39, "0"),
+              (636, "Y"),
+              (25023, "20250808-18:50:07.819027")
+            ],
+            nameValueMap = {
+
             }
           ]
         ],
-        correlationIdList = [ same correlation id for subscription and request ]
+        correlationIdList = [ any ],
       ]
     ]
   ]
@@ -976,7 +1019,7 @@ std::vector<Event> eventList = session.getEventQueue().purge();
 An example can be found [here](example/src/market_data_advanced_subscription/main.cpp).
 
 #### Thread safety
-* The following methods are implemented to be thread-safe: `Session::sendRequest`, `Session::subscribe`, `Session::sendRequestByFix`, `Session::subscribeByFix`, `Session::setTimer`, all public methods in `Queue`.
+* The following methods are implemented to be thread-safe: `Session::sendRequest`, `Session::subscribe`, `Session::sendRequestByFix`, `Session::setTimer`, all public methods in `Queue`.
 * If you choose to inject an external `boost::asio::io_context` to `ServiceContext`, the `boost::asio::io_context` has to run on a single thread to ensure thread safety.
 
 #### Enable library logging
@@ -1007,7 +1050,7 @@ Logger* Logger::logger = &myLogger;
 
 #### Set timer
 
-[C++](example/src/utility_set_timer/main.cpp)
+[C++](example/src/set_timer/main.cpp)
 
 To perform an asynchronous wait, use the utility method `setTimer` in class `Session`. The handlers are invoked in the same threads as the `processEvent` method in the `EventHandler` class. The `id` of the timer should be unique. `delayMilliseconds` can be 0.
 ```
@@ -1017,6 +1060,16 @@ sessionPtr->setTimer(
       std::cout << std::string("Timer error handler is triggered at ") + UtilTime::getISOTimestamp(UtilTime::now()) << std::endl;
     },
     []() { std::cout << std::string("Timer success handler is triggered at ") + UtilTime::getISOTimestamp(UtilTime::now()) << std::endl; });
+```
+
+#### Heartbeat
+
+[C++](example/src/heartbeat/main.cpp)
+
+To receive heartbeat events, instantiate a `Subscription` object with field `HEARTBEAT` and subscribe it.
+```
+Subscription subscription("", "", "HEARTBEAT", "HEARTBEAT_INTERVAL_MILLISECONDS=1000");
+session.subscribe(subscription);
 ```
 
 ## Performance Tuning

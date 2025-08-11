@@ -11,7 +11,7 @@ class MyEventHandler : public EventHandler {
   void processEvent(const Event& event, Session* sessionPtr) override {
     const auto& eventType = event.getType();
     if (eventType == Event::Type::SESSION_STATUS || eventType == Event::Type::SUBSCRIPTION_STATUS) {
-      std::cout << "Received an event:\n" + event.toStringPretty(2, 2) << std::endl;
+      std::cout << "Received an event:\n" + event.toPrettyString(2, 2) << std::endl;
     } else if (eventType == Event::Type::SUBSCRIPTION_DATA) {
       ++subscriptionDataEventCount;
       if (subscriptionDataEventCount % this->subscriptionDataEventPrintCount == 0) {

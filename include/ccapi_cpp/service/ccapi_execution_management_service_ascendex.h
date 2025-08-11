@@ -15,7 +15,7 @@ class ExecutionManagementServiceAscendex : public ExecutionManagementService {
     this->baseUrlWs = sessionConfigs.getUrlWebsocketBase().at(this->exchangeName);
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
     this->apiKeyName = CCAPI_ASCENDEX_API_KEY;
     this->apiSecretName = CCAPI_ASCENDEX_API_SECRET;
     this->apiAccountGroupName = CCAPI_ASCENDEX_API_ACCOUNT_GROUP;

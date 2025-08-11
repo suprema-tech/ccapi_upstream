@@ -15,7 +15,7 @@ class ExecutionManagementServiceDeribit : public ExecutionManagementService {
     this->baseUrlWs = sessionConfigs.getUrlWebsocketBase().at(this->exchangeName) + "/ws/api/v2";
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
     this->clientIdName = CCAPI_DERIBIT_CLIENT_ID;
     this->clientSecretName = CCAPI_DERIBIT_CLIENT_SECRET;
     this->setupCredential({this->clientIdName, this->clientSecretName});

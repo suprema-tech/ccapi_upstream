@@ -15,7 +15,7 @@ class MarketDataServiceHuobi : public MarketDataServiceHuobiBase {
     this->baseUrlWs = sessionConfigs.getUrlWebsocketBase().at(this->exchangeName);
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
     this->getRecentTradesTarget = "/market/history/trade";
     this->getInstrumentTarget = "/v1/common/symbols";
     this->getInstrumentsTarget = "/v1/common/symbols";

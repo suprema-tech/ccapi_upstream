@@ -15,7 +15,7 @@ class MarketDataServiceBitmex : public MarketDataService {
     this->baseUrlWs = sessionConfigs.getUrlWebsocketBase().at(this->exchangeName) + "/realtime";
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
     this->getRecentTradesTarget = "/api/v1/trade";
     this->getInstrumentTarget = "/api/v1/instrument";
     this->getInstrumentsTarget = "/api/v1/instrument";

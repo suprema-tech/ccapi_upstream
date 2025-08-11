@@ -10,7 +10,7 @@ class MyEventHandler : public EventHandler {
       : websocketOrderEntrySubscriptionCorrelationId(websocketOrderEntrySubscriptionCorrelationId) {}
 
   void processEvent(const Event& event, Session* sessionPtr) override {
-    std::cout << "Received an event:\n" + event.toStringPretty(2, 2) << std::endl;
+    std::cout << "Received an event:\n" + event.toPrettyString(2, 2) << std::endl;
     if (!willSendRequest) {
       sessionPtr->setTimer("id", 1000, nullptr, [this, sessionPtr]() {
         Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDT");

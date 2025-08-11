@@ -16,7 +16,7 @@ class ExecutionManagementServiceKrakenFutures : public ExecutionManagementServic
     this->baseUrlWs = sessionConfigs.getUrlWebsocketBase().at(this->exchangeName) + "/ws/v1";
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
     this->apiKeyName = CCAPI_KRAKEN_FUTURES_API_KEY;
     this->apiSecretName = CCAPI_KRAKEN_FUTURES_API_SECRET;
     this->setupCredential({this->apiKeyName, this->apiSecretName});

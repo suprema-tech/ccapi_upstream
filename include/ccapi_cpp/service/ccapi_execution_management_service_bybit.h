@@ -16,8 +16,8 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
     this->baseUrlWsOrderEntry = sessionConfigs.getUrlWebsocketOrderEntryBase().at(this->exchangeName) + CCAPI_BYBIT_WS_ORDER_ENTRY_PATH;
     this->baseUrlRest = sessionConfigs.getUrlRestBase().at(this->exchangeName);
     this->setHostRestFromUrlRest(this->baseUrlRest);
-    this->setHostWsFromUrlWs(this->baseUrlWs);
-    this->setHostWsFromUrlWsOrderEntry(this->baseUrlWsOrderEntry);
+    // this->setHostWsFromUrlWs(this->baseUrlWs);
+    // this->setHostWsFromUrlWsOrderEntry(this->baseUrlWsOrderEntry);
     this->apiKeyName = CCAPI_BYBIT_API_KEY;
     this->apiSecretName = CCAPI_BYBIT_API_SECRET;
     this->setupCredential({this->apiKeyName, this->apiSecretName});
@@ -58,7 +58,7 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
     req.set("X-BAPI-SIGN", signature);
   }
 
-  void signRequest(http::request<http::string_body>& req, const std::string aString, const TimePoint& now,
+  void signRequest(http::request<http::string_body>& req, const std::string& aString, const TimePoint& now,
                    const std::map<std::string, std::string>& credential) {
     auto apiKey = mapGetWithDefault(credential, this->apiKeyName);
     auto apiSecret = mapGetWithDefault(credential, this->apiSecretName);

@@ -32,7 +32,9 @@ class SessionOptions {
                          ", httpRequestTimeoutMilliseconds = " + ccapi::toString(httpRequestTimeoutMilliseconds) +
                          ", httpConnectionPoolMaxSize = " + ccapi::toString(httpConnectionPoolMaxSize) +
                          ", httpConnectionKeepAliveTimeoutSeconds = " + ccapi::toString(httpConnectionKeepAliveTimeoutSeconds) +
-                         ", enableOneHttpConnectionPerRequest = " + ccapi::toString(enableOneHttpConnectionPerRequest) + "]";
+                         ", enableOneHttpConnectionPerRequest = " + ccapi::toString(enableOneHttpConnectionPerRequest) +
+                         ", websocketConnectTimeoutMilliseconds = " + ccapi::toString(websocketConnectTimeoutMilliseconds) +
+                         ", fixConnectTimeoutMilliseconds = " + ccapi::toString(fixConnectTimeoutMilliseconds) + "]";
     return output;
   }
 
@@ -58,6 +60,7 @@ class SessionOptions {
       10};  // used to remove a http connection from the http connection pool if it has stayed idle for at least this amount of time
   bool enableOneHttpConnectionPerRequest{};  // create a new http connection for each request
   long websocketConnectTimeoutMilliseconds{10000};
+  long fixConnectTimeoutMilliseconds{10000};
 };
 
 } /* namespace ccapi */

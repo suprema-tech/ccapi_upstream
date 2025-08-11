@@ -209,18 +209,21 @@
 
 // start: enable exchanges for FIX
 #ifdef CCAPI_ENABLE_SERVICE_FIX
-#ifdef CCAPI_ENABLE_EXCHANGE_COINBASE
-#include "ccapi_cpp/service/ccapi_fix_service_coinbase.h"
+#ifdef CCAPI_ENABLE_EXCHANGE_BINANCE
+#include "ccapi_cpp/service/ccapi_fix_service_binance.h"
 #endif
-#ifdef CCAPI_ENABLE_EXCHANGE_GEMINI
-#include "ccapi_cpp/service/ccapi_fix_service_gemini.h"
-#endif
-#ifdef CCAPI_ENABLE_EXCHANGE_FTX
-#include "ccapi_cpp/service/ccapi_fix_service_ftx.h"
-#endif
-#ifdef CCAPI_ENABLE_EXCHANGE_FTX_US
-#include "ccapi_cpp/service/ccapi_fix_service_ftx_us.h"
-#endif
+// #ifdef CCAPI_ENABLE_EXCHANGE_COINBASE
+// #include "ccapi_cpp/service/ccapi_fix_service_coinbase.h"
+// #endif
+// #ifdef CCAPI_ENABLE_EXCHANGE_GEMINI
+// #include "ccapi_cpp/service/ccapi_fix_service_gemini.h"
+// #endif
+// #ifdef CCAPI_ENABLE_EXCHANGE_FTX
+// #include "ccapi_cpp/service/ccapi_fix_service_ftx.h"
+// #endif
+// #ifdef CCAPI_ENABLE_EXCHANGE_FTX_US
+// #include "ccapi_cpp/service/ccapi_fix_service_ftx_us.h"
+// #endif
 // #ifdef CCAPI_ENABLE_EXCHANGE_DERIBIT
 // #include "ccapi_cpp/service/ccapi_fix_service_deribit.h"
 // #endif
@@ -566,22 +569,26 @@ class Session {
 #endif
 
 #ifdef CCAPI_ENABLE_SERVICE_FIX
-#ifdef CCAPI_ENABLE_EXCHANGE_COINBASE
-    this->serviceByServiceNameExchangeMap[CCAPI_FIX][CCAPI_EXCHANGE_NAME_COINBASE] =
-        std::make_shared<FixServiceCoinbase>(this->onEventFunc, sessionOptions, sessionConfigs, this->serviceContextPtr);
+#ifdef CCAPI_ENABLE_EXCHANGE_BINANCE
+    this->serviceByServiceNameExchangeMap[CCAPI_FIX][CCAPI_EXCHANGE_NAME_BINANCE] =
+        std::make_shared<FixServiceBinance>(this->onEventFunc, sessionOptions, sessionConfigs, this->serviceContextPtr);
 #endif
+// #ifdef CCAPI_ENABLE_EXCHANGE_COINBASE
+//     this->serviceByServiceNameExchangeMap[CCAPI_FIX][CCAPI_EXCHANGE_NAME_COINBASE] =
+//         std::make_shared<FixServiceCoinbase>(this->onEventFunc, sessionOptions, sessionConfigs, this->serviceContextPtr);
+// #endif
 // #ifdef CCAPI_ENABLE_EXCHANGE_GEMINI
 //     this->serviceByServiceNameExchangeMap[CCAPI_FIX][CCAPI_EXCHANGE_NAME_GEMINI] =
 //         std::make_shared<FixServiceGemini>(this->onEventFunc, sessionOptions, sessionConfigs, this->serviceContextPtr);
 // #endif
-#ifdef CCAPI_ENABLE_EXCHANGE_FTX
-    this->serviceByServiceNameExchangeMap[CCAPI_FIX][CCAPI_EXCHANGE_NAME_FTX] =
-        std::make_shared<FixServiceFtx>(this->onEventFunc, sessionOptions, sessionConfigs, this->serviceContextPtr);
-#endif
-#ifdef CCAPI_ENABLE_EXCHANGE_FTX_US
-    this->serviceByServiceNameExchangeMap[CCAPI_FIX][CCAPI_EXCHANGE_NAME_FTX_US] =
-        std::make_shared<FixServiceFtxUs>(this->onEventFunc, sessionOptions, sessionConfigs, this->serviceContextPtr);
-#endif
+// #ifdef CCAPI_ENABLE_EXCHANGE_FTX
+//     this->serviceByServiceNameExchangeMap[CCAPI_FIX][CCAPI_EXCHANGE_NAME_FTX] =
+//         std::make_shared<FixServiceFtx>(this->onEventFunc, sessionOptions, sessionConfigs, this->serviceContextPtr);
+// #endif
+// #ifdef CCAPI_ENABLE_EXCHANGE_FTX_US
+//     this->serviceByServiceNameExchangeMap[CCAPI_FIX][CCAPI_EXCHANGE_NAME_FTX_US] =
+//         std::make_shared<FixServiceFtxUs>(this->onEventFunc, sessionOptions, sessionConfigs, this->serviceContextPtr);
+// #endif
 // #ifdef CCAPI_ENABLE_EXCHANGE_DERIBIT
 //     this->serviceByServiceNameExchangeMap[CCAPI_FIX][CCAPI_EXCHANGE_NAME_DERIBIT] =
 //         std::make_shared<FixServiceDeribit>(this->onEventFunc, sessionOptions, sessionConfigs, this->serviceContextPtr);
@@ -602,6 +609,9 @@ class Session {
       for (const auto& [_, delayTimer] : this->delayTimerByIdMap) {
         delayTimer->cancel();
       }
+      if (heartbeatTimerPtr) {
+        heartbeatTimerPtr->cancel();
+      }
       for (const auto& x : this->serviceByServiceNameExchangeMap) {
         for (const auto& y : x.second) {
           y.second->stop();
@@ -614,6 +624,28 @@ class Session {
     }
   }
 
+  typedef boost::system::error_code ErrorCode;
+
+  virtual void setHeartbeatTimer(long heartbeatIntervalMilliseconds) {
+    auto timerPtr =
+        std::make_shared<boost::asio::steady_timer>(*this->serviceContextPtr->ioContextPtr, std::chrono::milliseconds(heartbeatIntervalMilliseconds));
+    timerPtr->async_wait([this, heartbeatIntervalMilliseconds](ErrorCode const& ec) {
+      if (ec) {
+        if (ec != boost::asio::error::operation_aborted) {
+          std::string errorMessage = "heartbeat timer error: " + ec.message();
+          CCAPI_LOGGER_ERROR(errorMessage);
+          this->onError(Event::Type::SESSION_STATUS, Message::Type::GENERIC_ERROR, errorMessage);
+        }
+      } else {
+        Event event;
+        event.setType(Event::Type::HEARTBEAT);
+        this->onEvent(event, nullptr);
+        this->setHeartbeatTimer(heartbeatIntervalMilliseconds);
+      }
+    });
+    this->heartbeatTimerPtr = timerPtr;
+  }
+
   virtual void subscribe(Subscription& subscription) {
     std::vector<Subscription> subscriptionList;
     subscriptionList.push_back(subscription);
@@ -623,6 +655,11 @@ class Session {
   virtual void subscribe(std::vector<Subscription>& subscriptionList) {
     CCAPI_LOGGER_FUNCTION_ENTER;
     for (auto& subscription : subscriptionList) {
+      CCAPI_LOGGER_TRACE("subscription = " + toString(subscription));
+      if (subscription.getField() == CCAPI_HEARTBEAT) {
+        this->setHeartbeatTimer(std::stol(subscription.getOptionMap().at(CCAPI_HEARTBEAT_INTERVAL_MILLISECONDS)));
+        continue;
+      }
       auto exchange = subscription.getExchange();
       if (exchange == CCAPI_EXCHANGE_NAME_BYBIT) {
         auto instrumentType = subscription.getInstrumentType();
@@ -652,6 +689,9 @@ class Session {
     }
     std::map<std::string, std::vector<Subscription>> subscriptionListByServiceNameMap;
     for (const auto& subscription : subscriptionList) {
+      if (subscription.getField() == CCAPI_HEARTBEAT) {
+        continue;
+      }
       auto serviceName = subscription.getServiceName();
       subscriptionListByServiceNameMap[serviceName].push_back(subscription);
     }
@@ -696,12 +736,13 @@ class Session {
           auto subscriptionList = subscriptionListByExchange.second;
           std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
           if (serviceByExchangeMap.find(exchange) == serviceByExchangeMap.end()) {
-            this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, "please enable exchange: " + exchange);
+            this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE,
+                          "please enable exchange: " + exchange + " for subscriptionList " + toString(subscriptionList));
             return;
           }
           serviceByExchangeMap.at(exchange)->subscribe(subscriptionList);
         }
-      } else if (serviceName == CCAPI_EXECUTION_MANAGEMENT) {
+      } else if (serviceName == CCAPI_EXECUTION_MANAGEMENT || serviceName == CCAPI_FIX) {
         std::map<std::string, std::vector<Subscription>> subscriptionListByExchangeMap;
         for (const auto& subscription : subscriptionList) {
           auto exchange = subscription.getExchange();
@@ -713,7 +754,8 @@ class Session {
           auto subscriptionList = subscriptionListByExchange.second;
           std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
           if (serviceByExchangeMap.find(exchange) == serviceByExchangeMap.end()) {
-            this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE, "please enable exchange: " + exchange);
+            this->onError(Event::Type::SUBSCRIPTION_STATUS, Message::Type::SUBSCRIPTION_FAILURE,
+                          "please enable exchange: " + exchange + " for subscriptionList " + toString(subscriptionList));
             return;
           }
           serviceByExchangeMap.at(exchange)->subscribe(subscriptionList);
@@ -723,28 +765,28 @@ class Session {
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
 
-  virtual void subscribeByFix(Subscription& subscription) {
-    auto serviceName = subscription.getServiceName();
-    CCAPI_LOGGER_DEBUG("serviceName = " + serviceName);
-    if (this->serviceByServiceNameExchangeMap.find(serviceName) == this->serviceByServiceNameExchangeMap.end()) {
-      this->onError(Event::Type::FIX_STATUS, Message::Type::FIX_FAILURE,
-                    "please enable service: " + serviceName + ", and the exchanges that you want for subscription " + toString(subscription));
-      return;
-    }
-    auto exchange = subscription.getExchange();
-    std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
-    if (serviceByExchangeMap.find(exchange) == serviceByExchangeMap.end()) {
-      this->onError(Event::Type::FIX_STATUS, Message::Type::FIX_FAILURE, "please enable exchange: " + exchange);
-      return;
-    }
-    serviceByExchangeMap.at(exchange)->subscribeByFix(subscription);
-  }
+  //   virtual void subscribe(Subscription& subscription) {
+  //     auto serviceName = subscription.getServiceName();
+  //     CCAPI_LOGGER_DEBUG("serviceName = " + serviceName);
+  //     if (this->serviceByServiceNameExchangeMap.find(serviceName) == this->serviceByServiceNameExchangeMap.end()) {
+  //       this->onError(Event::Type::FIX_STATUS, Message::Type::FIX_FAILURE,
+  //                     "please enable service: " + serviceName + ", and the exchanges that you want for subscription " + toString(subscription));
+  //       return;
+  //     }
+  //     auto exchange = subscription.getExchange();
+  //     std::map<std::string, std::shared_ptr<Service>>& serviceByExchangeMap = this->serviceByServiceNameExchangeMap.at(serviceName);
+  //     if (serviceByExchangeMap.find(exchange) == serviceByExchangeMap.end()) {
+  //       this->onError(Event::Type::FIX_STATUS, Message::Type::FIX_FAILURE, "please enable exchange: " + exchange+" for subscription " +
+  //       toString(subscription)); return;
+  //     }
+  //     serviceByExchangeMap.at(exchange)->subscribe(subscription);
+  //   }
 
-  virtual void subscribeByFix(std::vector<Subscription>& subscriptionList) {
-    for (auto& x : subscriptionList) {
-      this->subscribeByFix(x);
-    }
-  }
+  //   virtual void subscribe(std::vector<Subscription>& subscriptionList) {
+  //     for (auto& x : subscriptionList) {
+  //       this->subscribe(x);
+  //     }
+  //   }
 
   virtual void onEvent(Event& event, Queue<Event>* eventQueue) {
     CCAPI_LOGGER_FUNCTION_ENTER;
@@ -777,7 +819,7 @@ class Session {
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
 
-  virtual void sendRequestByFix(Request& request) {
+  virtual void sendRequestByFix(const std::string& fixOrderEntrySubscriptionCorrelationId, Request& request) {
     CCAPI_LOGGER_FUNCTION_ENTER;
     auto serviceName = request.getServiceName();
     CCAPI_LOGGER_DEBUG("serviceName = " + serviceName);
@@ -794,13 +836,13 @@ class Session {
     }
     std::shared_ptr<Service> servicePtr = serviceByExchangeMap.at(exchange);
     auto now = UtilTime::now();
-    servicePtr->sendRequestByFix(request, now);
+    servicePtr->sendRequestByFix(fixOrderEntrySubscriptionCorrelationId, request, now);
     CCAPI_LOGGER_FUNCTION_EXIT;
   }
 
-  virtual void sendRequestByFix(std::vector<Request>& requestList) {
+  virtual void sendRequestByFix(const std::string& fixOrderEntrySubscriptionCorrelationId, std::vector<Request>& requestList) {
     for (auto& x : requestList) {
-      this->sendRequestByFix(x);
+      this->sendRequestByFix(fixOrderEntrySubscriptionCorrelationId, x);
     }
   }
 
@@ -992,6 +1034,7 @@ class Session {
   bool useInternalServiceContextPtr{};
   std::function<void(Event& event, Queue<Event>* eventQueue)> onEventFunc;
   std::map<std::string, std::shared_ptr<steady_timer>> delayTimerByIdMap;
+  std::shared_ptr<steady_timer> heartbeatTimerPtr{nullptr};
 };
 
 } /* namespace ccapi */

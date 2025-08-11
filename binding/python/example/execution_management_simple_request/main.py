@@ -9,7 +9,7 @@ class MyEventHandler(EventHandler):
         super().__init__()
 
     def processEvent(self, event: Event, session: Session) -> None:
-        print(f"Received an event:\n{event.toStringPretty(2, 2)}")
+        print(f"Received an event:\n{event.toPrettyString(2, 2)}")
 
 
 if __name__ == "__main__":
