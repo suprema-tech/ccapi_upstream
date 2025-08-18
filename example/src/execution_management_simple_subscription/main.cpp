@@ -7,10 +7,9 @@ Logger* Logger::logger = nullptr;  // This line is needed.
 class MyEventHandler : public EventHandler {
  public:
   void processEvent(const Event& event, Session* sessionPtr) override {
-    if (event.getType() == Event::Type::SUBSCRIPTION_STATUS) {
-      std::cout << "Received an event of type SUBSCRIPTION_STATUS:\n" + event.toPrettyString(2, 2) << std::endl;
-      auto message = event.getMessageList().at(0);
-      if (message.getType() == Message::Type::SUBSCRIPTION_STARTED) {
+    std::cout << "Received an event:\n" + event.toPrettyString(2, 2) << std::endl;
+    if (!willSendRequest) {
+      sessionPtr->setTimer("id", 1000, nullptr, [this, sessionPtr]() {
         Request request(Request::Operation::CREATE_ORDER, "okx", "BTC-USDT");
         request.appendParam({
             {"SIDE", "BUY"},
@@ -18,12 +17,15 @@ class MyEventHandler : public EventHandler {
             {"QUANTITY", "0.001"},
             {"CLIENT_ORDER_ID", request.generateNextClientOrderId()},
         });
+        std::cout << "About to send a request:\n" + request.toString() << std::endl;
         sessionPtr->sendRequest(request);
-      }
-    } else if (event.getType() == Event::Type::SUBSCRIPTION_DATA) {
-      std::cout << "Received an event of type SUBSCRIPTION_DATA:\n" + event.toPrettyString(2, 2) << std::endl;
+      });
+      willSendRequest = true;
     }
   }
+
+ private:
+  bool willSendRequest{};
 };
 
 } /* namespace ccapi */

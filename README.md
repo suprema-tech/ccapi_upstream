@@ -1,14 +1,9 @@
-# Notice
-* Small breaking change: renamed `toStringPretty` to `toPrettyString`.
-* Added FIX API support for binance.
-
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 
 **Table of Contents**  *generated with [DocToc](https://github.com/ktechhub/doctoc)*
 
 <!---toc start-->
 
-* [Notice](#notice)
 * [ccapi](#ccapi)
   * [Branches](#branches)
   * [Build](#build)
@@ -57,12 +52,11 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-
 # ccapi
 * A header-only C++ library for streaming market data and executing trades directly from cryptocurrency exchanges (i.e. the connections are between your server and the exchange server without anything in-between).
 * Bindings for other languages such as Python, Java, C#, Go, and Javascript are provided.
 * Code closely follows Bloomberg's API: https://www.bloomberg.com/professional/support/api-library/.
-* It is ultra fast thanks to very careful optimizations: move semantics, regex optimization, locality of reference, lock contention minimization, etc.
+* It is ultra fast thanks to very careful optimizations.
 * Supported exchanges:
   * Market Data: ascendex, [binance](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-usds-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-coin-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, [bybit](https://www.bybit.com/invite?ref=XNYP2K), coinbase, [cryptocom](https://crypto.com/exch/tqj4b8x48w), deribit, erisx (Cboe Digital), [gateio](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), [gateio-perpetual-futures](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, mexc-futures, [okx](https://www.okx.com/join/47636709), whitebit.
   * Execution Management: ascendex, [binance](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-usds-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-coin-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, [bybit](https://www.bybit.com/invite?ref=XNYP2K), coinbase, [cryptocom](https://crypto.com/exch/tqj4b8x48w), deribit, erisx (Cboe Digital), [gateio](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), [gateio-perpetual-futures](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, [okx](https://www.okx.com/join/47636709).
@@ -610,7 +604,7 @@ class MyEventHandler : public EventHandler {
             {"SIDE", "BUY"},
             {"LIMIT_PRICE", "20000"},
             {"QUANTITY", "0.001"},
-            {"CLIENT_ORDER_ID", "6d4eb0fb"},
+            {"CLIENT_ORDER_ID", request.generateNextClientOrderId()},
         });
         sessionPtr->sendRequest(request);
       }
@@ -703,7 +697,7 @@ Received an event of type SUBSCRIPTION_DATA:
   ]
 Bye
 ```
-* Subscription fields: `ORDER_UPDATE`, `PRIVATE_TRADE`, `BALANCE_UPDATE`, `POSITION_UPDATE`.
+* Subscription fields: `ORDER_UPDATE`, `PRIVATE_TRADE`, `PRIVATE_TRADE_LITE`, `BALANCE_UPDATE`, `POSITION_UPDATE`.
 
 ### Advanced Execution Management
 

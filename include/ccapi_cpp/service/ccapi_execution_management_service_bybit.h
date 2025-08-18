@@ -461,7 +461,8 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
               message.setTimeReceived(timeReceived);
               message.setCorrelationIdList({subscription.getCorrelationId()});
               message.setTime(time);
-              message.setType(Message::Type::EXECUTION_MANAGEMENT_EVENTS_PRIVATE_TRADE);
+              message.setType(topic.rfind("execution.fast", 0) == 0 ? Message::Type::EXECUTION_MANAGEMENT_EVENTS_PRIVATE_TRADE_LITE
+                                                                    : Message::Type::EXECUTION_MANAGEMENT_EVENTS_PRIVATE_TRADE);
               std::vector<Element> elementList;
               Element element;
               element.insert(CCAPI_TRADE_ID, x["execId"].GetString());
@@ -550,6 +551,9 @@ class ExecutionManagementServiceBybit : public ExecutionManagementService {
             }
             if (fieldSet.find(CCAPI_EM_PRIVATE_TRADE) != fieldSet.end()) {
               args.PushBack(rj::Value((instrumentType.empty() ? "execution" : "execution." + instrumentType).c_str(), allocator).Move(), allocator);
+            }
+            if (fieldSet.find(CCAPI_EM_PRIVATE_TRADE_LITE) != fieldSet.end()) {
+              args.PushBack(rj::Value((instrumentType.empty() ? "execution.fast" : "execution.fast." + instrumentType).c_str(), allocator).Move(), allocator);
             }
             if (fieldSet.find(CCAPI_EM_POSITION_UPDATE) != fieldSet.end() && subscription.getInstrumentType() != "spot") {
               args.PushBack(rj::Value((instrumentType.empty() ? "position" : "position." + instrumentType).c_str(), allocator).Move(), allocator);
