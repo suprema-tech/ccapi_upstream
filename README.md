@@ -62,6 +62,7 @@
   * Execution Management: ascendex, [binance](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-usds-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-coin-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, [bybit](https://www.bybit.com/invite?ref=XNYP2K), coinbase, [cryptocom](https://crypto.com/exch/tqj4b8x48w), deribit, erisx (Cboe Digital), [gateio](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), [gateio-perpetual-futures](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), gemini, huobi, huobi-usdt-swap, huobi-coin-swap, kraken, kraken-futures, kucoin, kucoin-futures, mexc, [okx](https://www.okx.com/join/47636709).
   * FIX: [binance](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), coinbase, gemini.
 * Join us on Discord https://discord.gg/b5EKcp9s8T and Medium https://cryptochassis.medium.com.
+* For any questions, email hello@cryptochassis.com.
 
 ## Branches
 * The `develop` branch may contain experimental features.
