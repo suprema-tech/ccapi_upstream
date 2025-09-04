@@ -68,6 +68,9 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
         if (param.find("order_price_type") == param.end()) {
           document.AddMember("order_price_type", rj::Value("limit").Move(), allocator);
         }
+        if (param.find("channel_code") == param.end()) {
+          document.AddMember("channel_code", CCAPI_HTX_BROKER_ID, allocator);
+        }
         this->appendSymbolId(document, allocator, symbolId);
         rj::StringBuffer stringBuffer;
         rj::Writer<rj::StringBuffer> writer(stringBuffer);

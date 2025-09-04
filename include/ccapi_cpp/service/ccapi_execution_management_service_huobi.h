@@ -66,6 +66,10 @@ class ExecutionManagementServiceHuobi : public ExecutionManagementServiceHuobiBa
                               {CCAPI_EM_ACCOUNT_ID, "account-id"},
                           });
         this->appendSymbolId(document, allocator, symbolId);
+        if (param.find("client-order-id") == param.end() && param.find(CCAPI_EM_CLIENT_ORDER_ID) == param.end()) {
+          std::string nonce = std::to_string(this->generateNonce(now, request.getIndex()));
+          document.AddMember("client-order-id", rj::Value((std::string(CCAPI_HTX_BROKER_ID) + "-" + nonce).c_str(), allocator).Move(), allocator);
+        }
         rj::StringBuffer stringBuffer;
         rj::Writer<rj::StringBuffer> writer(stringBuffer);
         document.Accept(writer);
