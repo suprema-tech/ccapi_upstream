@@ -288,6 +288,9 @@ class Request {
       nextClientOrderId += "x-";
       nextClientOrderId += CCAPI_BINANCE_USDS_FUTURES_API_LINK_ID;
       nextClientOrderId += "-";
+    } else if (this->exchange == CCAPI_EXCHANGE_NAME_HUOBI) {
+      nextClientOrderId += CCAPI_HTX_BROKER_ID;
+      nextClientOrderId += "-";
     }
     nextClientOrderId += std::to_string(lastClientOrderIdUnixTimestampInSeconds);
     nextClientOrderId += UtilString::leftPadTo(std::to_string(lastClientOrderIdSequenceNumber), CCAPI_EM_CLIENT_ORDER_ID_SEQUENCE_NUMBER_PAD_TO_LENGTH, '0');

@@ -18,6 +18,7 @@ class MyEventHandler : public EventHandler {
             {"SIDE", "BUY"},
             {"LIMIT_PRICE", "20000"},
             {"QUANTITY", "0.001"},
+            {"CLIENT_ORDER_ID", request.generateNextClientOrderId()},
         });
         std::cout << "About to send a request:\n" + request.toString() << std::endl;
         sessionPtr->sendRequestByWebsocket(this->websocketOrderEntrySubscriptionCorrelationId, request);
