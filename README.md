@@ -124,7 +124,6 @@ cmake --build .
 
 ## Constants
 [`include/ccapi_cpp/ccapi_macro.h`](include/ccapi_cpp/ccapi_macro.h)
-* For most cryptocurrencies, the default value of `CCAPI_DECIMAL_SCALE` is sufficient. You can override it if you need more.
 
 ## Examples
 [C++](example)

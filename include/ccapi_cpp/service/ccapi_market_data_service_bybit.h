@@ -340,7 +340,7 @@ class MarketDataServiceBybit : public MarketDataService {
     element.insert(CCAPI_QUOTE_ASSET, x["quoteCoin"].GetString());
     auto it = x.FindMember("settleCoin");
     if (it != x.MemberEnd()) {
-      element.insert(CCAPI_MARGIN_ASSET, it->value.GetString());
+      element.insert(CCAPI_SETTLE_ASSET, it->value.GetString());
     }
     element.insert(CCAPI_ORDER_PRICE_INCREMENT, x["priceFilter"]["tickSize"].GetString());
     if (category == "spot") {

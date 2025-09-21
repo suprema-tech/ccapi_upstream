@@ -48,7 +48,7 @@ class MarketDataServiceGateioPerpetualFutures : public MarketDataServiceGateioBa
     this->substituteParam(target, param,
                           {
                               {"settle", "{settle}"},
-                              {CCAPI_MARGIN_ASSET, "{settle}"},
+                              {CCAPI_SETTLE_ASSET, "{settle}"},
                           });
     std::string settle;
     if (UtilString::endsWith(symbolId, "_USD")) {
@@ -99,7 +99,7 @@ class MarketDataServiceGateioPerpetualFutures : public MarketDataServiceGateioBa
         this->substituteParam(target, param,
                               {
                                   {"settle", "{settle}"},
-                                  {CCAPI_MARGIN_ASSET, "{settle}"},
+                                  {CCAPI_SETTLE_ASSET, "{settle}"},
                               });
         req.target(target);
       } break;
