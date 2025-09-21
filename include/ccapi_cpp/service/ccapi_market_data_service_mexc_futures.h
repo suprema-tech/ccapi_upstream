@@ -200,7 +200,7 @@ class MarketDataServiceMexcFutures : public MarketDataService {
 
   void extractInstrumentInfo(Element& element, const rj::Value& x) {
     element.insert(CCAPI_INSTRUMENT, x["symbol"].GetString());
-    element.insert(CCAPI_MARGIN_ASSET, x["settleCoin"].GetString());
+    element.insert(CCAPI_SETTLE_ASSET, x["settleCoin"].GetString());
     element.insert(CCAPI_ORDER_PRICE_INCREMENT, x["priceUnit"].GetString());
     element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, x["volUnit"].GetString());
     element.insert(CCAPI_ORDER_QUANTITY_MIN, x["minVol"].GetString());

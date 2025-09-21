@@ -274,7 +274,7 @@ class MarketDataServiceBitmex : public MarketDataService {
   }
 
   void extractInstrumentInfo(Element& element, const rj::Value& x) {
-    element.insert(CCAPI_MARGIN_ASSET, x["settlCurrency"].GetString());
+    element.insert(CCAPI_SETTLE_ASSET, x["settlCurrency"].GetString());
     element.insert(CCAPI_UNDERLYING_SYMBOL, x["referenceSymbol"].GetString());
     element.insert(CCAPI_ORDER_PRICE_INCREMENT, x["tickSize"].GetString());
     element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, x["lotSize"].GetString());
