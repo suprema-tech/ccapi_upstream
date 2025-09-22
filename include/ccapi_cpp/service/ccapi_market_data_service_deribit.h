@@ -417,7 +417,7 @@ class MarketDataServiceDeribit : public MarketDataService {
 
   void extractInstrumentInfo(Element& element, const rj::Value& x) {
     element.insert(CCAPI_INSTRUMENT, x["instrument_name"].GetString());
-    element.insert(CCAPI_MARGIN_ASSET, x["base_currency"].GetString());
+    element.insert(CCAPI_SETTLE_ASSET, x["base_currency"].GetString());
     element.insert(CCAPI_UNDERLYING_SYMBOL, x["base_currency"].GetString());
     element.insert(CCAPI_ORDER_PRICE_INCREMENT, x["tick_size"].GetString());
     element.insert(CCAPI_ORDER_QUANTITY_INCREMENT, x["contract_size"].GetString());

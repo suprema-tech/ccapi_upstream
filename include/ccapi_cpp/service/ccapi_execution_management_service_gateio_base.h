@@ -119,7 +119,7 @@ class ExecutionManagementServiceGateioBase : public ExecutionManagementService {
     this->substituteParam(target, param,
                           {
                               {"settle", "{settle}"},
-                              {CCAPI_MARGIN_ASSET, "{settle}"},
+                              {CCAPI_SETTLE_ASSET, "{settle}"},
                           });
     std::string settle;
     if (UtilString::endsWith(symbolId, "_USD")) {

@@ -1,54 +1,51 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/ktechhub/doctoc)*
 
-<!---toc start-->
-
-* [ccapi](#ccapi)
-  * [Branches](#branches)
-  * [Build](#build)
-    * [C++](#c)
-    * [non-C++](#non-c)
-  * [Constants](#constants)
-  * [Examples](#examples)
-  * [Documentations](#documentations)
-    * [Simple Market Data](#simple-market-data)
-    * [Advanced Market Data](#advanced-market-data)
-      * [Complex request parameters](#complex-request-parameters)
-      * [Specify subscription market depth](#specify-subscription-market-depth)
-      * [Specify correlation id](#specify-correlation-id)
-      * [Multiple exchanges and/or instruments](#multiple-exchanges-andor-instruments)
-      * [Receive subscription events at periodic intervals](#receive-subscription-events-at-periodic-intervals)
-      * [Receive subscription events at periodic intervals including when the market depth snapshot hasn't changed](#receive-subscription-events-at-periodic-intervals-including-when-the-market-depth-snapshot-hasnt-changed)
-      * [Receive subscription market depth updates](#receive-subscription-market-depth-updates)
-      * [Receive subscription trade events](#receive-subscription-trade-events)
-      * [Receive subscription calculated-candlestick events at periodic intervals](#receive-subscription-calculated-candlestick-events-at-periodic-intervals)
-      * [Receive subscription exchange-provided-candlestick events at periodic intervals](#receive-subscription-exchange-provided-candlestick-events-at-periodic-intervals)
-      * [Send generic public requests](#send-generic-public-requests)
-      * [Make generic public subscriptions](#make-generic-public-subscriptions)
-      * [Send generic private requests](#send-generic-private-requests)
-    * [Simple Execution Management](#simple-execution-management)
-    * [Advanced Execution Management](#advanced-execution-management)
-      * [Specify correlation id](#specify-correlation-id-1)
-      * [Multiple exchanges and/or instruments](#multiple-exchanges-andor-instruments-1)
-      * [Multiple subscription fields](#multiple-subscription-fields)
-      * [Make Session::sendRequest blocking](#make-sessionsendrequest-blocking)
-      * [Provide API credentials for an exchange](#provide-api-credentials-for-an-exchange)
-      * [Override exchange urls](#override-exchange-urls)
-      * [Complex request parameters](#complex-request-parameters-1)
-      * [Send request by Websocket API](#send-request-by-websocket-api)
-      * [Specify instrument type](#specify-instrument-type)
-    * [FIX API](#fix-api)
-    * [More Advanced Topics](#more-advanced-topics)
-      * [Handle events in "immediate" vs. "batching" mode](#handle-events-in-immediate-vs-batching-mode)
-      * [Thread safety](#thread-safety)
-      * [Enable library logging](#enable-library-logging)
-      * [Set timer](#set-timer)
-      * [Heartbeat](#heartbeat)
-  * [Performance Tuning](#performance-tuning)
-  * [Known Issues and Workarounds](#known-issues-and-workarounds)
-
-<!---toc end-->
+- [ccapi](#ccapi)
+  - [Branches](#branches)
+  - [Build](#build)
+    - [C++](#c)
+    - [non-C++](#non-c)
+  - [Constants](#constants)
+  - [Examples](#examples)
+  - [Documentations](#documentations)
+    - [Simple Market Data](#simple-market-data)
+    - [Advanced Market Data](#advanced-market-data)
+      - [Complex request parameters](#complex-request-parameters)
+      - [Specify subscription market depth](#specify-subscription-market-depth)
+      - [Specify correlation id](#specify-correlation-id)
+      - [Multiple exchanges and/or instruments](#multiple-exchanges-andor-instruments)
+      - [Receive subscription events at periodic intervals](#receive-subscription-events-at-periodic-intervals)
+      - [Receive subscription events at periodic intervals including when the market depth snapshot hasn't changed](#receive-subscription-events-at-periodic-intervals-including-when-the-market-depth-snapshot-hasnt-changed)
+      - [Receive subscription market depth updates](#receive-subscription-market-depth-updates)
+      - [Receive subscription trade events](#receive-subscription-trade-events)
+      - [Receive subscription calculated-candlestick events at periodic intervals](#receive-subscription-calculated-candlestick-events-at-periodic-intervals)
+      - [Receive subscription exchange-provided-candlestick events at periodic intervals](#receive-subscription-exchange-provided-candlestick-events-at-periodic-intervals)
+      - [Send generic public requests](#send-generic-public-requests)
+      - [Make generic public subscriptions](#make-generic-public-subscriptions)
+      - [Send generic private requests](#send-generic-private-requests)
+    - [Simple Execution Management](#simple-execution-management)
+    - [Advanced Execution Management](#advanced-execution-management)
+      - [Specify correlation id](#specify-correlation-id-1)
+      - [Multiple exchanges and/or instruments](#multiple-exchanges-andor-instruments-1)
+      - [Multiple subscription fields](#multiple-subscription-fields)
+      - [Make Session::sendRequest blocking](#make-sessionsendrequest-blocking)
+      - [Provide API credentials for an exchange](#provide-api-credentials-for-an-exchange)
+      - [Override exchange urls](#override-exchange-urls)
+      - [Complex request parameters](#complex-request-parameters-1)
+      - [Send request by Websocket API](#send-request-by-websocket-api)
+      - [Specify instrument type](#specify-instrument-type)
+    - [FIX API](#fix-api)
+    - [More Advanced Topics](#more-advanced-topics)
+      - [Handle events in "immediate" vs. "batching" mode](#handle-events-in-immediate-vs-batching-mode)
+      - [Thread safety](#thread-safety)
+      - [Enable library logging](#enable-library-logging)
+      - [Set timer](#set-timer)
+      - [Heartbeat](#heartbeat)
+      - [Use multiple sessions](#use-multiple-sessions)
+  - [Performance Tuning](#performance-tuning)
+  - [Known Issues and Workarounds](#known-issues-and-workarounds)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -58,9 +55,9 @@
 * Code closely follows Bloomberg's API: https://www.bloomberg.com/professional/support/api-library/.
 * It is ultra fast thanks to very careful optimizations.
 * Supported exchanges:
-  * Market Data: ascendex, [binance](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-usds-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-coin-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, [bybit](https://www.bybit.com/invite?ref=XNYP2K), coinbase, [cryptocom](https://crypto.com/exch/tqj4b8x48w), deribit, erisx (Cboe Digital), [gateio](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), [gateio-perpetual-futures](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), gemini, [huobi](https://www.htx.com/invite/en-us/1f?invite_code=rmw7d223), [huobi-usdt-swap](https://www.htx.com/invite/en-us/1f?invite_code=rmw7d223), [huobi-coin-swap](https://www.htx.com/invite/en-us/1f?invite_code=rmw7d223), kraken, kraken-futures, kucoin, kucoin-futures, mexc, mexc-futures, [okx](https://www.okx.com/join/47636709), whitebit.
-  * Execution Management: ascendex, [binance](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-usds-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), [binance-coin-futures](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, [bybit](https://www.bybit.com/invite?ref=XNYP2K), coinbase, [cryptocom](https://crypto.com/exch/tqj4b8x48w), deribit, erisx (Cboe Digital), [gateio](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), [gateio-perpetual-futures](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), gemini, [huobi](https://www.htx.com/invite/en-us/1f?invite_code=rmw7d223), [huobi-usdt-swap](https://www.htx.com/invite/en-us/1f?invite_code=rmw7d223), [huobi-coin-swap](https://www.htx.com/invite/en-us/1f?invite_code=rmw7d223), kraken, kraken-futures, kucoin, kucoin-futures, mexc, [okx](https://www.okx.com/join/47636709).
-  * FIX: [binance](https://www.marketwebb.net/activity/referral-entry/CPA?ref=CPA_00WFM0HU96), coinbase, gemini.
+  * Market Data: ascendex, [binance](https://accounts.maxweb.academy/register?ref=1116718520), [binance-usds-futures](https://accounts.maxweb.academy/register?ref=1116718520), [binance-coin-futures](https://accounts.maxweb.academy/register?ref=1116718520), bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, [bybit](https://www.bybit.com/invite?ref=XNYP2K), coinbase, [cryptocom](https://crypto.com/exch/tqj4b8x48w), deribit, erisx (Cboe Digital), [gateio](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), [gateio-perpetual-futures](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), gemini, [huobi](https://www.htx.com/invite/en-us/1f?invite_code=rmw7d223), [huobi-usdt-swap](https://www.htx.com/invite/en-us/1f?invite_code=rmw7d223), [huobi-coin-swap](https://www.htx.com/invite/en-us/1f?invite_code=rmw7d223), kraken, kraken-futures, kucoin, kucoin-futures, mexc, mexc-futures, [okx](https://www.okx.com/join/47636709), whitebit.
+  * Execution Management: ascendex, [binance](https://accounts.maxweb.academy/register?ref=1116718520), [binance-usds-futures](https://accounts.maxweb.academy/register?ref=1116718520), [binance-coin-futures](https://accounts.maxweb.academy/register?ref=1116718520), bitfinex, bitget, bitget-futures, bitmart, bitmex, bitstamp, [bybit](https://www.bybit.com/invite?ref=XNYP2K), coinbase, [cryptocom](https://crypto.com/exch/tqj4b8x48w), deribit, erisx (Cboe Digital), [gateio](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), [gateio-perpetual-futures](https://www.gate.com/signup/VLUQXVFWAW?ref_type=103), gemini, [huobi](https://www.htx.com/invite/en-us/1f?invite_code=rmw7d223), [huobi-usdt-swap](https://www.htx.com/invite/en-us/1f?invite_code=rmw7d223), [huobi-coin-swap](https://www.htx.com/invite/en-us/1f?invite_code=rmw7d223), kraken, kraken-futures, kucoin, kucoin-futures, mexc, [okx](https://www.okx.com/join/47636709).
+  * FIX: [binance](https://accounts.maxweb.academy/register?ref=1116718520), coinbase, gemini.
 * Join us on Discord https://discord.gg/b5EKcp9s8T and Medium https://cryptochassis.medium.com.
 * For any questions, email hello@cryptochassis.com.
 
@@ -127,7 +124,6 @@ cmake --build .
 
 ## Constants
 [`include/ccapi_cpp/ccapi_macro.h`](include/ccapi_cpp/ccapi_macro.h)
-* For most cryptocurrencies, the default value of `CCAPI_DECIMAL_SCALE` is sufficient. You can override it if you need more.
 
 ## Examples
 [C++](example)
@@ -1066,6 +1062,18 @@ To receive heartbeat events, instantiate a `Subscription` object with field `HEA
 Subscription subscription("", "", "HEARTBEAT", "HEARTBEAT_INTERVAL_MILLISECONDS=1000");
 session.subscribe(subscription);
 ```
+
+#### Use multiple sessions
+
+[C++](example/src/use_multiple_sessions/main.cpp)
+
+Multiple `session` instances, each with their own `SessionOptions` and `SessionConfigs`, can share a common `EventHandler`. If no `EventDispatcher` is provided, thread safety must be maintained by using a shared `ServiceContext`.
+```
+Subscription subscription("", "", "HEARTBEAT", "HEARTBEAT_INTERVAL_MILLISECONDS=1000");
+session.subscribe(subscription);
+```
+
+
 
 ## Performance Tuning
 * Turn on compiler optimization flags (e.g. `cmake -DCMAKE_BUILD_TYPE=Release ...`).
