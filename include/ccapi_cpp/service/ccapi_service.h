@@ -1040,8 +1040,7 @@ class Service : public std::enable_shared_from_this<Service> {
     CCAPI_LOGGER_TRACE("connected");
     CCAPI_LOGGER_TRACE("ep.port() = " + std::to_string(ep.port()));
 
-    wsConnectionPtr->hostHttpHeaderValue =
-        this->hostHttpHeaderValueIgnorePort ? wsConnectionPtr->host : wsConnectionPtr->host + ':' + std::to_string(ep.port());
+    wsConnectionPtr->hostHttpHeaderValue = this->hostHttpHeaderValueIgnorePort ? wsConnectionPtr->host : wsConnectionPtr->host + ':' + wsConnectionPtr->port;
 
     CCAPI_LOGGER_TRACE("wsConnectionPtr->hostHttpHeaderValue = " + wsConnectionPtr->hostHttpHeaderValue);
 
