@@ -60,6 +60,7 @@
   * FIX: [binance](https://accounts.maxweb.academy/register?ref=1116718520), coinbase, gemini.
 * Join us on Discord https://discord.gg/b5EKcp9s8T and Medium https://cryptochassis.medium.com.
 * For any questions, email hello@cryptochassis.com.
+* We’re experts in market data collection, high-speed trading system, infrastructure optimization, and proprietary market making. Hire us as engineers, liquidity providers, traders, or asset managers.
 
 ## Branches
 * The `develop` branch may contain experimental features.
