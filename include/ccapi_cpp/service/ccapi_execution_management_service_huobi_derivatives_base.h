@@ -62,7 +62,7 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
         if (param.find("offset") == param.end()) {
           document.AddMember("offset", rj::Value("open").Move(), allocator);
         }
-        if (param.find("lever_rate") == param.end()) {
+        if (param.find("lever_rate") == param.end() && param.find(CCAPI_EM_ORDER_LEVERAGE) == param.end()) {
           document.AddMember("lever_rate", rj::Value("1").Move(), allocator);
         }
         if (param.find("order_price_type") == param.end()) {
