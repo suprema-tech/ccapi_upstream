@@ -976,8 +976,18 @@ class Service : public std::enable_shared_from_this<Service> {
     CCAPI_LOGGER_TRACE("wsConnectionPtr = " + wsConnectionPtr->toString());
     CCAPI_LOGGER_TRACE("wsConnectionPtr->host = " + wsConnectionPtr->host);
     CCAPI_LOGGER_TRACE("wsConnectionPtr->port = " + wsConnectionPtr->port);
-    newResolverPtr->async_resolve(wsConnectionPtr->host, wsConnectionPtr->port,
-                                  beast::bind_front_handler(&Service::onResolveWs, shared_from_this(), wsConnectionPtr, newResolverPtr));
+    CCAPI_LOGGER_TRACE("wsConnectionPtr->proxyUrl = " + wsConnectionPtr->proxyUrl);
+    std::string host;
+    std::string port;
+    if (wsConnectionPtr->proxyUrl.empty()) {
+      host = wsConnectionPtr->host;
+      port = wsConnectionPtr->port;
+    } else {
+      const auto& splitted = UtilString::split(wsConnectionPtr->proxyUrl, ':');
+      host = splitted.at(0);
+      port = splitted.size() > 1 ? splitted.at(1) : CCAPI_HTTP_PORT_DEFAULT;
+    }
+    newResolverPtr->async_resolve(host, port, beast::bind_front_handler(&Service::onResolveWs, shared_from_this(), wsConnectionPtr, newResolverPtr));
   }
 
   void onResolveWs(std::shared_ptr<WsConnection> wsConnectionPtr, std::shared_ptr<tcp::resolver> newResolverPtr, beast::error_code ec,
@@ -1030,8 +1040,7 @@ class Service : public std::enable_shared_from_this<Service> {
     CCAPI_LOGGER_TRACE("connected");
     CCAPI_LOGGER_TRACE("ep.port() = " + std::to_string(ep.port()));
 
-    wsConnectionPtr->hostHttpHeaderValue =
-        this->hostHttpHeaderValueIgnorePort ? wsConnectionPtr->host : wsConnectionPtr->host + ':' + std::to_string(ep.port());
+    wsConnectionPtr->hostHttpHeaderValue = this->hostHttpHeaderValueIgnorePort ? wsConnectionPtr->host : wsConnectionPtr->host + ':' + wsConnectionPtr->port;
 
     CCAPI_LOGGER_TRACE("wsConnectionPtr->hostHttpHeaderValue = " + wsConnectionPtr->hostHttpHeaderValue);
 
