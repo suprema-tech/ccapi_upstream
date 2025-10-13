@@ -351,15 +351,6 @@ class ExecutionManagementServiceHuobiDerivativesBase : public ExecutionManagemen
           };
           Element info;
           this->extractOrderInfo(info, document, extractionFieldNameMap);
-          {
-            auto it1 = document.FindMember("trade_volume");
-            auto it2 = document.FindMember("trade_avg_price");
-            if (it1 != document.MemberEnd() && it2 != document.MemberEnd()) {
-              info.insert(
-                  CCAPI_EM_ORDER_CUMULATIVE_FILLED_QUOTE_QUANTITY,
-                  ConvertDecimalToString(Decimal(UtilString::printDoubleScientific(std::stod(it1->value.GetString()) * std::stod(it2->value.GetString())))));
-            }
-          }
           for (const auto& x : document["trade"].GetArray()) {
             info.insert(CCAPI_TRADE_ID, std::string(x["trade_id"].GetString()));
             info.insert(CCAPI_EM_ORDER_LAST_EXECUTED_PRICE, x["trade_price"].GetString());
