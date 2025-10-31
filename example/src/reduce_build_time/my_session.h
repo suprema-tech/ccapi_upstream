@@ -8,7 +8,7 @@
 namespace ccapi {
 
 class EventHandler;
-class Session;
+class Session;  // forward declaration instead of including full header!
 
 class MySession {
  public:
