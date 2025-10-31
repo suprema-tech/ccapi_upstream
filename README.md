@@ -45,6 +45,7 @@
       - [Use multiple sessions](#use-multiple-sessions)
       - [Override exchange urls](#override-exchange-urls)
       - [Connect to a proxy](#connect-to-a-proxy)
+      - [Reduce build time](#reduce-build-time)
   - [Performance Tuning](#performance-tuning)
   - [Known Issues and Workarounds](#known-issues-and-workarounds)
 
@@ -1081,6 +1082,8 @@ Instantiate `Subscription` with the desired `proxyUrl`.
 Subscription subscription("okx", "BTC-USDT", "MARKET_DEPTH", "", "", {}, "172.30.0.146:9000");
 ```
 
+#### Reduce build time
+The Pimpl (Pointer to Implementation) idiom in C++ can significantly reduce build time. This reduction is achieved by minimizing compilation dependencies and isolating implementation details. See [this example](example/src/reduce_build_time).
 
 ## Performance Tuning
 * Turn on compiler optimization flags (e.g. `cmake -DCMAKE_BUILD_TYPE=Release ...`).
